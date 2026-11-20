@@ -6,3 +6,6 @@ Thumbs.db
 node_modules/
 .vscode/
 .idea/
+
+# Local persistence server output (server.mjs writes data/feed-log-*.json)
+data/
