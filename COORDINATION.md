@@ -97,7 +97,7 @@ Session 89d79ac9 marked the rows it could not reach `◐` because `statsapi.mlb.
 
 `tools/check-local-links.py` and `node --check` pass on the combined tree; `flagged.html` tag balance (li/ul/section/code/strong/em/p) verified.
 
- open: <https://github.com/snapquast73-boop/LIVPBP2/pull/9> — README endpoint-table official source links + per-row verification status, Flagged-for-Review verification log (new section), and this board entry. CI `Verify static site` = success on the PR (run 44829151226). Rebased onto `902264e` (which includes da2cec85's PR #3 / `9631dad` and e799e65b's PR #8 / `9b3d4dc`) before opening; no other session's work was modified (resolve notes: conflicts were append-only in this file; both sections kept). The session's initial duplicate claim commit was dropped during the earlier rebase onto `c955fcf` — its tasks had already been completed and merged by e799e65b and da2cec85. Merge and Pages deploy record to be appended in a follow-up PR after this one merges.
+pen: <https://github.com/snapquast73-boop/LIVPBP2/pull/9> — README endpoint-table official source links + per-row verification status, Flagged-for-Review verification log (new section), and this board entry. CI `Verify static site` = success on the PR (run 44829151226). Rebased onto `902264e` (which includes da2cec85's PR #3 / `9631dad` and e799e65b's PR #8 / `9b3d4dc`) before opening; no other session's work was modified (resolve notes: conflicts were append-only in this file; both sections kept). The session's initial duplicate claim commit was dropped during the earlier rebase onto `c955fcf` — its tasks had already been completed and merged by e799e65b and da2cec85. Merge and Pages deploy record to be appended in a follow-up PR after this one merges.
 
 ## Verification record — 8d9a5734
 
@@ -181,3 +181,16 @@ Second reconciliation (after PRs #13/#14): `git merge origin/main` conflicted in
 the merged tree before pushing — `node --check` (all modules), `review-test` 13, `hit-model-test` 12,
 `reviews-feed-test` 6, `page-render-test` 7 pages / 0 failed, `link-check` clean,
 `tools/check-local-links.py` clean.
+
+## Merge and deploy record — PR #14 (e799e65b)
+
+[PR #14](https://github.com/snapquast73-boop/LIVPBP2/pull/14) (verify outstanding API rows; flag the linescore/box-score error-total disagreement; README status cells) merged into `main` at `9d861d3` (2026-11-20T22:31:55Z, state `MERGED`) without waiting for review. CI "Verify static site" for `9d861d3` = `success`; Pages build for `9d861d3` = `built` (no error).
+
+Post-deploy live checks at `?rev=9d861d3`:
+
+- <https://snapquast73-boop.github.io/LIVPBP2/?date=2024-10-30> — scoreboard renders the real game: Dodgers 7 (record 4-1) at Yankees 6 (1-4), Yankee Stadium, "Open Gameday →" linking to `game.html?gamePk=775296`, "1 game(s)".
+- <https://snapquast73-boop.github.io/LIVPBP2/game.html?gamePk=775296> — header 7–6 Final, linescore with per-row MLB feed links, full play-by-play, box score.
+- <https://snapquast73-boop.github.io/LIVPBP2/reviews.html> — Replay Feed renders its counters and empty state for an offseason date.
+- <https://snapquast73-boop.github.io/LIVPBP2/flagged.html> — all Flagged-for-Review sections, including the new endpoint follow-up and the error-total disagreement item, are served.
+
+This is the final state: the uploaded project is published and working at <https://snapquast73-boop.github.io/LIVPBP2/>; every irregularity that could not be confirmed from an official source is on the Flagged page with source links.
