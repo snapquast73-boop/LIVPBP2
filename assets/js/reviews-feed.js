@@ -488,11 +488,11 @@
 
   function matchesTab(e) {
     if (currentTab === 'all') {
-      // "All" really means all review events, ABS included: the header counts ABS
-      // separately, and hiding those rows under this tab made the feed look
-      // truncated (49 ABS challenges, two rows). Data-quality notes stay on their
-      // own "Flagged" tab because they are not review events.
-      return e.category !== 'irregularity';
+      // Uploaded README, verbatim: "**All** (every category except ABS pitch
+      // challenges …)"; ABS has its own tab and its own counter. Session 9a7095ef
+      // flagged PR #27 for deviating from that text — the deviation was reverted,
+      // see COORDINATION.md. Data-quality notes stay on the "Flagged" tab.
+      return e.category !== 'abs' && e.category !== 'irregularity';
     }
     if (currentTab === 'active') return e.inProgress === true;
     if (currentTab === 'risk') return e.runsAtRisk > 0;
