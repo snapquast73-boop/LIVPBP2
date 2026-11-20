@@ -7,6 +7,7 @@
 | Audit and integrate Pages navigation, game data attribution and dependency checks | done | 9fc08fc2 | arena/9fc08fc2-livpbp2 | root HTML, assets/js, tools, README.md, COORDINATION.md | [Project](https://github.com/snapquast73-boop/LIVPBP2); checked remote boards before claiming. Merged via PR #2 (b3e9d19) and PR #4 (bc26637): repaired Pages navigation, added per-row MLB feed source links in linescore/boxscore tables, added `flagged.html`, recorded the production deployment. |
 | Final integration: line-by-line verification, deployment fixes, Flagged for Review, PR + merge to Pages | done | e799e65b | arena/e799e65b-livpbp2 | `COORDINATION.md`, `flagged.html`, `.gitignore`, `README.md` (status note only) | [Project](https://github.com/snapquast73-boop/LIVPBP2); checked remote boards (`git log`: 9fc08fc2 merged as PR #2 b3e9d19 and PR #4 bc26637, no other active claims). Final integration session; no other session owns files in this scope. Verified live site (scoreboard, game 775296, replay feed, flagged page render with real StatsAPI data), schedule `hydrate` params, official event-type registry codes, MLB scoring-changes attribution, logo CDN pattern, `node --check` on every script, `tools/check-local-links.py`, every `getElementById` target, and local `server.mjs` (health, static, feed-log GET/POST, 404). Fixes: `.gitignore` ignores the server's `data/` output; `flagged.html` gained Verified + Irregularities sections, each item with an official source link; `README.md` gained a status note naming the missing `docs/`/`tools/` files and unimplemented features. Irregularities flagged, non-blocking: README files absent from the repo, poll cadence vs README watchers, hit forecast and scoring-change/SSE tracking not implemented, unverified `flags.inReview`, absolute-path `404.html`, empty repo homepage field (403 for the integration token). Merge/deploy record below. |
 | Endpoint-table source links + audit re-verification (89d79ac9) | done | 89d79ac9 | arena/89d79ac9-livpbp2 | `README.md` (endpoint table only), `flagged.html` (new verification-log section), `COORDINATION.md` | Rebased onto `origin/main` c955fcf; initial duplicate claim commit dropped during rebase (its tasks were already completed by e799e65b's merged PRs #4/#5 — no other session's work discarded). Added an official source link and per-row verification status to every row of the README API-calls table (no values added/removed/rewritten) and a matching verification-log section on the Flagged for Review page. Re-verified locally: `tools/check-local-links.py` passes, `node --check` passes for all 9 scripts, `node server.mjs` verified end-to-end (health, index, 404 fallback, feed-log GET/POST round-trip, SSE `connected` + initial snapshot). Note: sandbox egress is restricted to github.com/api.github.com/codeload.github.com/registry.npmjs.org/pypi.org — `statsapi.mlb.com` is unreachable from here, so only the two already-verified rows (marked ✅) count as checked; all other rows link the official host and are flagged ◐ unverified for manual review. Merge/deploy record: follow-up PR (see end of board). |
+| Restore documented functionality on the live GitHub Pages site: rebuild the client against the official StatsAPI shapes, repair every broken doc/test reference, add deterministic checks and a Flagged for Review page | done | 8d9a5734 | arena/8d9a5734-livpbp2 | `*.html`, `assets/**`, `docs/**`, `tools/**`, `README.md`, `COORDINATION.md` | Claimed 2026-11-20 before editing any file (board then held only `26bf496d` = done); the parallel rows above were added by sessions that branched from the same `e1609de`, so this session's merge had to reconcile them — see the conflict log below. Rebuilt all 9 client modules against re-fetched API responses (schedule hydrate, `gameStatus`, live feed incl. `reviewDetails` placement, `playByPlay.playIndex`, `statSplits`, `eventTypes`), added `docs/verification-report.md`, `docs/scoring-changes.md`, `docs/api-compliance.md`, two optional workflow templates, five deterministic test tools + fixtures, and rewrote `flagged.html`. Adopted the parallel sessions' per-row official source links and their no-zero-fill rule from `main`. PR #11. |
 
 | Add automated static-site validation and correct Pages deployment guidance | in progress | da2cec85 | arena/da2cec85-livpbp2 | `.github/workflows/verify-site.yml`, `README.md`, `COORDINATION.md` | Validated the existing Pages `main` root publication and added a CI check for JS syntax and local HTML references; official GitHub Pages source: https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site. Rebase conflict after PR #5 merged was resolved by retaining the merged final-integration report and adding this non-overlapping check; final PR/deploy verification pending. |
 
@@ -95,6 +96,91 @@ Session 89d79ac9 marked the rows it could not reach `◐` because `statsapi.mlb.
 **Official-data irregularity found while verifying:** the Yankees’ error total for `775296` is **3** in the [live feed linescore](https://statsapi.mlb.com/api/v1.1/game/775296/feed/live?fields=liveData,linescore,teams,home,away,runs,hits,errors) and in the [box score](https://statsapi.mlb.com/api/v1/game/775296/boxscore) (Judge, Volpe and Wells each charged one), but **2** in the [standalone linescore](https://statsapi.mlb.com/api/v1/game/775296/linescore) and in [schedule `hydrate=linescore`](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2024-10-30&hydrate=linescore&fields=dates,games,gamePk,linescore,teams,home,away,errors,hits,runs). The game page shows 3 because every row links the feed it reads. No code was changed to hide the disagreement; it is documented on the Flagged page.
 
 `tools/check-local-links.py` and `node --check` pass on the combined tree; `flagged.html` tag balance (li/ul/section/code/strong/em/p) verified.
+
+pen: <https://github.com/snapquast73-boop/LIVPBP2/pull/9> — README endpoint-table official source links + per-row verification status, Flagged-for-Review verification log (new section), and this board entry. CI `Verify static site` = success on the PR (run 44829151226). Rebased onto `902264e` (which includes da2cec85's PR #3 / `9631dad` and e799e65b's PR #8 / `9b3d4dc`) before opening; no other session's work was modified (resolve notes: conflicts were append-only in this file; both sections kept). The session's initial duplicate claim commit was dropped during the earlier rebase onto `c955fcf` — its tasks had already been completed and merged by e799e65b and da2cec85. Merge and Pages deploy record to be appended in a follow-up PR after this one merges.
+
+## Verification record — 8d9a5734
+
+Sources fetched for this branch (each one is also linked from the row it supports in the README
+endpoint table and on `flagged.html`):
+
+- Schedule, hydrated: <https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags> — 9 games; trimmed copy in `tools/fixtures/schedule-2026-06-01.json`.
+- Live feed: <https://statsapi.mlb.com/api/v1.1/game/824027/feed/live> and <https://statsapi.mlb.com/api/v1.1/game/822974/feed/live> — `gameData`, `plays`, `linescore`, `boxscore`, and the `fields=` projection that proves `reviewDetails` survives narrowing.
+- Review-status registry: <https://statsapi.mlb.com/api/v1/gameStatus> — `MA MH MJ NH NS NJ IH`, controls `I` / `F`, `detailedState` "Instant Replay"; trimmed copy in `tools/fixtures/game-status.json`.
+- Play-by-play: <https://statsapi.mlb.com/api/v1/game/822974/playByPlay> (with `fields=`) — `playEvents[].details.playIndex`.
+- Splits: <https://statsapi.mlb.com/api/v1/people/660271/stats?stats=statSplits&group=hitting&sitCodes=vl,vr&season=2026> — `split.code`/`split.description`; combining `stats=season,statSplits,gameLog` in one call drops `split`.
+- Event types: <https://statsapi.mlb.com/api/v1/eventTypes?fields=eventTypes,code,description> — `os_ruling_pending_primary` / `os_ruling_pending_prior`, description "Official Scorer Ruling Pending".
+- Not served: <https://statsapi.mlb.com/api/v1/game/824027/feed/live> — the unversioned feed path errors, so the client uses `v1.1`.
+- MLB terms: <https://www.mlb.com/official-information/terms-of-use> and <http://gdx.mlb.com/components/copyright.txt> — quoted verbatim in `docs/api-compliance.md`.
+- Scoring changes: <https://www.mlb.com/official-information/scoring-changes> — who may change a ruling, and why no API equivalent exists.
+- Pages publishing: <https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site>; live Pages metadata: <https://api.github.com/repos/snapquast73-boop/LIVPBP2/pages>.
+
+Local checks, all passing before the merge (re-run after it): `node --check` on every `assets/js/*.js`;
+`tools/review-test.mjs` 13/13; `tools/hit-model-test.mjs` 12/12; `tools/reviews-feed-test.mjs` 6/6;
+`tools/page-render-test.mjs` 7 pages, 0 failed (jsdom, `npm install --no-save jsdom`);
+`tools/link-check.mjs` reports no broken internal links or assets (76 internal references across 5 pages
+and 5 docs, 15 script files, 40+ external URLs, 20 statsapi references).
+
+Still unverified (published on `flagged.html`, non-blocking): logo/headshot CDN paths (HTTP 500 to a
+non-browser client), `challengeTeamId` semantics, "call stands" vs "call confirmed", whether a challenge
+is ever published on the whole play object, the `vsPlayer` head-to-head shape, the reconstructed model's
+coefficients, ABS counter semantics, and the public-redistribution question raised by MLB's copyright
+notice and Terms of Use.
+
+## Conflict log — 8d9a5734
+
+`git merge origin/main` conflicted in seven files because three other sessions had merged work into
+`main` from the same base commit (`e1609de`) while this branch was being built. Nothing of theirs was
+discarded:
+
+- `assets/js/game.js` — kept this session's rewrite and imported their two improvements: a value the feed
+  does not contain now renders blank instead of `0`, and every linescore/box-score row ends with an
+  "MLB feed" source cell plus a "blank = not in payload" note when a field is missing.
+- `assets/js/scoreboard.js`, `assets/js/reviews-feed.js` — kept this session's rewrite (independent
+  poll/sweep timers, registry gate) and added their `latestRequest` guard so a slow response from an
+  older date can no longer overwrite a newer render.
+- `README.md` — kept this session's rebuilt documentation and adopted their four-column endpoint table
+  (endpoint · official source link · verification status), refilled with this session's own fetch
+  results; ✅/◐/❌ marks say which rows this session actually fetched. Their "repository status" note was
+  not kept verbatim: it listed `docs/` and `tools/` as missing and the forecast as unimplemented, which
+  is no longer true on this branch (the note's remaining true point — upstream 404 — is kept in the
+  flagged list).
+- `flagged.html` — rebuilt from this session's page and folded in their Verified / Irregularities /
+  endpoint-log material as a new "2b · Verified in this session (and items earlier sessions had flagged)"
+  section, attributed per item. Their "os_ruling_pending unverified" item is now marked verified against
+  the event-type registry; their "◐ not fetched this session (egress blocked)" marks are superseded where
+  this session's fetch tool could reach `statsapi.mlb.com`, and that difference is stated on the page.
+- `404.html` — took their absolute in-site paths (`/LIVPBP2/...`), which is the correct form for a
+  project-site 404 page, and added the `flagged.html` link.
+- `COORDINATION.md` — this file: their rows and records kept in full, this session's row and records
+  appended.
+
+No file was reverted to a state that loses another session's work; no force-push was used.
+
+## Conflict log — 8d9a5734 (second merge: PRs #13 and #14 landed while this branch was open)
+
+`main` advanced twice more (PR #13 → `4745f60`, PR #14 → `9d861d3`) after the first reconciliation, so the
+merge was repeated. Three files conflicted again; nothing was discarded:
+
+- `COORDINATION.md` — their `89d79ac9` merge record, their follow-up verification table and their
+  official-data irregularity kept verbatim ahead of this session's records.
+- `README.md` — this session's four-column endpoint table kept, with their verified findings folded into the
+  rows they belong to: the `gameStatus` row now lists the `M*`/`N*` families and quotes the exact
+  `detailedState` strings, and the fallback-bundle row is `✅` with the standalone-`linescore` error-total
+  disagreement recorded as an upstream irregularity.
+- `flagged.html` — their follow-up verification block and the error-total irregularity kept, with a
+  correction appended: `MJ` / `NJ` / `NH` **are** in the registry (this session fetched all four pages of
+  `GET /api/v1/gameStatus`; `MJ` “Player challenge: Pitch Result”, `NJ` “Umpire Challenge: Pitch Result”,
+  `NH` “Umpire review: Home run”), so their ◐ on the review-code mapping is resolved rather than deleted.
+
+## Merge and deploy record — 8d9a5734
+
+To be appended once PR #11 merges and the Pages build is confirmed.
+Second reconciliation (after PRs #13/#14): `git merge origin/main` conflicted in `COORDINATION.md`,
+`README.md`, `flagged.html`; resolved as described in the second conflict log above. Re-ran every check on
+the merged tree before pushing — `node --check` (all modules), `review-test` 13, `hit-model-test` 12,
+`reviews-feed-test` 6, `page-render-test` 7 pages / 0 failed, `link-check` clean,
+`tools/check-local-links.py` clean.
 
 ## Merge and deploy record — PR #14 (e799e65b)
 

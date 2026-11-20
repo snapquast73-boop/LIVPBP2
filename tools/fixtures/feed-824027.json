@@ -1,0 +1,665 @@
+{
+  "_note": "SYNTHETIC fixture, shaped exactly like GET /api/v1.1/game/{gamePk}/feed/live as verified on 2026-11-20 (docs/verification-report.md §3–§5). Values are trimmed copies; the reviewDetails / runners / boxscore nesting is what the parsers are tested against.",
+  "gamePk": 824027,
+  "gameData": {
+    "game": {
+      "pk": 824027,
+      "season": "2026",
+      "scheduledInnings": 9,
+      "gameNumber": 1
+    },
+    "gameDate": "2026-06-01T23:40:00Z",
+    "status": {
+      "abstractGameState": "Final",
+      "codedGameState": "F",
+      "detailedState": "Final",
+      "statusCode": "F",
+      "abstractGameCode": "F"
+    },
+    "teams": {
+      "away": {
+        "id": 115,
+        "name": "Colorado Rockies",
+        "abbreviation": "COL",
+        "record": {
+          "wins": 23,
+          "losses": 38
+        },
+        "probablePitcher": {
+          "id": 607536,
+          "fullName": "Kyle Freeland"
+        }
+      },
+      "home": {
+        "id": 108,
+        "name": "Los Angeles Angels",
+        "abbreviation": "LAA",
+        "record": {
+          "wins": 23,
+          "losses": 38
+        },
+        "probablePitcher": {
+          "id": 667755,
+          "fullName": "José Soriano"
+        }
+      }
+    },
+    "venue": {
+      "id": 1,
+      "name": "Angel Stadium"
+    },
+    "weather": {
+      "condition": "Clear",
+      "temp": "72",
+      "wind": "5 mph, L To R"
+    },
+    "datetime": {
+      "dateTime": "2026-06-01T23:40:00Z"
+    },
+    "players": {
+      "ID642350": {
+        "person": {
+          "id": 642350,
+          "fullName": "Jose Siri"
+        },
+        "batSide": {
+          "code": "R",
+          "description": "Right"
+        },
+        "pitchHand": {
+          "code": "R",
+          "description": "Right"
+        }
+      },
+      "ID489446": {
+        "person": {
+          "id": 489446,
+          "fullName": "Kirby Yates"
+        },
+        "batSide": {
+          "code": "R",
+          "description": "Right"
+        },
+        "pitchHand": {
+          "code": "R",
+          "description": "Right"
+        }
+      },
+      "ID624428": {
+        "person": {
+          "id": 624428,
+          "fullName": "Adam Frazier"
+        },
+        "batSide": {
+          "code": "L",
+          "description": "Left"
+        },
+        "pitchHand": {
+          "code": "R",
+          "description": "Right"
+        }
+      },
+      "ID681351": {
+        "person": {
+          "id": 681351,
+          "fullName": "Logan O'Hoppe"
+        },
+        "batSide": {
+          "code": "R",
+          "description": "Right"
+        },
+        "pitchHand": {
+          "code": "R",
+          "description": "Right"
+        }
+      }
+    },
+    "review": {
+      "away": {
+        "used": 0,
+        "remaining": 1
+      },
+      "home": {
+        "used": 1,
+        "remaining": 0
+      }
+    },
+    "absChallenges": {
+      "away": {
+        "usedSuccessful": 2,
+        "usedFailed": 2,
+        "remaining": 0
+      },
+      "home": {
+        "usedSuccessful": 1,
+        "usedFailed": 1,
+        "remaining": 1
+      }
+    }
+  },
+  "liveData": {
+    "linescore": {
+      "currentInning": 9,
+      "currentInningOrdinal": "9th",
+      "inningState": "Bottom",
+      "inningHalf": "Bottom",
+      "isTopInning": false,
+      "outs": 3,
+      "balls": 0,
+      "strikes": 2,
+      "innings": [
+        {
+          "num": 1,
+          "home": {
+            "runs": 0,
+            "hits": 2,
+            "errors": 1,
+            "leftOnBase": 2
+          },
+          "away": {
+            "runs": 1,
+            "hits": 1,
+            "errors": 0,
+            "leftOnBase": 2
+          }
+        },
+        {
+          "num": 2,
+          "home": {
+            "runs": 0,
+            "hits": 0,
+            "errors": 0,
+            "leftOnBase": 0
+          },
+          "away": {
+            "runs": 0,
+            "hits": 0,
+            "errors": 0,
+            "leftOnBase": 0
+          }
+        },
+        {
+          "num": 9,
+          "home": {
+            "runs": 0,
+            "hits": 1,
+            "errors": 0,
+            "leftOnBase": 0
+          },
+          "away": {
+            "runs": 1,
+            "hits": 2,
+            "errors": 0,
+            "leftOnBase": 1
+          }
+        }
+      ],
+      "teams": {
+        "home": {
+          "runs": 8,
+          "hits": 10,
+          "errors": 1,
+          "leftOnBase": 7
+        },
+        "away": {
+          "runs": 9,
+          "hits": 10,
+          "errors": 4,
+          "leftOnBase": 12
+        }
+      },
+      "offense": {
+        "batter": {
+          "id": 642350,
+          "fullName": "Jose Siri"
+        },
+        "onDeck": {
+          "id": 624428,
+          "fullName": "Adam Frazier"
+        },
+        "inHole": {
+          "id": 681351,
+          "fullName": "Logan O'Hoppe"
+        },
+        "pitcher": {
+          "id": 489446,
+          "fullName": "Kirby Yates"
+        }
+      }
+    },
+    "plays": {
+      "currentPlay": {
+        "result": {
+          "type": "atBat"
+        },
+        "about": {
+          "atBatIndex": 2,
+          "halfInning": "bottom",
+          "inning": 9,
+          "isComplete": false
+        },
+        "count": {
+          "balls": 0,
+          "strikes": 2,
+          "outs": 3
+        },
+        "matchup": {
+          "batter": {
+            "id": 642350,
+            "fullName": "Jose Siri"
+          },
+          "pitcher": {
+            "id": 489446,
+            "fullName": "Kirby Yates"
+          },
+          "batSide": {
+            "code": "R",
+            "description": "Right"
+          },
+          "pitchHand": {
+            "code": "R",
+            "description": "Right"
+          }
+        },
+        "playEvents": []
+      },
+      "allPlays": [
+        {
+          "result": {
+            "type": "atBat",
+            "event": "Walk",
+            "eventType": "walk",
+            "description": "Junior Caminero walks.",
+            "rbi": 0,
+            "awayScore": 0,
+            "homeScore": 1,
+            "isOut": false
+          },
+          "about": {
+            "atBatIndex": 0,
+            "halfInning": "bottom",
+            "inning": 1,
+            "isComplete": true,
+            "startTime": "2026-06-01T23:45:00.000Z",
+            "endTime": "2026-06-01T23:49:00.000Z"
+          },
+          "count": {
+            "balls": 3,
+            "strikes": 2,
+            "outs": 0
+          },
+          "matchup": {
+            "batter": {
+              "id": 642350,
+              "fullName": "Jose Siri"
+            },
+            "pitcher": {
+              "id": 489446,
+              "fullName": "Kirby Yates"
+            }
+          },
+          "runners": [
+            {
+              "details": {
+                "event": "Walk",
+                "eventType": "walk",
+                "runner": {
+                  "id": 642350,
+                  "fullName": "Jose Siri"
+                },
+                "isScoringEvent": false,
+                "rbi": false,
+                "playIndex": 2
+              }
+            }
+          ],
+          "playEvents": [
+            {
+              "details": {
+                "description": "Ball",
+                "event": "Ball",
+                "eventType": "ball"
+              },
+              "count": {
+                "balls": 1,
+                "strikes": 0
+              },
+              "pitchNumber": 1,
+              "isPitch": true
+            },
+            {
+              "details": {
+                "description": "Ball",
+                "event": "Ball",
+                "eventType": "ball"
+              },
+              "count": {
+                "balls": 2,
+                "strikes": 0
+              },
+              "pitchNumber": 2,
+              "isPitch": true
+            },
+            {
+              "details": {
+                "description": "Ball",
+                "event": "Ball",
+                "eventType": "ball"
+              },
+              "count": {
+                "balls": 3,
+                "strikes": 0
+              },
+              "pitchNumber": 3,
+              "isPitch": true
+            },
+            {
+              "details": {
+                "description": "Batter challenged (pitch result), call on the field was overturned: Ball.",
+                "event": "Challenge",
+                "eventType": "challenge",
+                "playIndex": 3
+              },
+              "count": {
+                "balls": 3,
+                "strikes": 1
+              },
+              "pitchNumber": 4,
+              "isPitch": true,
+              "reviewDetails": {
+                "reviewType": "MJ",
+                "challengeTeamId": 108,
+                "isOverturned": true,
+                "inProgress": false
+              }
+            },
+            {
+              "details": {
+                "description": "Ball",
+                "event": "Ball",
+                "eventType": "ball"
+              },
+              "count": {
+                "balls": 4,
+                "strikes": 1
+              },
+              "pitchNumber": 5,
+              "isPitch": true
+            }
+          ]
+        },
+        {
+          "result": {
+            "type": "atBat",
+            "event": "Double",
+            "eventType": "double",
+            "description": "Jose Siri doubles (7) on a line drive to left fielder. Runner scores.",
+            "rbi": 1,
+            "awayScore": 0,
+            "homeScore": 2,
+            "isOut": false
+          },
+          "about": {
+            "atBatIndex": 1,
+            "halfInning": "bottom",
+            "inning": 9,
+            "isComplete": true,
+            "startTime": "2026-06-01T23:50:00.000Z",
+            "endTime": "2026-06-01T23:56:00.000Z"
+          },
+          "count": {
+            "balls": 1,
+            "strikes": 2,
+            "outs": 1
+          },
+          "matchup": {
+            "batter": {
+              "id": 642350,
+              "fullName": "Jose Siri"
+            },
+            "pitcher": {
+              "id": 489446,
+              "fullName": "Kirby Yates"
+            }
+          },
+          "reviewDetails": {
+            "reviewType": "MA",
+            "challengeTeamId": 115,
+            "isOverturned": false,
+            "inProgress": true,
+            "reason": "Tag play"
+          },
+          "runners": [
+            {
+              "details": {
+                "event": "Double",
+                "eventType": "double",
+                "runner": {
+                  "id": 642350,
+                  "fullName": "Jose Siri"
+                },
+                "isScoringEvent": true,
+                "rbi": true,
+                "playIndex": 1
+              }
+            }
+          ],
+          "playEvents": [
+            {
+              "details": {
+                "description": "Called Strike",
+                "event": "Strike",
+                "eventType": "strikeout"
+              },
+              "count": {
+                "balls": 0,
+                "strikes": 1
+              },
+              "pitchNumber": 1,
+              "isPitch": true
+            },
+            {
+              "details": {
+                "description": "In play, run(s)",
+                "event": "Double",
+                "eventType": "double"
+              },
+              "count": {
+                "balls": 1,
+                "strikes": 2
+              },
+              "pitchNumber": 2,
+              "isPitch": true
+            }
+          ]
+        },
+        {
+          "result": {
+            "type": "atBat",
+            "event": "Strikeout",
+            "eventType": "strikeout",
+            "description": "Adam Frazier strikes out swinging.",
+            "rbi": 0,
+            "awayScore": 0,
+            "homeScore": 2,
+            "isOut": true
+          },
+          "about": {
+            "atBatIndex": 2,
+            "halfInning": "bottom",
+            "inning": 9,
+            "isComplete": false,
+            "startTime": "2026-06-01T23:58:00.000Z",
+            "endTime": "2026-06-02T00:01:00.000Z"
+          },
+          "count": {
+            "balls": 0,
+            "strikes": 2,
+            "outs": 3
+          },
+          "matchup": {
+            "batter": {
+              "id": 642350,
+              "fullName": "Jose Siri"
+            },
+            "pitcher": {
+              "id": 489446,
+              "fullName": "Kirby Yates"
+            }
+          },
+          "runners": [],
+          "playEvents": [
+            {
+              "details": {
+                "description": "Swinging Strike",
+                "event": "Strike",
+                "eventType": "strikeout"
+              },
+              "count": {
+                "balls": 0,
+                "strikes": 1
+              },
+              "pitchNumber": 1,
+              "isPitch": true
+            },
+            {
+              "details": {
+                "description": "Swinging Strike",
+                "event": "Strike",
+                "eventType": "strikeout"
+              },
+              "count": {
+                "balls": 0,
+                "strikes": 2
+              },
+              "pitchNumber": 2,
+              "isPitch": true
+            }
+          ]
+        }
+      ]
+    },
+    "boxscore": {
+      "teams": {
+        "away": {
+          "batters": [
+            607536
+          ],
+          "pitchers": [
+            607536
+          ],
+          "players": {
+            "ID607536": {
+              "person": {
+                "id": 607536,
+                "fullName": "Kyle Freeland"
+              },
+              "position": {
+                "abbreviation": "P"
+              },
+              "battingOrder": "100",
+              "stats": {
+                "batting": {
+                  "atBats": 3,
+                  "runs": 0,
+                  "hits": 1,
+                  "rbi": 1,
+                  "baseOnBalls": 0,
+                  "strikeOuts": 1
+                },
+                "pitching": {
+                  "inningsPitched": "6.0",
+                  "hits": 6,
+                  "runs": 3,
+                  "earnedRuns": 3,
+                  "baseOnBalls": 2,
+                  "strikeOuts": 5
+                }
+              }
+            }
+          }
+        },
+        "home": {
+          "batters": [
+            642350,
+            624428
+          ],
+          "pitchers": [
+            489446
+          ],
+          "players": {
+            "ID642350": {
+              "person": {
+                "id": 642350,
+                "fullName": "Jose Siri"
+              },
+              "position": {
+                "abbreviation": "CF"
+              },
+              "battingOrder": "100",
+              "stats": {
+                "batting": {
+                  "atBats": 4,
+                  "runs": 2,
+                  "hits": 2,
+                  "rbi": 1,
+                  "baseOnBalls": 1,
+                  "strikeOuts": 1
+                }
+              }
+            },
+            "ID624428": {
+              "person": {
+                "id": 624428,
+                "fullName": "Adam Frazier"
+              },
+              "position": {
+                "abbreviation": "2B"
+              },
+              "battingOrder": "200",
+              "stats": {
+                "batting": {
+                  "atBats": 4,
+                  "runs": 0,
+                  "hits": 1,
+                  "rbi": 0,
+                  "baseOnBalls": 0,
+                  "strikeOuts": 2
+                }
+              }
+            },
+            "ID489446": {
+              "person": {
+                "id": 489446,
+                "fullName": "Kirby Yates"
+              },
+              "position": {
+                "abbreviation": "P"
+              },
+              "stats": {
+                "pitching": {
+                  "inningsPitched": "1.0",
+                  "hits": 1,
+                  "runs": 1,
+                  "earnedRuns": 1,
+                  "baseOnBalls": 1,
+                  "strikeOuts": 2
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "decisions": {
+      "winner": {
+        "id": 622608,
+        "fullName": "Antonio Senzatela"
+      },
+      "loser": {
+        "id": 489446,
+        "fullName": "Kirby Yates"
+      }
+    }
+  }
+}

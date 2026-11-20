@@ -1,0 +1,134 @@
+{
+  "_note": "SYNTHETIC fixture. Every field name and nesting level mirrors the live StatsAPI responses verified on 2026-11-20 (see docs/verification-report.md §2); the values are trimmed copies of those responses, not a new live request.",
+  "dates": [
+    {
+      "date": "2026-06-01",
+      "games": [
+        {
+          "gamePk": 824027,
+          "gameDate": "2026-06-01T23:40:00Z",
+          "officialDate": "2026-06-01",
+          "status": {
+            "abstractGameState": "Final",
+            "codedGameState": "F",
+            "detailedState": "Final",
+            "statusCode": "F",
+            "startTimeTBD": false,
+            "abstractGameCode": "F"
+          },
+          "teams": {
+            "away": {
+              "team": { "id": 115, "name": "Colorado Rockies", "abbreviation": "COL" },
+              "leagueRecord": { "wins": 23, "losses": 38, "ties": 0, "pct": ".377" },
+              "score": 9,
+              "isWinner": true,
+              "probablePitcher": { "id": 607536, "fullName": "Kyle Freeland" }
+            },
+            "home": {
+              "team": { "id": 108, "name": "Los Angeles Angels", "abbreviation": "LAA" },
+              "leagueRecord": { "wins": 23, "losses": 38, "ties": 0, "pct": ".377" },
+              "score": 8,
+              "isWinner": false,
+              "probablePitcher": { "id": 667755, "fullName": "José Soriano" }
+            }
+          },
+          "venue": { "id": 1, "name": "Angel Stadium" },
+          "linescore": {
+            "currentInning": 9,
+            "currentInningOrdinal": "9th",
+            "inningState": "Bottom",
+            "inningHalf": "Bottom",
+            "isTopInning": false,
+            "outs": 3,
+            "teams": { "home": { "runs": 8 }, "away": { "runs": 9 } }
+          },
+          "decisions": {
+            "winner": { "id": 622608, "fullName": "Antonio Senzatela" },
+            "loser": { "id": 489446, "fullName": "Kirby Yates" }
+          },
+          "review": {
+            "away": { "used": 0, "remaining": 1 },
+            "home": { "used": 1, "remaining": 0 }
+          },
+          "flags": {}
+        },
+        {
+          "gamePk": 822974,
+          "gameDate": "2026-06-01T22:40:00Z",
+          "officialDate": "2026-06-01",
+          "status": {
+            "abstractGameState": "Live",
+            "codedGameState": "M",
+            "detailedState": "Manager challenge: Tag play",
+            "statusCode": "MA",
+            "reason": "Tag play",
+            "startTimeTBD": false,
+            "abstractGameCode": "L"
+          },
+          "teams": {
+            "away": {
+              "team": { "id": 116, "name": "Detroit Tigers", "abbreviation": "DET" },
+              "leagueRecord": { "wins": 23, "losses": 38, "ties": 0, "pct": ".377" },
+              "score": 10,
+              "probablePitcher": { "id": 680744, "fullName": "Ty Madden" }
+            },
+            "home": {
+              "team": { "id": 139, "name": "Tampa Bay Rays", "abbreviation": "TB" },
+              "leagueRecord": { "wins": 36, "losses": 21, "ties": 0, "pct": ".632" },
+              "score": 9,
+              "probablePitcher": { "id": 643377, "fullName": "Griffin Jax" }
+            }
+          },
+          "venue": { "id": 12, "name": "Tropicana Field" },
+          "linescore": {
+            "currentInning": 9,
+            "currentInningOrdinal": "9th",
+            "inningState": "Bottom",
+            "inningHalf": "Bottom",
+            "isTopInning": false,
+            "outs": 3,
+            "balls": 1,
+            "strikes": 3,
+            "teams": { "home": { "runs": 9 }, "away": { "runs": 10 } }
+          },
+          "review": {
+            "away": { "used": 0, "remaining": 1 },
+            "home": { "used": 0, "remaining": 1 }
+          },
+          "flags": {}
+        },
+        {
+          "gamePk": 999001,
+          "gameDate": "2026-06-02T00:10:00Z",
+          "officialDate": "2026-06-01",
+          "status": {
+            "abstractGameState": "Preview",
+            "codedGameState": "S",
+            "detailedState": "Scheduled",
+            "statusCode": "S",
+            "startTimeTBD": false,
+            "abstractGameCode": "P"
+          },
+          "teams": {
+            "away": {
+              "team": { "id": 136, "name": "Seattle Mariners", "abbreviation": "SEA" },
+              "leagueRecord": { "wins": 32, "losses": 29, "ties": 0, "pct": ".525" },
+              "probablePitcher": { "id": 676106, "fullName": "Emerson Hancock" }
+            },
+            "home": {
+              "team": { "id": 133, "name": "Athletics", "abbreviation": "ATH" },
+              "leagueRecord": { "wins": 25, "losses": 36, "ties": 0, "pct": ".410" },
+              "probablePitcher": { "id": 605135, "fullName": "Jeffrey Springs" }
+            }
+          },
+          "venue": { "id": 10, "name": "Sutter Health Park" },
+          "review": {
+            "away": { "used": 0, "remaining": 1 },
+            "home": { "used": 0, "remaining": 1 }
+          },
+          "flags": {}
+        }
+      ]
+    }
+  ]
+}

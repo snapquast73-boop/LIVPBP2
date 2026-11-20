@@ -1,3 +1,6 @@
+/* ============================================================================
+ * ui.js — shared UI helpers: escaping, dates, logos, count dots, base diamond.
+ * ==========================================================================*/
 (function (global) {
   'use strict';
 
@@ -11,55 +14,208 @@
       .replace(/'/g, '&#39;');
   }
 
+  function pad2(n) {
+    return String(n).padStart(2, '0');
+  }
+
   function todayStr() {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+
+  function toDate(dateStr) {
+    var parts = String(dateStr || '').split('-').map(Number);
+    if (parts.length !== 3 || !parts.every(Number.isFinite)) return new Date(NaN);
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+  }
+
+  function toDateStr(d) {
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
   }
 
   function shiftDate(dateStr, deltaDays) {
-    const parts = dateStr.split('-').map(Number);
-    const d = new Date(parts[0], parts[1] - 1, parts[2] + deltaDays);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    var d = toDate(dateStr);
+    if (Number.isNaN(d.getTime())) return todayStr();
+    d.setDate(d.getDate() + deltaDays);
+    return toDateStr(d);
   }
 
   function formatDateLabel(dateStr) {
-    const parts = dateStr.split('-').map(Number);
-    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+    var d = toDate(dateStr);
+    if (Number.isNaN(d.getTime())) return '';
     return d.toLocaleDateString(undefined, {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
     });
   }
 
   function formatTime(isoStr) {
     if (!isoStr) return '';
-    const d = new Date(isoStr);
+    var d = new Date(isoStr);
     if (Number.isNaN(d.getTime())) return '';
-    return d.toLocaleTimeString(undefined, {
-      hour: 'numeric',
-      minute: '2-digit',
+    return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function formatDateTime(isoStr) {
+    if (!isoStr) return '';
+    var d = new Date(isoStr);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleString(undefined, {
+      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
     });
   }
 
+  /* ------------------------------------------------------------------ images */
+
+  // Primary team-logo path documented by the project (team-cap-on-dark); the
+  // onerror handler falls back to the un-suffixed path, then hides the image,
+  // so a change in the static host can never break the layout.
   function teamLogoUrl(teamId) {
     if (!teamId) return '';
-    return `https://www.mlbstatic.com/team-logos/${teamId}.svg`;
+    return 'https://www.mlbstatic.com/team-logos/team-cap-on-dark/' + teamId + '.svg';
+  }
+
+  function teamLogoFallbackUrl(teamId) {
+    if (!teamId) return '';
+    return 'https://www.mlbstatic.com/team-logos/' + teamId + '.svg';
+  }
+
+  function headshotUrl(playerId) {
+    if (!playerId) return '';
+    return 'https://img.mlbstatic.com/mlb-photos/image/upload/' +
+      'd_people:generic:headshot:67:current.png/w_120,q_auto:best/' +
+      'v1/people/' + playerId + '/headshot/67/current';
+  }
+
+  /**
+   * Build an <img> for a team logo with the fallback chain described above.
+   * `cls` is the CSS class, `size` an optional pixel size.
+   */
+  function teamLogoImg(teamId, cls, size) {
+    if (!teamId) return '';
+    var style = size ? ' style="width:' + size + 'px;height:' + size + 'px;"' : '';
+    return '<img class="' + (cls || 'team-logo') + '" src="' + esc(teamLogoUrl(teamId)) + '"' +
+      ' data-fallback="' + esc(teamLogoFallbackUrl(teamId)) + '"' +
+      ' alt="" loading="lazy" onerror="UI.logoError(this)"' + style + '>';
+  }
+
+  function headshotImg(playerId, cls, size) {
+    if (!playerId) return '';
+    var style = size ? ' style="width:' + size + 'px;height:' + size + 'px;"' : '';
+    return '<img class="' + (cls || 'headshot') + '" src="' + esc(headshotUrl(playerId)) +
+      '" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'"' + style + '>';
+  }
+
+  function logoError(img) {
+    var fallback = img && img.getAttribute ? img.getAttribute('data-fallback') : '';
+    if (fallback && img.src !== fallback) {
+      img.src = fallback;
+      img.removeAttribute('data-fallback');
+      return;
+    }
+    img.style.visibility = 'hidden';
+  }
+
+  /* ------------------------------------------------------------- game display */
+
+  function initials(abbr, fallback) {
+    return abbr || fallback || '';
+  }
+
+  function halfInningLabel(half) {
+    if (!half) return '';
+    var lower = String(half).toLowerCase();
+    if (lower === 'top') return 'Top';
+    if (lower === 'bottom') return 'Bottom';
+    return String(half);
+  }
+
+  function inningLabel(inning, half) {
+    var h = halfInningLabel(half);
+    return h ? h + ' ' + inning : String(inning || '');
+  }
+
+  /** Baseball count with balls/strikes/outs read straight from the payload. */
+  function countLine(count, outs) {
+    var c = count || {};
+    var parts = [];
+    parts.push('<span class="count-chip"><strong>' + (c.balls === undefined ? '-' : c.balls) + '</strong>' +
+      '<span class="count-lbl">B</span></span>');
+    parts.push('<span class="count-chip"><strong>' + (c.strikes === undefined ? '-' : c.strikes) + '</strong>' +
+      '<span class="count-lbl">S</span></span>');
+    parts.push('<span class="count-chip"><strong>' + (outs === undefined ? '-' : outs) + '</strong>' +
+      '<span class="count-lbl">OUT</span></span>');
+    return parts.join('');
+  }
+
+  /**
+   * Base diamond. `bases` is { first, second, third } where each value is a
+   * runner object ({id, fullName}) or falsy. Renders an inline SVG so it scales
+   * with the card and needs no image asset.
+   */
+  function basesDiamond(bases) {
+    var b = bases || {};
+    var first = !!b.first;
+    var second = !!b.second;
+    var third = !!b.third;
+    function name(r) {
+      if (!r) return '';
+      var n = r.fullName || '';
+      return n ? '<title>' + esc(n) + '</title>' : '';
+    }
+    return '<svg class="bases-diamond" viewBox="0 0 60 60" role="img" aria-label="Runners on base">' +
+      '<rect x="6" y="6" width="48" height="48" rx="4" transform="rotate(45 30 30)" class="diamond-frame"></rect>' +
+      '<rect x="22" y="8" width="14" height="14" rx="2" class="base' + (second ? ' on' : '') + '">' + name(b.second) + '</rect>' +
+      '<rect x="38" y="24" width="14" height="14" rx="2" class="base' + (first ? ' on' : '') + '">' + name(b.first) + '</rect>' +
+      '<rect x="6" y="24" width="14" height="14" rx="2" class="base' + (third ? ' on' : '') + '">' + name(b.third) + '</rect>' +
+      '</svg>';
+  }
+
+  function runnerList(bases) {
+    var b = bases || {};
+    var parts = [];
+    if (b.first) parts.push('1B: ' + esc(b.first.fullName || ''));
+    if (b.second) parts.push('2B: ' + esc(b.second.fullName || ''));
+    if (b.third) parts.push('3B: ' + esc(b.third.fullName || ''));
+    return parts.join(' · ');
+  }
+
+  function pct(value, digits) {
+    if (!Number.isFinite(value)) return '—';
+    return (value * 100).toFixed(digits === undefined ? 1 : digits) + '%';
+  }
+
+  function decimal(value, digits) {
+    if (!Number.isFinite(value)) return '—';
+    return value.toFixed(digits === undefined ? 3 : digits).replace(/^0\./, '.');
+  }
+
+  function safeArr(value) {
+    return Array.isArray(value) ? value : [];
   }
 
   global.UI = {
-    esc,
-    todayStr,
-    shiftDate,
-    formatDateLabel,
-    formatTime,
-    teamLogoUrl,
+    esc: esc,
+    todayStr: todayStr,
+    toDate: toDate,
+    toDateStr: toDateStr,
+    shiftDate: shiftDate,
+    formatDateLabel: formatDateLabel,
+    formatTime: formatTime,
+    formatDateTime: formatDateTime,
+    teamLogoUrl: teamLogoUrl,
+    teamLogoFallbackUrl: teamLogoFallbackUrl,
+    teamLogoImg: teamLogoImg,
+    headshotUrl: headshotUrl,
+    headshotImg: headshotImg,
+    logoError: logoError,
+    initials: initials,
+    halfInningLabel: halfInningLabel,
+    inningLabel: inningLabel,
+    countLine: countLine,
+    basesDiamond: basesDiamond,
+    runnerList: runnerList,
+    pct: pct,
+    decimal: decimal,
+    safeArr: safeArr,
   };
 })(window);

@@ -1,0 +1,43 @@
+# OPTIONAL template — copy to .github/workflows/smoke.yml to run the
+# deterministic checks on every push and once a night.
+#
+# The checks never touch the network: they run against the synthetic fixtures in
+# tools/fixtures/, which mirror the StatsAPI shapes verified on 2026-11-20
+# (see docs/verification-report.md). The nightly job also re-checks that the live
+# API still answers the two endpoints the parsers depend on most.
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '17 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  deterministic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install test dependency (jsdom, tests only)
+        run: npm install --no-save jsdom
+      - run: node tools/review-test.mjs
+      - run: node tools/hit-model-test.mjs
+      - run: node tools/reviews-feed-test.mjs
+      - run: node tools/page-render-test.mjs
+      - run: node tools/link-check.mjs
+
+  live-api-shape:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch the two endpoints the parsers depend on
+        run: |
+          set -euo pipefail
+          curl -fsS 'https://statsapi.mlb.com/api/v1/gameStatus' -o /tmp/gameStatus.json
+          curl -fsS 'https://statsapi.mlb.com/api/v1/schedule?sportId=1&date='"$(date -u -d yesterday +%F)"'&fields=dates,games,gamePk,status,statusCode,detailedState,abstractGameState' -o /tmp/schedule.json
+          node -e "const s=require('/tmp/gameStatus.json');const codes=s.map(r=>r.statusCode);for(const c of ['IH','MA','MJ','NH','NJ'])if(!codes.includes(c))throw new Error('missing statusCode '+c);console.log('gameStatus registry OK:',codes.length,'codes');"
+          node -e "const s=require('/tmp/schedule.json');if(!Array.isArray(s.dates))throw new Error('schedule shape changed');console.log('schedule shape OK');"

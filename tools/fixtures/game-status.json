@@ -1,0 +1,64 @@
+[
+  {
+    "abstractGameState": "Live",
+    "codedGameState": "M",
+    "detailedState": "Manager challenge: Tag play",
+    "statusCode": "MA",
+    "reason": "Tag play",
+    "abstractGameCode": "L"
+  },
+  {
+    "abstractGameState": "Live",
+    "codedGameState": "M",
+    "detailedState": "Manager challenge: Home run",
+    "statusCode": "MH",
+    "reason": "Home run",
+    "abstractGameCode": "L"
+  },
+  {
+    "abstractGameState": "Live",
+    "codedGameState": "M",
+    "detailedState": "Player challenge: Pitch Result",
+    "statusCode": "MJ",
+    "reason": "Pitch Result",
+    "abstractGameCode": "L"
+  },
+  {
+    "abstractGameState": "Live",
+    "codedGameState": "N",
+    "detailedState": "Umpire review: Home run",
+    "statusCode": "NH",
+    "reason": "Home run",
+    "abstractGameCode": "L"
+  },
+  {
+    "abstractGameState": "Live",
+    "codedGameState": "N",
+    "detailedState": "Umpire Challenge: Pitch Result",
+    "statusCode": "NJ",
+    "reason": "Pitch Result",
+    "abstractGameCode": "L"
+  },
+  {
+    "abstractGameState": "Live",
+    "codedGameState": "I",
+    "detailedState": "Instant Replay",
+    "statusCode": "IH",
+    "reason": "Review",
+    "abstractGameCode": "L"
+  },
+  {
+    "abstractGameState": "Live",
+    "codedGameState": "I",
+    "detailedState": "In Progress",
+    "statusCode": "I",
+    "abstractGameCode": "L"
+  },
+  {
+    "abstractGameState": "Final",
+    "codedGameState": "F",
+    "detailedState": "Final",
+    "statusCode": "F",
+    "abstractGameCode": "F"
+  }
+]

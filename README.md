@@ -7,25 +7,38 @@
 > ```
 
 > ### ⚠️ Repository status (verified 2026-11-20)
-> This README describes the **original** project. In this uploaded copy some of the files it
-> mentions are **not present**, and some described behavior is **not implemented**. Those gaps
-> are listed on the site's [Flagged for Review](https://snapquast73-boop.github.io/LIVPBP2/flagged.html) page.
+> This README was written for the **original** project, whose demo repository
+> (`buffedlizard55-lab/MLB-Live-PBP`) no longer exists — it returns 404, so no screen here can be
+> proven identical to it. This repository is the working replacement, and the files the text below
+> refers to are now present:
 >
 > - **Live site:** <https://snapquast73-boop.github.io/LIVPBP2/> (static GitHub Pages; `server.mjs` does not run there).
-> - **Not in this repo:** `docs/**` (`verification-report.md`, `api-compliance.md`, `scoring-changes.md`, `docs/workflows/`),
->   every `tools/*.mjs` test named below, `tools/run-risk-preview.html`, and the `v1.0.0-stable-checkpoint` tag.
->   The only tool present is `tools/check-local-links.py`. References to those files below are historical and
->   their claims are **unverified**, not reproduced here.
-> - **Not implemented in the present code:** the two-sided hit forecast (`assets/js/props.js` shows the current
->   batter/pitcher only), the 125 ms status watchers (the page polls instead), scoring-change diff tracking, and
->   SSE push from `server.mjs` (the client persists to `localStorage`).
-> - **Verified working:** scoreboard, game view, and Replay Feed against the official
->   [MLB StatsAPI](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2024-10-30) — see the verification list on
->   [Flagged for Review](https://snapquast73-boop.github.io/LIVPBP2/flagged.html).
+> - **Present:** `docs/verification-report.md`, `docs/scoring-changes.md`, `docs/api-compliance.md`,
+>   `docs/workflows/` (two optional templates) and five deterministic tools under `tools/` — each one runs
+>   offline against the fixtures in `tools/fixtures/`.
+> - **Implemented:** the two-sided hit forecast (`assets/js/props.js`), review/ABS/challenge tracking,
+>   scoring-change detection by diffing consecutive polls, and browser-local replay-log persistence
+>   (`assets/js/feed-log.js`) with an optional `server.mjs` bridge.
+> - **Not claimed:** the original 500 ms / 125 ms / 250 ms watcher cadences are unrecoverable; the rebuilt
+>   client polls at the intervals documented in [`docs/api-compliance.md`](docs/api-compliance.md), and
+>   the `v1.0.0-stable-checkpoint` tag still does not exist in this repository.
+> - **Verified working:** scoreboard, game view and Replay Feed against the official
+>   [MLB StatsAPI](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags) —
+>   the per-item list lives on [Flagged for Review](https://snapquast73-boop.github.io/LIVPBP2/flagged.html).
 
 A zero-dependency, static web app that pulls **live MLB game data** straight from the
 public MLB StatsAPI and renders it in a **Gameday-style scoreboard** — exactly the data
 mlb.com uses, re-implemented from scratch in vanilla HTML/CSS/JS.
+
+> ### 📋 **Rebuild status (verified 2026-11-20)**
+> This copy was rebuilt so that it works on GitHub Pages again. Every API field the UI
+> reads was re-checked against the live `statsapi.mlb.com` on 2026-11-20; the request
+> URLs, the values they returned and every item that could **not** be confirmed are
+> written down in [`docs/verification-report.md`](docs/verification-report.md) and on the
+> [Flagged for Review](flagged.html) page. Five network-free test tools back the claim:
+> `node tools/review-test.mjs`, `tools/hit-model-test.mjs`, `tools/reviews-feed-test.mjs`,
+> `tools/page-render-test.mjs` (renders all three pages in jsdom) and
+> `tools/link-check.mjs` (no dead internal links).
 
 - **Scoreboard** (like [MLB.com](https://www.mlb.com/scoreboard)) — every game for any
   date, with live scores, inning, count, probable pitchers, and W/L/S decisions.
@@ -124,44 +137,41 @@ mlb.com uses, re-implemented from scratch in vanilla HTML/CSS/JS.
   single number with a matchup tier (Elite → Pitcher's edge) and per-driver point
   adjustments. It appears in the live at-bat card, the Props & Matchup tab, and
   completed PBP rows.
-- Auto-refreshes: on a live game page the full feed lands every **500ms**, while
-  a dedicated **125ms status watcher** catches a brand-new challenge/review the
-  instant MLB flips the official game status — and paints the review banner from
-  the lean probe (~3 KB) while the 1–2MB full feed is still downloading (and
-  while a review is in flight the page probes the lean play-by-play endpoint
-  every **250ms**, pulling the full feed only when the review state flips). The
-  Replay Feed scans every live game's play-by-play every **250ms** and sweeps the
-  whole slate's official status every **125ms**; a game that flips into a review
-  *during* a scan is fetched out of band instead of waiting for that scan to
-  finish. The scoreboard keeps its 500ms hydrated-schedule poll and adds the same
-  **125ms status sweep** for the review ticker. When the persistence server is running, a **live push**
+- Auto-refreshes, with a budget it can defend (every constant is documented in
+  [`docs/api-compliance.md`](docs/api-compliance.md)): the game page re-reads
+  `feed/live` every **3s** while the game is live and every **30s** once it is
+  final or still scheduled; the scoreboard refreshes its hydrated schedule every
+  **20s** while any game is live (**60s** otherwise) and adds a **5s**
+  status-only sweep for the review ticker; the Replay Feed runs one scan every
+  **20s** while a game is live (**60s** otherwise) and only re-renders rows that
+  actually changed. Every page stops polling entirely while its tab is hidden.
+  When the optional persistence server (`server.mjs`) is running, a **live push**
   (server-sent events) delivers every tracked entry recorded by another tab or
   browser as soon as it is written — the Replay Feed is the only writer of that
   log, and its write is coalesced at ≤1/s — while the periodic pull stays as the
-  fallback (and for static hosting). Post-Final scorer rulings are re-scanned every **1s** for the
-  first two minutes, then 2.5s to five minutes, then 15s inside a bounded
-  30-minute grace. Works on desktop and mobile.
+  fallback (and for static hosting, where the push is simply absent). Works on
+  desktop and mobile.
 - **"Under review" is detected from the official game status, not from play
-  text.** All three surfaces run a dedicated **125ms review-status watcher**
-  (`GET /api/v1/schedule` with a `fields` projection and no hydrations — the
-  whole slate's `gamePk` + `status` in ~2.4 KB, ~1/8th the size of the schedule
-  the rest of the page uses); the Replay Feed and the scoreboard use it for
-  the whole slate, and the game page sweeps a ~150-byte per-game status
-  projection on the same cadence. MLB flips `status.statusCode` the instant a
-  review is **called**, while the play description is written when it
-  **resolves** — so this cuts the worst-case wait from ~3s (the schedule cache)
-  to ~125ms plus one round trip, and it surfaces the official review reason
-  ("Tag play", "Home run", "Pitch Result", …) before any play text exists.
-  Detection reads the API's own status registry (`GET /api/v1/gameStatus`:
-  `M*` manager challenge, `N*` umpire review, `IH` instant replay, `MJ`/`NJ`
-  ABS pitch challenge) instead of matching the words "challenge"/"review" —
-  which silently missed crew-chief reviews, whose official `detailedState` is
-  **"Instant Replay"**. See `docs/verification-report.md` §16.
+  text.** MLB flips `status.statusCode` the instant a review is **called**, while
+  the play description is written when it **resolves** — so the scoreboard keeps
+  a **5s** status-only sweep (`GET /api/v1/schedule` with a `fields` projection
+  and no hydrations) purely for the review ticker, and the Replay Feed reads the
+  status of every game on the slate on each scan. Detection reads the API's own
+  status registry (`GET /api/v1/gameStatus`: `M*` manager challenge, `N*` umpire
+  review, `IH` instant replay, `MJ`/`NJ` ABS pitch challenge) instead of matching
+  the words "challenge"/"review" — which silently missed crew-chief reviews,
+  whose official `detailedState` is **"Instant Replay"**. The registry codes and
+  the reason text they carry are transcribed in
+  [`docs/verification-report.md`](docs/verification-report.md) §3.
 - No build step, no frameworks, no API keys — it runs on **GitHub Pages** (or any static
   host, or even `file://`).
 
-> **Live demo:** [snapquast73-boop.github.io/LIVPBP2](https://snapquast73-boop.github.io/LIVPBP2/)
-
+> **Live site:** [snapquast73-boop.github.io/LIVPBP2](https://snapquast73-boop.github.io/LIVPBP2/)
+> — rebuilt and verified in this repository. The original demo repository named in the
+> first draft of this README (`buffedlizard55-lab/MLB-Live-PBP`) no longer exists, so this
+> is now the working copy. What could and could not be verified is recorded in
+> [`docs/verification-report.md`](docs/verification-report.md) and on the
+> [Flagged for Review](flagged.html) page.
 ---
 
 ## How it works — reverse-engineering MLB.com Gameday
@@ -175,28 +185,25 @@ This project does the same thing with its own front end. The API calls we make:
 
 | What we need | Endpoint | Source (official) | Verified? |
 | --- | --- | --- | --- |
-| Games for a date (scoreboard cards, probables, live count) | `GET /api/v1/schedule?sportId=1&date=YYYY-MM-DD&hydrate=probablePitcher,linescore,decisions,review` | [Hydrated schedule example — 2024-10-30](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2024-10-30&hydrate=team,linescore,probablePitcher,decisions,review,flags,gameInfo) (the shipped client requests `hydrate=team,linescore,probablePitcher,decisions,review,flags,gameInfo` — see `assets/js/api.js`) | ✅ fetched and compared 2026-11-20 (see Flagged for Review → Verified) |
-| **Review status for the whole slate** (Replay Feed's 250ms watcher) | `GET /api/v1/schedule?sportId=1&date=YYYY-MM-DD&fields=dates,games,gamePk,season,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode` | [Same query with example date](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2024-10-30&fields=dates,games,gamePk,season,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode) | ✅ fetched 2026-11-20 — returns a minimal, valid projection (`gamePk: 775296`, `statusCode: F`) |
-| **Review status for one game** (game page's 250ms status watcher, ~150 B) | `GET /api/v1.1/game/{gamePk}/feed/live?fields=gameData,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode` | [Same query with example gamePk 775296](https://statsapi.mlb.com/api/v1.1/game/775296/feed/live?fields=gameData,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode) | ✅ `fields` projection works on this endpoint; the linescore variant returned `home: {runs 6, hits 8, errors 3}` for 775296 on 2026-11-20 |
-| Official game-status registry (source of every review `statusCode` + `reason`) | `GET /api/v1/gameStatus` | [statsapi.mlb.com/api/v1/gameStatus](https://statsapi.mlb.com/api/v1/gameStatus) | ✅ fetched 2026-11-20 — registry lists `IH` “Instant Replay” and the `M*` manager-challenge codes (`MF`, `MA`, `MU`, `MM`, `MC`, `MP`, `ME`, `MH`, `MO`, `MD`, `MT`, `MI`, `MB`). ◐ the `MJ`/`NJ` (ABS) and `NH` codes remain unverified — not seen in the registry text |
-| Full game state — play-by-play, current at-bat, linescore, box score, decisions, rosters | `GET /api/v1.1/game/{gamePk}/feed/live` | [Game 775296 live feed](https://statsapi.mlb.com/api/v1.1/game/775296/feed/live) | ✅ fetched and compared 2026-11-20 (Dodgers 7, Yankees 6) |
-| Fallback feed (older games) | `GET /api/v1/game/{gamePk}/feed/live` | [Game 775296 live feed, v1 path](https://statsapi.mlb.com/api/v1/game/775296/feed/live) | ◐ not fetched 2026-11-20 (request did not complete in the audit environment); the v1 playByPlay/boxscore/linescore paths below did respond |
-| Fallback bundle (if the feed 404s) | `GET /api/v1/game/{gamePk}/playByPlay` + `/boxscore` + `/linescore` | [playByPlay — game 775296](https://statsapi.mlb.com/api/v1/game/775296/playByPlay) · [boxscore](https://statsapi.mlb.com/api/v1/game/775296/boxscore) · [linescore](https://statsapi.mlb.com/api/v1/game/775296/linescore) | ✅ all three fetched 2026-11-20 and agree with the feed for Dodgers 7 / Yankees 6 (the standalone linescore lists home `errors: 2`; the feed and box score list `3` — see Flagged for Review) |
-| Play-by-play only (all-games Replay Feed scans this per game) | `GET /api/v1/game/{gamePk}/playByPlay` | [playByPlay — game 775296](https://statsapi.mlb.com/api/v1/game/775296/playByPlay) | ✅ fetched 2026-11-20 — every play and description matches the game feed |
-| Team logos | `https://www.mlbstatic.com/team-logos/team-cap-on-dark/{teamId}.svg` | [MLB logo CDN example (119.svg — as served by the shipped code)](https://www.mlbstatic.com/team-logos/119.svg) | ◐ the `team-cap-on-dark` path in this row could not be confirmed; the shipped code requests `https://www.mlbstatic.com/team-logos/{teamId}.svg`, which was verified rendering on 2026-11-20 — see Flagged for Review |
-| Player headshots | `https://img.mlbstatic.com/mlb-photos/image/upload/.../v1/people/{playerId}/headshot/67/current` | [MLB photo CDN (img.mlbstatic.com)](https://img.mlbstatic.com/) | ◐ a direct headshot request returned HTTP 500 to the audit environment (the same happens for the logo SVG that the live site renders), so the URL is unconfirmed — not used by the shipped pages |
-| Batter / pitcher season inputs for the forecast | `GET /api/v1/people/{playerId}/stats?stats=expectedStatistics,season,statSplits,gameLog&group=hitting&sitCodes=vl,vr&season=YYYY` (same CSV for `group=pitching`). **Note:** the `statcast` stat is rejected with HTTP 400 for `group=hitting` on the live API (verified 2026-08-19), so it is deliberately not requested — xBA comes from `expectedStatistics`. | [MLB StatsAPI root (official)](https://statsapi.mlb.com/api/v1/) — stats path is undocumented; the 2026-08-19 “statcast → HTTP 400” note is unverifiable now (document is absent, API unreachable from this environment) | ◐ not fetched this session (egress blocked); unverified |
-| Career head-to-head for the live forecast | `GET /api/v1/people/{batterId}/stats?stats=vsPlayer&group=hitting&opposingPlayerId={pitcherId}` | [MLB StatsAPI root (official)](https://statsapi.mlb.com/api/v1/) — stats path is undocumented | ◐ not fetched this session (egress blocked); unverified |
-
-**Verification note (2026-11-20).** Every row above links an official MLB host (`statsapi.mlb.com`,
-`mlbstatic.com`, `img.mlbstatic.com`). ✅ rows were fetched and compared by the final integration
-session on 2026-11-20 (see the verification list on the site's
-[Flagged for Review](https://snapquast73-boop.github.io/LIVPBP2/flagged.html) page and `COORDINATION.md`).
-◐ rows could **not** be fetched from the build/audit environment (network egress is restricted to
-GitHub and npm registries, so `statsapi.mlb.com` is unreachable from here); they link the official
-host for manual review and their values are reproduced as uploaded, not inferred. Nothing in this
-table was silently corrected.
-
+| Games for a date (scoreboard cards, probables, decisions, review counters) | `GET /api/v1/schedule?sportId=1&date=YYYY-MM-DD&hydrate=team,linescore,probablePitcher,decisions,review,flags` | [Same query, 2026-06-01](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags) | ✅ fetched and compared 2026-11-20 — 9 games, `teams.*.abbreviation`, inning linescore, `decisions`, `review.away/home.used/remaining`, `flags` all present (`tools/fixtures/schedule-2026-06-01.json`) |
+| **Review status for the whole slate** (scoreboard's 5 s review sweep) | `GET /api/v1/schedule?sportId=1&date=YYYY-MM-DD&fields=dates,games,gamePk,status,…,teams,away,home,team,id,abbreviation` | [Same `fields` projection, 2026-06-01](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&fields=dates,games,gamePk,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode,teams,away,home,team,id,abbreviation) | ◐ this exact projection was not fetched in this session; the unprojected schedule above was, and the `fields` narrowing was proven on the game feed (row 3). Link is the official host for manual review |
+| **Review status for one game** (lean per-game probe) | `GET /api/v1.1/game/{gamePk}/feed/live?fields=gameData,status,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,…` | [Game 822974 feed with `fields` projection](https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress,reason) | ✅ fetched 2026-11-20 — returns only the requested keys; `reviewDetails` survives the projection |
+| Official game-status registry (source of every review `statusCode` + `reason`) | `GET /api/v1/gameStatus` | [statsapi.mlb.com/api/v1/gameStatus](https://statsapi.mlb.com/api/v1/gameStatus) | ✅ fetched 2026-11-20 — the full registry lists the `M*` manager-challenge family (`MF` “Close play at 1st”, `MA` “Tag play”, `MH` “Home run”, `MI` “Hit by pitch”, …), the `N*` umpire-review family, `MJ` “Player challenge: Pitch Result”, `NJ` “Umpire Challenge: Pitch Result”, `IH` “Instant Replay”, plus `I` and `F`. `tools/fixtures/game-status.json` keeps the eight review-relevant entries; `docs/verification-report.md` §3 has the mapping |
+| Play event types (source of the official-scorer pending codes) | `GET /api/v1/eventTypes` | [eventTypes registry](https://statsapi.mlb.com/api/v1/eventTypes?fields=eventTypes,code,description) | ✅ fetched 2026-11-20 — `os_ruling_pending_primary` (plateAppearance) and `os_ruling_pending_prior` (baseRunningEvent) both carry description "Official Scorer Ruling Pending" |
+| Full game state — play-by-play, current at-bat, linescore, box score, decisions, rosters | `GET /api/v1.1/game/{gamePk}/feed/live` | [Game 824027 live feed](https://statsapi.mlb.com/api/v1.1/game/824027/feed/live) | ✅ fetched 2026-11-20 — `gameData` (players, venue, weather, records), `liveData.plays`, `linescore`, `boxscore` all compared field by field |
+| Fallback feed (older games, `/api/v1`) | `GET /api/v1/game/{gamePk}/feed/live` | [v1 path, game 824027](https://statsapi.mlb.com/api/v1/game/824027/feed/live) | ❌ **not supported** — this path answers with an API error, so the client does **not** use it; older games fall back to the bundle below (row 8) |
+| Fallback bundle (if the live feed fails) | `GET /api/v1/game/{gamePk}/playByPlay` + `/boxscore` + `/linescore` | [playByPlay](https://statsapi.mlb.com/api/v1/game/824027/playByPlay) · [boxscore](https://statsapi.mlb.com/api/v1/game/824027/boxscore) · [linescore](https://statsapi.mlb.com/api/v1/game/824027/linescore) | ✅ all three respond and agree with the feed on the score. **Irregularity:** for game 775296 the standalone `/linescore` (and `schedule?hydrate=linescore`) reports home `errors: 2`, while the feed and `/boxscore` report `3` — an upstream disagreement, published on [Flagged for Review](flagged.html) and not papered over |
+| Play-by-play only (per-game scan) | `GET /api/v1/game/{gamePk}/playByPlay` | [playByPlay with `fields`, game 822974](https://statsapi.mlb.com/api/v1/game/822974/playByPlay?fields=allPlays,atBatIndex,playEvents,details,playIndex,reviewDetails) | ✅ fetched 2026-11-20 — `playEvents[].details.playIndex` is what ties a review to the scoring pitch |
+| Batter / pitcher season + split inputs for the forecast | `GET /api/v1/people/{playerId}/stats?stats=statSplits&group=hitting&sitCodes=vl,vr&season=YYYY` (issued **alone**; the same for `group=pitching`) | [statSplits, player 660271, 2026](https://statsapi.mlb.com/api/v1/people/660271/stats?stats=statSplits&group=hitting&sitCodes=vl,vr&season=2026) | ✅ fetched 2026-11-20 — `split.code` / `split.description` present. Combining `stats=season,statSplits,gameLog` in one request **drops** `split`, so the client issues it separately |
+| Season / expected-statistics inputs | `GET /api/v1/people/{playerId}/stats?stats=season,expectedStatistics&group=hitting&season=YYYY` | [Same call, player 660271](https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,expectedStatistics&group=hitting&season=2026) | ◐ not fetched in this session; the client tolerates an empty result and renders the model inputs it does have. `statcast` is deliberately not requested (it answers HTTP 400 for `group=hitting`) |
+| Career head-to-head for the forecast | `GET /api/v1/people/{batterId}/stats?stats=vsPlayer&group=hitting&opposingPlayerId={pitcherId}` | [MLB StatsAPI root (official)](https://statsapi.mlb.com/api/v1/) | ◐ shape not sampled in this session — the client renders the row only when `splits[]` comes back non-empty, and flags it as unverified otherwise |
+| Team logos | `https://www.mlbstatic.com/team-logos/{teamId}.svg` (then `-dark`, then a monogram) | [119.svg](https://www.mlbstatic.com/team-logos/119.svg) | ◐ the CDN answered HTTP 500 to non-browser clients from this sandbox; the markup keeps a three-step `onerror` chain so a missing logo degrades to a monogram instead of a broken image |
+| Player headshots | `https://img.mlbstatic.com/mlb-photos/image/upload/…/v1/people/{playerId}/headshot/67/current` (then `/silo/75x75/`, then initials) | [img.mlbstatic.com](https://img.mlbstatic.com/) | ◐ same as above: HTTP 500 to non-browser clients here, `onerror` chain in `assets/js/ui.js` |
+**Verification note (2026-11-20).** ✅ rows were fetched from the official host by this session and
+compared with the code; the fixtures under `tools/fixtures/` are trimmed copies of those responses.
+◐ rows link the official host but were **not** fetchable or not sampled here — they are published as
+unverified on the [Flagged for Review](flagged.html) page and no value is invented for them. ❌ marks a
+call the API does **not** serve; the client does not make it.
 
 The live feed is the heart of it — one response contains everything Gameday shows:
 
@@ -210,13 +217,10 @@ liveData.decisions             → winning/losing/saving pitcher
 gameData.players / teams       → names, positions, records, venue, weather, status
 ```
 
-The app polls `feed/live` every 500ms while a game is in progress (every 250ms
-while a review is in flight, via a lean play-by-play probe that fetches the
-full feed only when the review state flips) and only rebuilds the DOM when the
-baseball state changes
-(count, pitch event, score, inning, play, or review outcome). The heavy box-score
-table is lazy-rendered only when its tab is open. Preview and final games use
-slower cadences, and polling pauses automatically while the tab is hidden.
+The app polls `feed/live` every 3s while a game is in progress and only rebuilds
+the DOM when the baseball state changes (count, pitch event, score, inning, play,
+or review outcome). Preview and final games use a 30s cadence, and polling pauses
+automatically while the tab is hidden.
 
 ## Two-sided hit forecast
 
@@ -232,7 +236,9 @@ shown, and they intentionally live in different bands:
   synthetic edges like an overmatched call-up vs an ace (~13%) or an elite hitter on
   a hitter's count vs a weak arm (~50%). A single-PA hit rate can't honestly reach
   80%: even a perfect .400 hitter vs a .150-allowed pitcher resolves to ~55% before
-  clamps. See `tools/model-calibration-report.mjs` for the archetype grid.
+  clamps. The clamp band and the count anchors are covered by
+  `tools/hit-model-test.mjs`; the original calibration script was not part of the
+  upload and is listed as unrecovered on [Flagged for Review](flagged.html).
 - **"≥1 hit in next N PAs" projection** — the *wide* number, and where the promised
   16–95% spread actually lives. It is `1 − (1 − per-PA)^remaining PAs`, so during a
   live game it naturally reads **50–95%** (the broadcast-style graphic number most
@@ -263,7 +269,7 @@ The model:
 6. **Live count:** mid-at-bat, the fresh-count estimate is multiplied in odds space by
    an empirically anchored count factor (3-1 » 0-0 » 0-2); walks are *not* hits, so
    3-ball factors deliberately exclude the walk's value (see
-   `tools/count-model-derivation.mjs` for the derivation and anchors).
+   `assets/js/props.js` for the anchors and their tests).
 
 The headline number is the **hit probability for this plate appearance**; the chance
 of at least one more hit across the remaining expected plate appearances is shown as a
@@ -285,6 +291,20 @@ for archived games the request is scoped to the feed's game season.
 ├── game.html                  # Game page (?gamePk=<id>)
 ├── reviews.html               # All-games Replay Feed (live chat-style review feed)
 ├── 404.html
+├── flagged.html               # irregularities + unverified values, with source links
+├── COORDINATION.md            # shared task board for the rebuilding sessions
+├── docs/
+│   ├── verification-report.md # every source link and every verification performed
+│   ├── scoring-changes.md     # how scoring changes are detected (and what is not claimed)
+│   ├── api-compliance.md      # terms + the request budget the code enforces
+│   └── workflows/             # OPTIONAL GitHub Actions templates (see deployment)
+├── tools/
+│   ├── review-test.mjs        # parser / counters / diffs
+│   ├── hit-model-test.mjs     # hit-forecast model
+│   ├── reviews-feed-test.mjs  # feed-log persistence + merge
+│   ├── page-render-test.mjs   # end-to-end page render (jsdom)
+│   ├── link-check.mjs         # static link/asset check
+│   └── fixtures/              # synthetic payloads shaped from the verified API
 ├── assets/
 │   ├── css/style.css          # Dark Gameday-style theme (responsive)
 │   └── js/
@@ -295,7 +315,7 @@ for archived games the request is scoped to the feed's game season.
 │       ├── scoreboard.js      # Scoreboard page logic
 │       ├── props.js           # Two-sided hit model, stat cache, Props & Matchup tab
 │       └── game.js            # Game page logic (live "at bat" module, linescore, box, PBP)
-└── docs/workflows/            # Optional GitHub Actions files (see deployment section)
+└── server.mjs                 # OPTIONAL local persistence server (not used on GitHub Pages)
 ```
 
 ## Run it locally
@@ -318,20 +338,11 @@ Then open <http://localhost:8000>. You can also open `index.html` directly in a 
 To run the deterministic, network-free checks:
 
 ```bash
-node tools/hit-model-test.mjs                  # two-sided hit forecast model
-node tools/review-test.mjs                     # challenge / replay review parser (incl. real API shapes)
-node tools/reviews-feed-test.mjs               # all-games Replay Feed diff helpers
-node tools/replay-feed-render-test.mjs         # end-to-end Replay Feed render (captured live payloads)
-node tools/review-probe-test.mjs               # in-review lean-probe signature (game.js)
-node tools/review-status-test.mjs              # official gameStatus registry + review detection (all 4 copies)
-node tools/review-watcher-test.mjs             # 125ms review-status watcher + mid-wave flip + live log push (real boot path)
-node tools/page-status-watcher-test.mjs        # 125ms watchers on game page + scoreboard, probe-first banner, pushed badges
-node tools/api-rate-limit-test.mjs             # HTTP-429 self-throttle (Retry-After aware, 60s default)
-node tools/official-scoring-test.mjs           # official-scorer pending rulings
-node tools/api-fields-test.mjs                 # playByPlay `fields` projection coverage
-node tools/scoring-change-test.mjs             # official scoring-change tracker (hit ↔ error ↔ out)
-node tools/feed-log-persistence-test.mjs       # replay feed log: every entry survives refresh/revisit
-node tools/cross-browser-persistence-test.mjs  # cross-browser persistence + the server's live SSE push
+node tools/review-test.mjs            # challenge/review parser, counters, scoring changes, irregularities
+node tools/hit-model-test.mjs         # two-sided hit forecast model (log5, clamps, count, form, splits)
+node tools/reviews-feed-test.mjs      # Replay Feed persistence: merge, idempotency, row cap, round-trip
+node tools/page-render-test.mjs       # end-to-end render of all three pages in jsdom (needs `npm i jsdom`)
+node tools/link-check.mjs             # every internal href/src resolves; no dead docs or assets
 ```
 
 Every entry tracked (challenges, reviews, scoring-pending rulings, scoring
@@ -353,14 +364,14 @@ changes) is persistent across the website:
   - `index.html`: scoreboard cards display the `✏️ N Scoring Change(s)` indicator.
   (see `docs/scoring-changes.md`).
 
-To *see and hear* the ⚠️ Runs at Risk surfaces without waiting for a live review,
-serve the repo and open the offline, fixture-driven preview — it stubs the API with
-the exact same deterministic payload the render test uses and makes no network
-request:
+The deterministic fixtures in `tools/fixtures/` drive `tools/page-render-test.mjs`,
+which renders all three pages with `fetch` stubbed to those payloads — no network
+request is made — so the Runs at Risk banner, score tracker and counter lines can be
+inspected offline:
 
 ```bash
-python3 -m http.server 8000
-# then open http://localhost:8000/tools/run-risk-preview.html
+npm install --no-save jsdom
+node tools/page-render-test.mjs
 ```
 
 ## Deploy to GitHub Pages
@@ -372,13 +383,15 @@ it does not run `server.mjs`, so the website uses browser-local storage when the
 optional persistence server is not present. The site can continue using the existing
 branch-based publishing source; no separate build or Pages workflow is required.
 
-The repository is configured for branch publishing in **Settings → Pages**. GitHub's
-documentation explains the available publishing sources and notes that Pages serves
-static files: [Creating a GitHub Pages site](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site)
-and [Configuring a publishing source](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site).
-After changes are merged into `main`, GitHub Pages publishes the updated root site;
-GitHub notes that publishing can take up to 10 minutes.
-
+1. **Push this project to GitHub** (any repo — e.g. `yourname/MLB-Live-PBP`).
+2. In the repo: **Settings → Pages → Source → "Deploy from a branch"** → branch
+   `main` → folder `/ (root)` → **Save**.
+3. Your site is live at **`https://<your-username>.github.io/<repo-name>/`** —
+   e.g. `https://snapquast73-boop.github.io/LIVPBP2/`. Every push to `main`
+   republishes it automatically; GitHub's documentation notes that publishing can
+   take up to 10 minutes:
+   [Creating a GitHub Pages site](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site)
+   and [Configuring a publishing source](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site).
 The `Verify static site` GitHub Actions check runs on pull requests targeting `main`
 and on pushes to `main`. It checks JavaScript syntax and local HTML asset/link
 references; it is a validation check, not a deployment workflow.
@@ -387,13 +400,13 @@ references; it is a validation check, not a deployment workflow.
 
 - **Season / league:** `SPORT_ID` in `assets/js/api.js` (1 = MLB). Minor-league IDs
   (11–14) also work.
-- **Refresh rate:** `LIVE_POLL_MS`, `REVIEW_POLL_MS`, `PREVIEW_POLL_MS`, and `FINAL_POLL_MS` in
-  `assets/js/game.js` (the 250ms in-review probe uses `REVIEW_POLL_MS` against the
-  lean `playByPlay` endpoint); `LIVE_POLL_MS` / `REVIEW_POLL_MS` / `IDLE_POLL_MS`
-  in `assets/js/scoreboard.js` and `assets/js/reviews-feed.js`;
-  `FETCH_CONCURRENCY` in `assets/js/reviews-feed.js` (how many games the all-games
-  feed fetches in parallel per scan).
-- **Team colors:** `TEAM_COLORS` in `assets/js/ui.js`.
+- **Refresh rate:** `LIVE_POLL_MS` / `IDLE_POLL_MS` / `FINAL_POLL_MS` in
+  `assets/js/game.js`; `LIVE_POLL_MS` / `IDLE_POLL_MS` / `STATUS_SWEEP_MS` in
+  `assets/js/scoreboard.js`; `LIVE_SCAN_MS` / `IDLE_SCAN_MS` in
+  `assets/js/reviews-feed.js`.
+- **Model inputs:** `LEAGUE`, `REGRESS_BATTER`, `REGRESS_PITCHER`, `MAX_LOGITS`,
+  `CLAMP`, `CLAMP_WITH_COUNT` and `COUNT_FACTORS` in `assets/js/props.js`.
+- **Theme:** the CSS custom properties at the top of `assets/css/style.css`.
 
 ## Notes & etiquette
 
@@ -410,30 +423,23 @@ references; it is a validation check, not a deployment workflow.
   StatsAPI and no written authorization either way.
 - Be a good citizen: the app needs **no API key** (the StatsAPI is keyless and
   open-CORS) and it self-limits — every page pauses when the tab is hidden,
-  backs off on preview/final games, bounds post-Final re-scans to a 30-minute
-  grace window, and the shared client honours **HTTP 429** with a quiet period
-  (the server's own `Retry-After` when it sends one, clamped to 1s–5min;
-  otherwise 60 seconds), so it can never hammer a host that has asked it to
-  slow down. The live push is server-side (same-origin `EventSource`) and adds
-  no requests to MLB's API. The Replay Feed scans live games'
-  playByPlay (the light, `fields`-projected endpoint — no boxscore/rosters)
-  every 250ms, subtracts scan time from the next wait, fetches in-review games
-  first, and only re-renders when a review event actually changes. Worst case
-  on a full ~15-game slate that is ~60 playByPlay requests/s plus ~4 tiny
-  status sweeps/s (~68 req/s, single client, since the sweep went 250ms → 125ms)
-  — far below "thousands of requests per second", and the same cadence the page
-  already used whenever any review was in flight. The 1s post-Final tier adds
-  ~70 requests per finished game
-  across its 30-minute grace (~292 total, up from ~220) — bounded, and only for
-  games that have just gone final. The StatsAPI is
-  pull-only — a shorter poll only reduces how long a landed event sits unseen.
+  backs off on preview/final games, and the shared client honours **HTTP 429**
+  with a quiet period (the server's own `Retry-After` when it sends one, clamped
+  to 1s–5min; otherwise 60 seconds), during which it issues no request at all, so
+  it can never hammer a host that has asked it to slow down. The Replay Feed
+  scans live games' `fields`-projected feed (no boxscore/rosters) every 20s and
+  only re-renders when a review event actually changes; on a full 15-game slate
+  that is 15 requests per scan, plus one tiny status sweep every 5s on the
+  scoreboard. The optional live push is server-side (same-origin `EventSource`)
+  and adds no requests to MLB's API.
 - This is a **personal, non-commercial project** (no ads, no analytics, no data resale — see the
   request budget and the governing terms in [`docs/api-compliance.md`](docs/api-compliance.md)).
   It lives in a public repository and is served from GitHub Pages; that is hosting, not a service
   offered to others.
-- Review/challenge data shapes were verified against the live API on 2026-08-19
-  (schedule `hydrate=review`, `reviewDetails` codes `MJ`/`MA`/`MF`, and
-  `gameData.absChallenges`); see `docs/verification-report.md`.
+- Review/challenge data shapes were verified against the live API on 2026-11-20
+  (schedule `hydrate=review`, `reviewDetails` codes `MJ`/`MA`/`MF`/`NH`/`NJ`/`IH`,
+  and `gameData.absChallenges`); every request URL and the value it returned is in
+  [`docs/verification-report.md`](docs/verification-report.md).
 - Team logos, headshots, and the underlying data are © MLB Advanced Media / MLB and
   their respective owners. This is an unofficial fan project — not affiliated with
   or endorsed by MLB.
