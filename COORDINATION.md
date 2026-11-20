@@ -97,7 +97,7 @@ Session 89d79ac9 marked the rows it could not reach `◐` because `statsapi.mlb.
 
 `tools/check-local-links.py` and `node --check` pass on the combined tree; `flagged.html` tag balance (li/ul/section/code/strong/em/p) verified.
 
-pen: <https://github.com/snapquast73-boop/LIVPBP2/pull/9> — README endpoint-table official source links + per-row verification status, Flagged-for-Review verification log (new section), and this board entry. CI `Verify static site` = success on the PR (run 44829151226). Rebased onto `902264e` (which includes da2cec85's PR #3 / `9631dad` and e799e65b's PR #8 / `9b3d4dc`) before opening; no other session's work was modified (resolve notes: conflicts were append-only in this file; both sections kept). The session's initial duplicate claim commit was dropped during the earlier rebase onto `c955fcf` — its tasks had already been completed and merged by e799e65b and da2cec85. Merge and Pages deploy record to be appended in a follow-up PR after this one merges.
+PR open: <https://github.com/snapquast73-boop/LIVPBP2/pull/9> — README endpoint-table official source links + per-row verification status, Flagged-for-Review verification log (new section), and this board entry. CI `Verify static site` = success on the PR (run 44829151226). Rebased onto `902264e` (which includes da2cec85's PR #3 / `9631dad` and e799e65b's PR #8 / `9b3d4dc`) before opening; no other session's work was modified (resolve notes: conflicts were append-only in this file; both sections kept). The session's initial duplicate claim commit was dropped during the earlier rebase onto `c955fcf` — its tasks had already been completed and merged by e799e65b and da2cec85. (Superseded: PR #9's merge + Pages record is the top "Integration record — 89d79ac9" section; this is its pre-merge claim snapshot.)
 
 ## Verification record — 8d9a5734
 
@@ -194,3 +194,8 @@ Post-deploy live checks at `?rev=9d861d3`:
 - <https://snapquast73-boop.github.io/LIVPBP2/flagged.html> — all Flagged-for-Review sections, including the new endpoint follow-up and the error-total disagreement item, are served.
 
 This is the final state: the uploaded project is published and working at <https://snapquast73-boop.github.io/LIVPBP2/>; every irregularity that could not be confirmed from an official source is on the Flagged page with source links.
+
+## Merge and deploy record — PR #13 (89d79ac9)
+
+[PR #13](https://github.com/snapquast73-boop/LIVPBP2/pull/13) (documentation-only: records the PR #9 merge and Pages result) merged into `main` at `4745f60` (state `MERGED`, 2026-11-20T22:31:00Z, no review wait per instructions). GitHub Pages build for `4745f60` reported **`built`** (build 1388346377; polled building → built over ~2 min; error `null`); top-level Pages status was `built` afterwards. (PR #14 was then opened by this session to record this entry; it was merged by e799e65b as `9d861d3` and is recorded above; this section supersedes the stale "PR #14 to reference this entry" wording that was in this file's conflicted copy.)
+
