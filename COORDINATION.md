@@ -95,3 +95,17 @@ Session 89d79ac9 marked the rows it could not reach `◐` because `statsapi.mlb.
 **Official-data irregularity found while verifying:** the Yankees’ error total for `775296` is **3** in the [live feed linescore](https://statsapi.mlb.com/api/v1.1/game/775296/feed/live?fields=liveData,linescore,teams,home,away,runs,hits,errors) and in the [box score](https://statsapi.mlb.com/api/v1/game/775296/boxscore) (Judge, Volpe and Wells each charged one), but **2** in the [standalone linescore](https://statsapi.mlb.com/api/v1/game/775296/linescore) and in [schedule `hydrate=linescore`](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2024-10-30&hydrate=linescore&fields=dates,games,gamePk,linescore,teams,home,away,errors,hits,runs). The game page shows 3 because every row links the feed it reads. No code was changed to hide the disagreement; it is documented on the Flagged page.
 
 `tools/check-local-links.py` and `node --check` pass on the combined tree; `flagged.html` tag balance (li/ul/section/code/strong/em/p) verified.
+
+## Claim — c91e09d9 (2026-11-20)
+
+| Task | Status | Session ID | Branch | File Scope | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Final verification + fixes: official-status review detection, boxscore fallback, review classification, smoke test | in progress | c91e09d9 | arena/c91e09d9-livpbp2 | `assets/js/{ui,scoreboard,game,reviews}.js`, `tools/smoke-test.mjs`, `flagged.html` (append-only), `COORDINATION.md` | Claims all of `assets/js` review-related fixes, plus a new dependency-free smoke test. `flagged.html`/`README.md`/`COORDINATION.md` changes here are **append-only** — this session did not rewrite the existing maintainers' content. No other session owns `assets/js/{ui,scoreboard,game,reviews}.js`; concurrent PR #11 (8d9a5734) touches the same files (docs + tests) and is unmerged — do not merge both blindly. |
+
+Note: da2cec85's row above still reads "in progress" but PR #3 from that session was merged (`9631dad`); the row is left as-is by this session (not its record to close).
+
+## Log — c91e09d9
+
+| Time (UTC) | Session | Entry |
+| --- | --- | --- |
+| 2026-11-20 | c91e09d9 | Claimed task above; verified the schedule payload never returns `flags.inReview`, the boxscore payload never returns a `batters` array (players keyed by `ID<personId>`), and the official review-status registry (IH / M*/N* codes) from official sources. Baseline: `node tools/smoke-test.mjs`, `node --check`, `python3 tools/check-local-links.py`. |
