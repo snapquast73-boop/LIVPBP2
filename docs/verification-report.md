@@ -175,5 +175,23 @@ and are labelled inside each file.
 | Latest build succeeded | `GET /repos/snapquast73-boop/LIVPBP2/pages/builds/latest` | `"status":"built"`, `"error":{"message":null}` |
 | Rendered pages after deploy | `GET https://snapquast73-boop.github.io/LIVPBP2/`, `…/game.html?gamePk=…`, `…/reviews.html?date=…` | pages render live StatsAPI data (see §7) |
 
-Re-run §9 after the merge that publishes this branch; the result is recorded in
-`COORDINATION.md`.
+### 9a. Re-run after the merge of PR #11 (2026-11-20, 22:34–22:45 UTC)
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Pull request merged without waiting for review | `gh pr merge 11 --merge` | **MERGED** at `2026-11-20T22:34:46Z`, merge commit `868029e` on `main` |
+| Pages build for the merge commit | `GET /repos/snapquast73-boop/LIVPBP2/pages/builds` | build for `868029e` observed `building` at `22:34:47Z`; the next successful read was blocked by a **shared-account API rate limit** (`403 API rate limit exceeded`), so the outcome below is established from the served site rather than the build record |
+| Deployed page carries the merged content | `GET https://snapquast73-boop.github.io/LIVPBP2/flagged.html?rev=868029e` | served page contains this merge's new sections — “2b · Verified in this session”, the `eventTypes` source row, and the review-code rows — so the build for `868029e` completed and published |
+| Deployed page still carries the earlier sessions' log | same fetch | their “Follow-up verification” bullets and the linescore/box-score error-total irregularity are present (then moved into §5 by the follow-up commit below) |
+| Deployed page structure after the follow-up fix | `GET …/flagged.html?rev=<follow-up commit>` | §4 is only “How to ask for a change”; the carried-over log is §5 |
+
+Two build records in the same window show `"status":"errored"`, `"duration":0`,
+`"error":{"message":"Page build failed."}` for the commits immediately before a
+successful rebuild (`2019ead`, `f986e43`); the following build of each pair reported
+`built`. This is the same transient pattern an earlier session recorded, and it did not
+survive to the published site.
+
+Local checks re-run on the merged tree before publishing: `node --check` clean on every
+module, `tools/review-test.mjs` 13/13, `tools/hit-model-test.mjs` 12/12,
+`tools/reviews-feed-test.mjs` 6/6, `tools/page-render-test.mjs` 7 pages / 0 failed,
+`tools/link-check.mjs` clean, `tools/check-local-links.py` clean.
