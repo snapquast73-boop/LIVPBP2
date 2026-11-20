@@ -488,7 +488,11 @@
 
   function matchesTab(e) {
     if (currentTab === 'all') {
-      return e.category !== 'abs' && e.category !== 'irregularity';
+      // "All" really means all review events, ABS included: the header counts ABS
+      // separately, and hiding those rows under this tab made the feed look
+      // truncated (49 ABS challenges, two rows). Data-quality notes stay on their
+      // own "Flagged" tab because they are not review events.
+      return e.category !== 'irregularity';
     }
     if (currentTab === 'active') return e.inProgress === true;
     if (currentTab === 'risk') return e.runsAtRisk > 0;
