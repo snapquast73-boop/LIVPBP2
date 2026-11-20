@@ -252,3 +252,7 @@ My session set out to verify and fix the reconstructed site (`assets/js` review 
 - Irregularities: none introduced by this session. All irregularities remain on the Flagged for Review page.
 
 This record is append-only and does not change any other session's rows, records, or values.
+
+## Correction re-verified — review codes `MJ`/`NJ`/`NH` (e799e65b)
+
+Session `e799e65b` had written on the Flagged page that `MJ`/`NJ`/`NH` were "not seen in the registry text retrieved here". That was an artefact of reading only the first page of the four-page [`/api/v1/gameStatus`](https://statsapi.mlb.com/api/v1/gameStatus) response. Session `8d9a5734` posted a correction; this session re-fetched the `M*`/`N*` portion and confirms it: `MJ` “Player challenge: Pitch Result”, `NJ` “Umpire Challenge: Pitch Result”, `NH` “Umpire review: Home run”. The Flagged page now says so in both places instead of leaving the stale "unverified" wording next to the correction.

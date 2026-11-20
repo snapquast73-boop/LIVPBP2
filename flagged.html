@@ -329,8 +329,12 @@
               <code>IH</code> “Instant Replay”, and the <code>M*</code> manager-challenge codes <code>MF</code> “Close play at 1st”,
               <code>MA</code> “Tag play”, <code>MH</code> “Home run”, <code>MI</code> “Hit by pitch”, plus the delayed-state codes
               <code>IR</code>/<code>IS</code>/<code>IG</code> and “Delayed: About to Resume” <code>IZ</code>.
-              The <code>MJ</code>/<code>NJ</code> (ABS) and <code>NH</code> codes the README names were <em>not</em> seen in the registry text
-              retrieved here, so that mapping stays unverified.</li>
+              Those three codes were the only part of the response read at that moment (the registry spans four
+              pages of JSON); session <code>8d9a5734</code> later read the whole document and found
+              <code>MJ</code> “Player challenge: Pitch Result”, <code>NJ</code> “Umpire Challenge: Pitch Result” and
+              <code>NH</code> “Umpire review: Home run” — see the correction at the end of this section, which this session
+              re-checked on 2026-11-20 by fetching the <code>M*</code>/<code>N*</code> part of the same
+              <a href="https://statsapi.mlb.com/api/v1/gameStatus">registry</a>. The review-code mapping is therefore <strong>verified</strong>.</li>
             <li><code>/api/v1</code> fallback bundle — ✔
               <a href="https://statsapi.mlb.com/api/v1/game/775296/playByPlay">playByPlay</a>,
               <a href="https://statsapi.mlb.com/api/v1/game/775296/boxscore">boxscore</a> and
