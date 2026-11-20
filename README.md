@@ -355,31 +355,23 @@ python3 -m http.server 8000
 
 ## Deploy to GitHub Pages
 
-The site is 100% static (repo root = site root), so GitHub Pages serves it directly
-with no build step and no workflow permissions:
+This repository's Pages site is already configured to publish the repository root
+from `main`. The repository's current Pages URL is
+<https://snapquast73-boop.github.io/LIVPBP2/>. GitHub Pages publishes static files;
+it does not run `server.mjs`, so the website uses browser-local storage when the
+optional persistence server is not present. The site can continue using the existing
+branch-based publishing source; no separate build or Pages workflow is required.
 
-1. **Push this project to GitHub** (any repo — e.g. `yourname/MLB-Live-PBP`).
-2. In the repo: **Settings → Pages → Source → "Deploy from a branch"** → branch
-   `main` → folder `/ (root)` → **Save**.
-3. Your site is live at **`https://<your-username>.github.io/<repo-name>/`** —
-   e.g. `https://snapquast73-boop.github.io/LIVPBP2/`. Every push to `main`
-   republishes it automatically (takes ~1 minute).
+The repository is configured for branch publishing in **Settings → Pages**. GitHub's
+documentation explains the available publishing sources and notes that Pages serves
+static files: [Creating a GitHub Pages site](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site)
+and [Configuring a publishing source](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site).
+After changes are merged into `main`, GitHub Pages publishes the updated root site;
+GitHub notes that publishing can take up to 10 minutes.
 
-### Optional: Actions-based deployment & CI smoke test
-
-The repo's Pages setup doesn't require Actions. If you'd rather deploy via GitHub
-Actions (and/or run the nightly API smoke test), ready-to-use workflow files are in
-[`docs/workflows/`](docs/workflows/):
-
-- `pages.yml` — deploys to Pages on every push to `main` (requires the repo setting
-  **Pages → Source → "GitHub Actions"** instead of branch deployment).
-- `smoke.yml` — runs the deterministic two-sided model checks and a nightly
-  check that the upstream MLB StatsAPI still matches our parsers; run it anytime
-  from **Actions** with "Run workflow".
-
-To use them, copy the file contents into `.github/workflows/` in the repo (the GitHub
-web UI's *Add file* is the easiest way), then go to **Settings → Pages → Source →
-GitHub Actions**.
+The `Verify static site` GitHub Actions check runs on pull requests targeting `main`
+and on pushes to `main`. It checks JavaScript syntax and local HTML asset/link
+references; it is a validation check, not a deployment workflow.
 
 ### Customizing
 
