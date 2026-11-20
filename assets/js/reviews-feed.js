@@ -31,6 +31,13 @@
     'pk', 'season', 'gameDate', 'scheduledInnings', 'status', 'detailedState',
     'abstractGameState', 'teams', 'away', 'home', 'abbreviation', 'review', 'used',
     'remaining', 'absChallenges', 'usedSuccessful', 'usedFailed', 'linescore',
+    // StatsAPI `fields` keeps only the keys it is given, at every depth:
+    // `reviewDetails` alone comes back as `{}`. Its children, the pitch-event
+    // position (`playEvents[].index`) and the team names used by the challenger
+    // fallback must be listed explicitly. Verified 2026-11-20:
+    // https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,about,atBatIndex,reviewDetails
+    'isOverturned', 'inProgress', 'reviewType', 'challengeTeamId', 'index',
+    'teamName', 'clubName', 'shortName', 'name',
   ].join(',');
 
   var currentDate = UI.todayStr();

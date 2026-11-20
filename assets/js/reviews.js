@@ -266,7 +266,13 @@
     var events = Array.isArray(play && play.playEvents) ? play.playEvents : [];
     events.forEach(function (ev) {
       if (!ev) return;
-      var idx = ev.details && typeof ev.details.playIndex === 'number' ? ev.details.playIndex : null;
+      // A pitch's position in the plate appearance is `playEvents[i].index`
+      // (the value `runners[].details.playIndex` points at); `details` carries
+      // no playIndex in the official payload (verified 2026-11-20 on
+      // https://statsapi.mlb.com/api/v1.1/game/825078/feed/live). The old
+      // lookup is kept only as a fallback.
+      var idx = typeof ev.index === 'number' ? ev.index
+        : (ev.details && typeof ev.details.playIndex === 'number' ? ev.details.playIndex : null);
       if (ev.reviewDetails) push(ev.reviewDetails, 'event', idx, 'event');
       if (ev.details && ev.details.reviewDetails) {
         push(ev.details.reviewDetails, 'event', idx, 'event.details');
