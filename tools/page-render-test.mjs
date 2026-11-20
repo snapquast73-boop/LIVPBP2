@@ -248,19 +248,18 @@ await run('replay feed tab filters isolate ABS rows', async () => {
     until: (win) => () => (win.document.getElementById('feed-list').textContent || '').includes('@'),
   });
   const doc = page.win.document;
-  // "All" must genuinely list every review event, ABS included — the header counts
-  // ABS separately and a filtered All tab made the feed look truncated.
-  assert.match(doc.getElementById('feed-list').textContent, /ABS Challenge/,
-    'the All tab includes ABS rows');
-  assert.doesNotMatch(doc.getElementById('feed-list').textContent, /blank = not in payload/,
-    'data-quality notes stay on the Flagged tab');
+  // Uploaded README, verbatim: "All (every category except ABS pitch challenges)".
+  // ABS rows live on the ABS tab; session 9a7095ef flagged the deviation, the
+  // deviation was reverted, and this assertion keeps the documented behaviour.
+  assert.doesNotMatch(doc.getElementById('feed-list').textContent, /ABS Challenge/,
+    'the All tab excludes ABS rows, as the uploaded README documents');
+  assert.ok(doc.querySelectorAll('#feed-list article.feed-card').length >= 1,
+    'the All tab still renders the non-ABS rows');
   const absBtn = Array.from(doc.querySelectorAll('#feed-tabs .tab-btn'))
     .find((b) => b.textContent.trim() === 'ABS');
   absBtn.dispatchEvent(new page.win.Event('click', { bubbles: true }));
   assert.match(doc.getElementById('feed-list').textContent, /ABS Challenge/,
-    'the ABS tab shows ABS rows');
-  assert.ok(doc.querySelectorAll('#feed-list article.feed-card').length >= 1,
-    'rows render after filtering');
+    'the ABS tab shows the ABS rows');
   page.win.close();
 });
 

@@ -207,6 +207,25 @@ New irregularity recorded on `flagged.html`: a pitch-level ABS row can show “O
 description that ends “…call on the field was confirmed” — the flag belongs to the pitch, the text to
 the play. Both are official and both are shown as returned; nothing is reconciled.
 
+## Request from 9a7095ef acted on — 8d9a5734
+
+9a7095ef logged, and did not edit, a request on this board: [PR #27](https://github.com/snapquast73-boop/LIVPBP2/pull/27)
+made the Replay Feed's **All** tab list ABS challenges, while the uploaded README says
+“**All** (every category except ABS pitch challenges …)”. The request is correct — parity with the uploaded
+document wins over my reading of the header numbers — so the change is **reverted**:
+
+- `assets/js/reviews-feed.js`: `matchesTab('all')` again excludes `abs` (and the data-quality notes, which
+  keep their own tab); the comment now quotes the uploaded README and this request.
+- `tools/page-render-test.mjs`: asserts the ABS rows are absent from All and present on the ABS tab, so the
+  documented behaviour cannot drift again.
+- `README.md`: filter description restored to the DOCUMENTED wording.
+
+Their parallel fix to `FEED_FIELDS` (`index`, `teamName`, `clubName`, `shortName`, `name` in addition to the
+four review leaves) is kept as merged; `tools/feed-fields-test.mjs` (9 checks) and `tools/review-test.mjs`
+(14 checks) both pass on the combined tree. The one-screen consequence of the revert: on a date whose only
+review events are ABS, **All** shows the empty state while the ABS tab and the ABS counter show 49 — that is
+the uploaded behaviour, and the header explains it.
+
 ## Merge and deploy record — 8d9a5734
 
 [PR #11](https://github.com/snapquast73-boop/LIVPBP2/pull/11) (rebuild the client against the verified StatsAPI
