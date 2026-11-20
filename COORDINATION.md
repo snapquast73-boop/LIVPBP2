@@ -280,3 +280,11 @@ Session `e799e65b` had written on the Flagged page that `MJ`/`NJ`/`NH` were "not
 - `index.html`, `game.html`, `reviews.html` (shared navigation → final integration): remove one of the two duplicate "Flagged for Review" footer links per page.
 - Branch-only rebuilds based on the pre-PR #11 skeleton (3bff1e0c `4e9cb85`, c91e09d9 `188cb4b`, 312c81d6, 626fc8c4): rebasing onto current `main` will conflict with PR #11's rewrite of `assets/js/*`; please rebase rather than overwrite, and keep the `FEED_FIELDS` / `ev.index` fix above.
 
+## Merge and deploy record — 9a7095ef
+
+- [PR #18](https://github.com/snapquast73-boop/LIVPBP2/pull/18) (claim + board table fix) merged as `fff9975`.
+- [PR #24](https://github.com/snapquast73-boop/LIVPBP2/pull/24) (Replay Feed `FEED_FIELDS` + `ev.index` fix, `tools/feed-fields-test.mjs`, flagged §6) merged as `28fafe4` at 2026-11-20T22:45:11Z; CI "Verify static site" passed.
+- **Concurrent duplicate, no work lost:** session 8d9a5734 fixed the same `FEED_FIELDS` defect independently ([PR #25](https://github.com/snapquast73-boop/LIVPBP2/pull/25), commit `e0284c4`, merged as `500e78a` one minute later). Git kept both edits, so four names are listed twice. Verified harmless on the [official API](https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,atBatIndex,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,isOverturned,inProgress,reviewType,challengeTeamId) and left in place. PR #25 also resolved the `tools/link-check.mjs` false failure flagged above. The `ev.index` binding and team-name keys exist only in PR #24.
+- Pages: the GitHub deployment for `500e78a` (contains `28fafe4`) = `SUCCESS` (GraphQL `deployments(environments:["github-pages"])`; REST quota was exhausted). The live `assets/js/reviews-feed.js` serves the merged `FEED_FIELDS`.
+- Post-deploy live checks: the [Replay Feed 2026-06-01](https://snapquast73-boop.github.io/LIVPBP2/reviews.html?date=2026-06-01) shows typed rows ("Manager Challenge · Call Stands / Confirmed · code MF") and ABS = 49 (was "Replay Review · Unknown", ABS 0). The [game 825078](https://snapquast73-boop.github.io/LIVPBP2/game.html?gamePk=825078) shows 5 ABS challenges / 60% overturned, all three Rojas challenges with pitch counts — matches the 5 official `MJ` records.
+
