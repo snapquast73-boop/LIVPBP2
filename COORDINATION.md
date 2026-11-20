@@ -78,3 +78,20 @@ Merging it would have replaced working, verified assets and broken the published
 GitHub Pages build for `cbcddde` reported **`built`** (build 1388342702, 2026-11-20T22:29:24Z, duration 49910 ms, error `null`) via the [Pages builds API](https://api.github.com/repos/snapquast73-boop/LIVPBP2/pages/builds); the top-level Pages status is now `built` (source `main` `/`, HTTPS enforced, custom 404 active, url <https://snapquast73-boop.github.io/LIVPBP2/>). One instant-fail build (duration 0, "Page build failed.") was recorded for `2019ead` at 22:28:31Z — a commit touching only this file; the immediately preceding content commits (`9631dad`, `902264e`) and `cbcddde` all built successfully, so no repository-side fix was required or made. `github.io` is not fetchable from this audit environment (egress restricted to GitHub API/npm and git hosts), so post-merge live rendering could not be re-fetched here; it was previously verified by e799e65b (scoreboard, `game.html?gamePk=775296`, replay feed, flagged page, at `?rev=9631dad`) and da2cec85 (Pages deployments list / Actions run).
 
 Unverified rows/items carried on this record, all published with official source links on <https://snapquast73-boop.github.io/LIVPBP2/flagged.html> (none block the site): see the "Endpoint table — source links & verification status (89d79ac9, 2026-11-20)" section added in this PR.
+
+## Follow-up verification of the endpoint table — e799e65b (2026-11-20)
+
+Session 89d79ac9 marked the rows it could not reach `◐` because `statsapi.mlb.com` was unreachable from its environment. This session *can* reach the official host and fetched every outstanding row, so the README status cells (status only — no endpoint URL, value or other README text) were updated, and the Flagged page carries the same log.
+
+| Endpoint | Result 2026-11-20 | Evidence |
+| --- | --- | --- |
+| `GET /api/v1/schedule …&fields=dates,games,gamePk,season,status,…` | ✅ works, minimal payload | [query](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2024-10-30&fields=dates,games,gamePk,season,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode) → `gamePk 775296`, `statusCode F` |
+| `GET /api/v1.1/game/{gamePk}/feed/live?fields=…` | ✅ works | [query](https://statsapi.mlb.com/api/v1.1/game/775296/feed/live?fields=liveData,linescore,teams,home,away,runs,hits,errors) |
+| `GET /api/v1/gameStatus` | ✅ served; `IH` “Instant Replay” and the `M*` manager-challenge codes present; `MJ`/`NJ` (ABS) and `NH` **not** seen | [gameStatus](https://statsapi.mlb.com/api/v1/gameStatus) |
+| `GET /api/v1/game/{gamePk}/playByPlay` · `/boxscore` · `/linescore` | ✅ all respond; play-by-play matches the feed | [playByPlay](https://statsapi.mlb.com/api/v1/game/775296/playByPlay) · [boxscore](https://statsapi.mlb.com/api/v1/game/775296/boxscore) · [linescore](https://statsapi.mlb.com/api/v1/game/775296/linescore) |
+| `img.mlbstatic.com` headshot URL | ◐ HTTP 500 to this environment (the same happens for the logo SVG that the live site renders) — URL unconfirmed, unused by the shipped pages | — |
+| `GET /api/v1/game/{gamePk}/feed/live` (v1 fallback feed) | ◐ request did not complete here | — |
+
+**Official-data irregularity found while verifying:** the Yankees’ error total for `775296` is **3** in the [live feed linescore](https://statsapi.mlb.com/api/v1.1/game/775296/feed/live?fields=liveData,linescore,teams,home,away,runs,hits,errors) and in the [box score](https://statsapi.mlb.com/api/v1/game/775296/boxscore) (Judge, Volpe and Wells each charged one), but **2** in the [standalone linescore](https://statsapi.mlb.com/api/v1/game/775296/linescore) and in [schedule `hydrate=linescore`](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2024-10-30&hydrate=linescore&fields=dates,games,gamePk,linescore,teams,home,away,errors,hits,runs). The game page shows 3 because every row links the feed it reads. No code was changed to hide the disagreement; it is documented on the Flagged page.
+
+`tools/check-local-links.py` and `node --check` pass on the combined tree; `flagged.html` tag balance (li/ul/section/code/strong/em/p) verified.
