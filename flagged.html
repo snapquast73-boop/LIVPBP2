@@ -413,6 +413,31 @@
       </div>
     </section>
 
+    <section class="panel" id="integration-5d3e49e1">
+      <h2>7 · Final integration follow-up</h2>
+      <ul>
+        <li><strong>Duplicate footer link resolved:</strong> one Flagged for Review link remains on each of the
+          <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/index.html">scoreboard</a>,
+          <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/game.html">game</a> and
+          <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/reviews.html">replay</a> pages.
+          This supersedes the open cosmetic item in section 6 after this change is deployed.</li>
+        <li><strong>Verification limits:</strong> an example comparison of the nine 2026-06-01 scoreboard scores
+          against the <a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2026-06-01&amp;hydrate=linescore&amp;fields=dates,games,gamePk,teams,away,home,team,name,score,status,abstractGameState">official MLB schedule</a>
+          is not a line-by-line verification of every field, historical game, or future live update. The original
+          application was not recovered; exact parity remains unverified.</li>
+        <li><strong>Model and attribution caution:</strong> the hit forecast uses reconstructed coefficients, not an
+          official MLB prediction, and the meaning of <code>challengeTeamId</code> is not fully established. The site
+          currently displays estimates and may use that ID to attribute a challenge. These are not verified facts;
+          see section 2 and the <a href="https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress">official sample</a>.
+          A request to avoid unverified attributions is recorded on the coordination board.</li>
+        <li><strong>Scoring-change history on GitHub Pages:</strong> GitHub Pages is
+          <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages">static hosting</a>;
+          the optional server does not run there. A browser cannot reconstruct changes that occurred while it was not
+          observing the data. Do not treat the local history as a complete official record; compare with
+          <a href="https://www.mlb.com/official-information/scoring-changes">MLB scoring changes</a>.</li>
+      </ul>
+    </section>
+
     <footer class="site-footer">
       <p>
         Unofficial fan project. Not affiliated with MLB or MLB Advanced Media.
