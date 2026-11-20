@@ -114,35 +114,40 @@
       <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;">
         <div><strong>At Bat:</strong> ${UI.esc((matchup.batter && matchup.batter.fullName) || '—')}</div>
         <div><strong>Pitching:</strong> ${UI.esc((matchup.pitcher && matchup.pitcher.fullName) || '—')}</div>
-        <div><strong>Count:</strong> ${count.balls ?? 0}-${count.strikes ?? 0} · <strong>Outs:</strong> ${ls.outs ?? count.outs ?? 0}</div>
+        <div><strong>Count:</strong> ${count.balls ?? ''}-${count.strikes ?? ''} · <strong>Outs:</strong> ${ls.outs ?? count.outs ?? ''}</div>
       </div>
     `;
+  }
+
+  function dataRow(values) {
+    const missing = values.some(value => value == null || value === '');
+    const url = `${MLBAPI.BASE_V11}/game/${encodeURIComponent(gamePk)}/feed/live`;
+    const cells = values.map(value => `<td>${UI.esc(value)}</td>`).join('');
+    return `<tr>${cells}<td><a href="${url}">MLB feed</a>${missing ? ' · Blank fields unverified' : ''}</td></tr>`;
   }
 
   function renderLinescore(feed) {
     const el = document.getElementById('linescore-wrap');
     const ls = (feed.liveData && feed.liveData.linescore) || {};
     const innings = ls.innings || [];
-    const gd = feed.gameData || {};
-    const awayAbbr = (gd.teams && gd.teams.away && gd.teams.away.abbreviation) || 'AWY';
-    const homeAbbr = (gd.teams && gd.teams.home && gd.teams.home.abbreviation) || 'HOM';
-
     if (!innings.length) {
       el.innerHTML = '<div style="color:var(--muted);">Linescore not yet available.</div>';
       return;
     }
 
-    const headCols = innings.map((i) => `<th>${i.num}</th>`).join('');
-    const awayCols = innings.map((i) => `<td>${i.away && i.away.runs !== undefined ? i.away.runs : '-'}</td>`).join('');
-    const homeCols = innings.map((i) => `<td>${i.home && i.home.runs !== undefined ? i.home.runs : '-'}</td>`).join('');
+    const headCols = innings.map(i => `<th>${UI.esc(i.num)}</th>`).join('');
+    const teamRow = side => dataRow([
+      feed.gameData?.teams?.[side]?.abbreviation,
+      ...innings.map(i => i[side]?.runs),
+      ...['runs', 'hits', 'errors'].map(key => ls.teams?.[side]?.[key]),
+    ]);
 
     el.innerHTML = `
       <div style="overflow-x:auto;">
         <table class="linescore-table">
-          <thead><tr><th>Team</th>${headCols}<th>R</th><th>H</th><th>E</th></tr></thead>
+          <thead><tr><th>Team</th>${headCols}<th>R</th><th>H</th><th>E</th><th>Source</th></tr></thead>
           <tbody>
-            <tr><td><strong>${UI.esc(awayAbbr)}</strong></td>${awayCols}<td><strong>${ls.teams.away.runs ?? 0}</strong></td><td>${ls.teams.away.hits ?? 0}</td><td>${ls.teams.away.errors ?? 0}</td></tr>
-            <tr><td><strong>${UI.esc(homeAbbr)}</strong></td>${homeCols}<td><strong>${ls.teams.home.runs ?? 0}</strong></td><td>${ls.teams.home.hits ?? 0}</td><td>${ls.teams.home.errors ?? 0}</td></tr>
+            ${teamRow('away')}${teamRow('home')}
           </tbody>
         </table>
       </div>
@@ -164,7 +169,7 @@
         <div class="play-item">
           <div class="play-head">
             <span>${UI.esc(about.halfInning || '')} ${about.inning || ''} · ${UI.esc(res.event || '')}</span>
-            <span>${hasReview ? '<span class="pill pill-review">Review</span>' : ''} ${res.awayScore ?? 0}–${res.homeScore ?? 0}</span>
+            <span>${hasReview ? '<span class="pill pill-review">Review</span>' : ''} ${res.awayScore ?? ''}–${res.homeScore ?? ''}</span>
           </div>
           <div class="play-desc">${UI.esc(res.description || 'In progress…')}</div>
         </div>
@@ -183,12 +188,12 @@
       const batters = (teamData.batters || []).map((id) => teamData.players && teamData.players[`ID${id}`]).filter(Boolean);
       const rows = batters.map((p) => {
         const s = (p.stats && p.stats.batting) || {};
-        return `<tr><td>${UI.esc(p.person && p.person.fullName)}</td><td>${s.atBats ?? 0}</td><td>${s.runs ?? 0}</td><td>${s.hits ?? 0}</td><td>${s.rbi ?? 0}</td></tr>`;
+        return dataRow([p.person?.fullName, s.atBats, s.runs, s.hits, s.rbi]);
       }).join('');
       return `
         <h4>${UI.esc(label)}</h4>
         <table class="boxscore-table">
-          <thead><tr><th>Batter</th><th>AB</th><th>R</th><th>H</th><th>RBI</th></tr></thead>
+          <thead><tr><th>Batter</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>Source</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       `;

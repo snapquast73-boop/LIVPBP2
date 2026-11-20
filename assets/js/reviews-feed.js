@@ -72,11 +72,14 @@
     }
   }
 
+  let latestRequest = 0;
   async function scanSchedule() {
+    const request = ++latestRequest;
     const statusLine = document.getElementById('status-line');
     if (statusLine) statusLine.textContent = 'Scanning games for reviews & challenges…';
     try {
       const sched = await MLBAPI.getSchedule(currentDate);
+      if (request !== latestRequest) return;
       const dates = sched.dates || [];
       const games = dates.length ? (dates[0].games || []) : [];
       const activeOrFinal = games.filter((g) => g.status && g.status.abstractGameState !== 'Preview');
@@ -85,6 +88,7 @@
         activeOrFinal.map((g) => MLBAPI.getGameLive(g.gamePk).catch(() => null))
       );
 
+      if (request !== latestRequest) return;
       const collected = [];
       feeds.forEach((f) => {
         if (f) collected.push(...Reviews.extractGameReviews(f));
@@ -98,9 +102,10 @@
 
       renderAll();
       if (statusLine) {
-        statusLine.textContent = `Updated ${new Date().toLocaleTimeString()} · Scanned ${activeOrFinal.length} game(s)`;
+        statusLine.textContent = `Updated ${new Date().toLocaleTimeString()} · Scanned ${feeds.filter(Boolean).length}/${activeOrFinal.length} game(s)${feeds.includes(null) ? " · Incomplete: game feed unavailable" : ""}`;
       }
     } catch (err) {
+      if (request !== latestRequest) return;
       console.error(err);
       if (statusLine) statusLine.textContent = `Error scanning schedule: ${err.message}`;
     }

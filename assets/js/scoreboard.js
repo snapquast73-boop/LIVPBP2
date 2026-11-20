@@ -21,11 +21,14 @@
     if (label) label.textContent = UI.formatDateLabel(currentDate);
   }
 
+  let latestRequest = 0;
   async function loadSchedule() {
+    const request = ++latestRequest;
     const statusLine = document.getElementById('status-line');
     if (statusLine) statusLine.textContent = 'Loading MLB schedule…';
     try {
       const data = await MLBAPI.getSchedule(currentDate);
+      if (request !== latestRequest) return;
       const dates = data.dates || [];
       gamesCache = dates.length ? (dates[0].games || []) : [];
       renderBanner();
@@ -35,6 +38,7 @@
         statusLine.textContent = `Updated ${new Date().toLocaleTimeString()} · ${gamesCache.length} game(s)`;
       }
     } catch (err) {
+      if (request !== latestRequest) return;
       console.error(err);
       if (statusLine) statusLine.textContent = `Error loading schedule: ${err.message}`;
     }

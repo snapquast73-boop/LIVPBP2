@@ -26,7 +26,7 @@
       <ul>
         <li>
           <strong>Missing <code>assets/</code> directory in initial upload:</strong>
-          The initial commit (<code>2ee9ca7</code>) contained <code>index.html</code>, <code>game.html</code>,
+          The initial commit (<a href="https://github.com/snapquast73-boop/LIVPBP2/tree/2ee9ca7">uploaded tree</a>) contained <code>index.html</code>, <code>game.html</code>,
           <code>reviews.html</code>, <code>404.html</code>, <code>README.md</code>, and <code>server.mjs</code>,
           but omitted <code>assets/css/style.css</code> and <code>assets/js/*.js</code>.
           All referenced static assets were reconstructed to match the HTML interfaces and official
@@ -34,9 +34,11 @@
         </li>
         <li>
           <strong>Static GitHub Pages hosting:</strong>
-          GitHub Pages serves static files only and does not execute <code>server.mjs</code>.
+          <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages">GitHub Pages</a> serves static files only and does not execute <code>server.mjs</code>.
           Browser-side persistence uses <code>localStorage</code> via <code>assets/js/feed-log.js</code>.
         </li>
+        <li><strong>Original behavior unverified.</strong> The <a href="https://github.com/buffedlizard55-lab/MLB-Live-PBP">upstream repository</a> returned 404. The reconstructed scripts are not a verified copy. In particular the matchup panel does not implement the forecast described in the <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/README.md">uploaded README</a>, and advanced replay tracking is not verified.</li>
+        <li><strong>Incomplete game data.</strong> Inning and batting table rows link to their MLB feed. Missing fields are blank rather than zero. For an official example, compare the <a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2024-10-30">schedule</a> with its <a href="https://statsapi.mlb.com/api/v1.1/game/775296/feed/live">game feed</a>.</li>
       </ul>
     </section>
   </main>
