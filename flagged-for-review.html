@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flagged for Review — MLB Live PBP</title>
+  <style>body{font:1rem/1.6 system-ui,sans-serif;max-width:52rem;margin:2rem auto;padding:0 1rem;background:#111827;color:#f3f4f6}a{color:#93c5fd}code{overflow-wrap:anywhere}</style>
+</head>
+<body>
+  <main>
+    <h1>Flagged for Review</h1>
+    <p>This audit is incomplete. No game data, forecasts, or original behavior has been verified.</p>
+    <ul>
+      <li><strong>Missing application files:</strong> the <a href="https://github.com/snapquast73-boop/LIVPBP2/tree/2ee9ca7e5cdba0712bfbc19322b5fa271203bca3">uploaded commit</a> does not include the CSS and JavaScript referenced by its pages, or the documented tests. The scoreboard, game page and replay feed therefore cannot function as uploaded.</li>
+      <li><strong>Original source unavailable:</strong> the <a href="https://github.com/buffedlizard55-lab/MLB-Live-PBP">repository identified by the imported documentation</a> returned HTTP 404 through the GitHub API during this audit. It may be private, removed, or otherwise inaccessible; the cause is unverified. An authoritative copy of the missing files is needed to restore and compare the application.</li>
+      <li><strong>Server functionality on Pages:</strong> <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages">GitHub Pages is static hosting</a>. It cannot run this repository's Node server, so its shared feed-log API and server-sent events require a separate compatible host. The original Pages behavior has not been verified.</li>
+      <li><strong>Unverified upstream data and claims:</strong> the missing client and tests prevent verification of the displayed MLB data, interpretations, polling, and forecast. The <a href="https://www.mlb.com/official-information/scoring-changes">MLB scoring changes log</a> is an official source for manual review; no individual rows were checked.</li>
+    </ul>
+    <p><a href="index.html">Back to scoreboard</a></p>
+  </main>
+</body>
+</html>

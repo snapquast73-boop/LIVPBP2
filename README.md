@@ -1,3 +1,5 @@
+> **Import audit (2026-11-20):** This upload is incomplete: the referenced `assets/`, `tools/`, and `docs/` are absent. The scoreboard, game and replay pages cannot function as uploaded. The original repository was inaccessible through GitHub API (404). See [Flagged for Review](flagged-for-review.html) and [COORDINATION.md](COORDINATION.md). The original README below is retained for context; its functionality and testing claims have not been verified. Run `python3 tools/check-local-links.py` to see missing local HTML resources.
+
 # ⚾ MLB Live PBP — Live MLB Scoreboard & Play-by-Play
 
 > ### 🛑 **CHECKPOINT NOTICE: `v1.0.0-stable-checkpoint`** 🛑
