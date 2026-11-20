@@ -6,6 +6,23 @@
 > git reset --hard v1.0.0-stable-checkpoint
 > ```
 
+> ### ⚠️ Repository status (verified 2026-11-20)
+> This README describes the **original** project. In this uploaded copy some of the files it
+> mentions are **not present**, and some described behavior is **not implemented**. Those gaps
+> are listed on the site's [Flagged for Review](https://snapquast73-boop.github.io/LIVPBP2/flagged.html) page.
+>
+> - **Live site:** <https://snapquast73-boop.github.io/LIVPBP2/> (static GitHub Pages; `server.mjs` does not run there).
+> - **Not in this repo:** `docs/**` (`verification-report.md`, `api-compliance.md`, `scoring-changes.md`, `docs/workflows/`),
+>   every `tools/*.mjs` test named below, `tools/run-risk-preview.html`, and the `v1.0.0-stable-checkpoint` tag.
+>   The only tool present is `tools/check-local-links.py`. References to those files below are historical and
+>   their claims are **unverified**, not reproduced here.
+> - **Not implemented in the present code:** the two-sided hit forecast (`assets/js/props.js` shows the current
+>   batter/pitcher only), the 125 ms status watchers (the page polls instead), scoring-change diff tracking, and
+>   SSE push from `server.mjs` (the client persists to `localStorage`).
+> - **Verified working:** scoreboard, game view, and Replay Feed against the official
+>   [MLB StatsAPI](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2024-10-30) — see the verification list on
+>   [Flagged for Review](https://snapquast73-boop.github.io/LIVPBP2/flagged.html).
+
 A zero-dependency, static web app that pulls **live MLB game data** straight from the
 public MLB StatsAPI and renders it in a **Gameday-style scoreboard** — exactly the data
 mlb.com uses, re-implemented from scratch in vanilla HTML/CSS/JS.
@@ -143,7 +160,7 @@ mlb.com uses, re-implemented from scratch in vanilla HTML/CSS/JS.
 - No build step, no frameworks, no API keys — it runs on **GitHub Pages** (or any static
   host, or even `file://`).
 
-> **Live demo:** [buffedlizard55-lab.github.io/MLB-Live-PBP](https://buffedlizard55-lab.github.io/MLB-Live-PBP/)
+> **Live demo:** [snapquast73-boop.github.io/LIVPBP2](https://snapquast73-boop.github.io/LIVPBP2/)
 
 ---
 
@@ -345,7 +362,7 @@ with no build step and no workflow permissions:
 2. In the repo: **Settings → Pages → Source → "Deploy from a branch"** → branch
    `main` → folder `/ (root)` → **Save**.
 3. Your site is live at **`https://<your-username>.github.io/<repo-name>/`** —
-   e.g. `https://buffedlizard55-lab.github.io/MLB-Live-PBP/`. Every push to `main`
+   e.g. `https://snapquast73-boop.github.io/LIVPBP2/`. Every push to `main`
    republishes it automatically (takes ~1 minute).
 
 ### Optional: Actions-based deployment & CI smoke test
