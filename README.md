@@ -14,7 +14,7 @@
 >
 > - **Live site:** <https://snapquast73-boop.github.io/LIVPBP2/> (static GitHub Pages; `server.mjs` does not run there).
 > - **Present:** `docs/verification-report.md`, `docs/scoring-changes.md`, `docs/api-compliance.md`,
->   `docs/workflows/` (two optional templates) and five deterministic tools under `tools/` — each one runs
+>   `docs/workflows/` (two optional templates) and six deterministic tools under `tools/` — each one runs
 >   offline against the fixtures in `tools/fixtures/`.
 > - **Implemented:** the two-sided hit forecast (`assets/js/props.js`), review/ABS/challenge tracking,
 >   scoring-change detection by diffing consecutive polls, and browser-local replay-log persistence
@@ -35,10 +35,11 @@ mlb.com uses, re-implemented from scratch in vanilla HTML/CSS/JS.
 > reads was re-checked against the live `statsapi.mlb.com` on 2026-11-20; the request
 > URLs, the values they returned and every item that could **not** be confirmed are
 > written down in [`docs/verification-report.md`](docs/verification-report.md) and on the
-> [Flagged for Review](flagged.html) page. Five network-free test tools back the claim:
+> [Flagged for Review](flagged.html) page. Six network-free test tools back the claim:
 > `node tools/review-test.mjs`, `tools/hit-model-test.mjs`, `tools/reviews-feed-test.mjs`,
+> `tools/ui-labels-test.mjs` (club codes for schedule-sourced teams),
 > `tools/page-render-test.mjs` (renders all three pages in jsdom) and
-> `tools/link-check.mjs` (no dead internal links).
+> `tools/link-check.mjs` (no dead internal links). All six run in CI on every push and pull request.
 
 - **Scoreboard** (like [MLB.com](https://www.mlb.com/scoreboard)) — every game for any
   date, with live scores, inning, count, probable pitchers, and W/L/S decisions.
@@ -341,6 +342,7 @@ To run the deterministic, network-free checks:
 node tools/review-test.mjs            # challenge/review parser, counters, scoring changes, irregularities
 node tools/hit-model-test.mjs         # two-sided hit forecast model (log5, clamps, count, form, splits)
 node tools/reviews-feed-test.mjs      # Replay Feed persistence: merge, idempotency, row cap, round-trip
+node tools/ui-labels-test.mjs         # club abbreviations for schedule-sourced teams
 node tools/page-render-test.mjs       # end-to-end render of all three pages in jsdom (needs `npm i jsdom`)
 node tools/link-check.mjs             # every internal href/src resolves; no dead docs or assets
 ```

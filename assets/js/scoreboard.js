@@ -191,7 +191,7 @@
     var parts = ids.map(function (pk) {
       var g = games.filter(function (x) { return String(x.gamePk) === String(pk); })[0];
       var label = g
-        ? (g.teams.away.team.abbreviation || 'AWY') + ' @ ' + (g.teams.home.team.abbreviation || 'HOM')
+        ? (UI.teamAbbr(g.teams.away) || 'AWY') + ' @ ' + (UI.teamAbbr(g.teams.home) || 'HOM')
         : ('game ' + pk);
       var reason = reviewGamePks[pk].reason ? ' (' + reviewGamePks[pk].reason + ')' : '';
       return '<a href="game.html?gamePk=' + encodeURIComponent(pk) + '">' + UI.esc(label) + '</a>' +
@@ -294,8 +294,8 @@
       var ap = probableLine(away);
       var hp = probableLine(home);
       if (ap || hp) {
-        footBits.push('Probables: ' + UI.esc((away.team.abbreviation || 'AWY') + ' ' + (ap || 'TBD') +
-          ' · ' + (home.team.abbreviation || 'HOM') + ' ' + (hp || 'TBD')));
+        footBits.push('Probables: ' + UI.esc((UI.teamAbbr(away) || 'AWY') + ' ' + (ap || 'TBD') +
+          ' · ' + (UI.teamAbbr(home) || 'HOM') + ' ' + (hp || 'TBD')));
       }
     }
     if (changes) {

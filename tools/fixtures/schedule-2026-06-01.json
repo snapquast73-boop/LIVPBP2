@@ -1,5 +1,5 @@
 {
-  "_note": "SYNTHETIC fixture. Every field name and nesting level mirrors the live StatsAPI responses verified on 2026-11-20 (see docs/verification-report.md §2); the values are trimmed copies of those responses, not a new live request.",
+  "_note": "SYNTHETIC fixture. Every field name and nesting level mirrors the live StatsAPI responses verified on 2026-11-20 (see docs/verification-report.md §2 and §10); the values are trimmed copies of those responses, not a new live request. Schedule team objects deliberately carry no `abbreviation`, exactly like the live /api/v1/schedule payload.",
   "dates": [
     {
       "date": "2026-06-01",
@@ -18,14 +18,14 @@
           },
           "teams": {
             "away": {
-              "team": { "id": 115, "name": "Colorado Rockies", "abbreviation": "COL" },
+              "team": { "id": 115, "name": "Colorado Rockies" },
               "leagueRecord": { "wins": 23, "losses": 38, "ties": 0, "pct": ".377" },
               "score": 9,
               "isWinner": true,
               "probablePitcher": { "id": 607536, "fullName": "Kyle Freeland" }
             },
             "home": {
-              "team": { "id": 108, "name": "Los Angeles Angels", "abbreviation": "LAA" },
+              "team": { "id": 108, "name": "Los Angeles Angels" },
               "leagueRecord": { "wins": 23, "losses": 38, "ties": 0, "pct": ".377" },
               "score": 8,
               "isWinner": false,
@@ -67,13 +67,13 @@
           },
           "teams": {
             "away": {
-              "team": { "id": 116, "name": "Detroit Tigers", "abbreviation": "DET" },
+              "team": { "id": 116, "name": "Detroit Tigers" },
               "leagueRecord": { "wins": 23, "losses": 38, "ties": 0, "pct": ".377" },
               "score": 10,
               "probablePitcher": { "id": 680744, "fullName": "Ty Madden" }
             },
             "home": {
-              "team": { "id": 139, "name": "Tampa Bay Rays", "abbreviation": "TB" },
+              "team": { "id": 139, "name": "Tampa Bay Rays" },
               "leagueRecord": { "wins": 36, "losses": 21, "ties": 0, "pct": ".632" },
               "score": 9,
               "probablePitcher": { "id": 643377, "fullName": "Griffin Jax" }
@@ -111,12 +111,12 @@
           },
           "teams": {
             "away": {
-              "team": { "id": 136, "name": "Seattle Mariners", "abbreviation": "SEA" },
+              "team": { "id": 136, "name": "Seattle Mariners" },
               "leagueRecord": { "wins": 32, "losses": 29, "ties": 0, "pct": ".525" },
               "probablePitcher": { "id": 676106, "fullName": "Emerson Hancock" }
             },
             "home": {
-              "team": { "id": 133, "name": "Athletics", "abbreviation": "ATH" },
+              "team": { "id": 133, "name": "Athletics" },
               "leagueRecord": { "wins": 25, "losses": 36, "ties": 0, "pct": ".410" },
               "probablePitcher": { "id": 605135, "fullName": "Jeffrey Springs" }
             }

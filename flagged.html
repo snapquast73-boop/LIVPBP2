@@ -344,6 +344,120 @@
           Trimmed copy of the eight review-relevant entries: <code>tools/fixtures/game-status.json</code>.</li>
     </section>
 
+    <section class="panel">
+      <div class="panel-title">5 · Independent re-verification — session 312c81d6 (2026-11-20)</div>
+      <p class="muted">
+        A second, independent pass re-fetched every endpoint the shipped client uses and compared the
+        values the code reads. Each row below links the exact official request; the observed value is
+        quoted as returned. Nothing here is inferred.
+      </p>
+      <table class="boxscore-table">
+        <thead>
+          <tr><th>Official request</th><th>Observed value (2026-11-20)</th><th>Used by</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2024-10-30&hydrate=probablePitcher,linescore,decisions,review" target="_blank" rel="noopener">GET /api/v1/schedule (2024-10-30)</a></td>
+            <td><code>gamePk 775296</code>; Dodgers 7 – Yankees 6; <code>decisions{winner:"Blake Treinen",loser:"Tommy Kahnle",save:"Walker Buehler"}</code>; <code>review{away{used:0,remaining:2},home{used:1,remaining:1}}</code>; <code>venue{name:"Yankee Stadium"}</code></td>
+            <td>scoreboard cards, review banner</td><td>✅ verified</td>
+          </tr>
+          <tr>
+            <td><a href="https://statsapi.mlb.com/api/v1/game/775296/linescore" target="_blank" rel="noopener">GET /api/v1/game/775296/linescore</a></td>
+            <td>nine <code>innings[]</code>; <code>teams.home{runs:6,hits:8,errors:2}</code>, <code>teams.away{runs:7,hits:7,errors:0}</code></td>
+            <td>card + game linescore</td><td>✅ verified</td>
+          </tr>
+          <tr>
+            <td><a href="https://statsapi.mlb.com/api/v1.1/game/775296/feed/live?fields=gameData,status,teams,venue,weather,datetime,game,review,flags,probablePitchers" target="_blank" rel="noopener">GET /api/v1.1/game/775296/feed/live</a></td>
+            <td><code>teams.away{id:119,name:"Los Angeles Dodgers",abbreviation:"LAD"}</code>, <code>…home{…"NYY"}</code>, <code>weather{condition:"Partly Cloudy",temp:"67",wind:"5 mph, Out To LF"}</code>, and <strong>no</strong> <code>absChallenges</code> (pre-ABS season — so no ABS counter is printed)</td>
+            <td>game header, counters</td><td>✅ verified</td>
+          </tr>
+          <tr>
+            <td><a href="https://statsapi.mlb.com/api/v1.1/game/824638/feed/live?fields=gameData,absChallenges,hasChallenges,away,home,usedSuccessful,usedFailed,remaining" target="_blank" rel="noopener">GET /api/v1.1/game/824638/feed/live</a></td>
+            <td><code>absChallenges{away{usedSuccessful:3,usedFailed:0,remaining:2},home{usedSuccessful:5,usedFailed:0,remaining:2}}</code></td>
+            <td>ABS counters (2026 games)</td><td>✅ verified</td>
+          </tr>
+          <tr>
+            <td><a href="https://statsapi.mlb.com/api/v1/game/823109/playByPlay?fields=allPlays,about,atBatIndex,reviewDetails,isOverturned,inProgress,reviewType,challengeTeamId" target="_blank" rel="noopener">GET /api/v1/game/823109/playByPlay</a></td>
+            <td>four real reviews: <code>MJ</code> overturned (team 136), <code>MD</code> stands (142), <code>MA</code> overturned (136), <code>NA</code> stands (no team id)</td>
+            <td>Replay Feed rows</td><td>✅ verified</td>
+          </tr>
+          <tr>
+            <td><a href="https://statsapi.mlb.com/api/v1/game/775296/playByPlay" target="_blank" rel="noopener">GET /api/v1/game/775296/playByPlay</a></td>
+            <td><code>runners[]{details{isScoringEvent:true,playIndex:4,…}}</code> on the home run; <code>playIndex</code> indexes that play's <code>playEvents[]</code></td>
+            <td>runs-at-risk attribution</td><td>✅ verified</td>
+          </tr>
+          <tr>
+            <td><a href="https://statsapi.mlb.com/api/v1/gameStatus" target="_blank" rel="noopener">GET /api/v1/gameStatus</a></td>
+            <td><code>IH</code> “Instant Replay”, <code>MA</code> “Manager challenge: Tag play”, <code>MD</code> “Manager challenge: Catch/drop in outfield”, <code>MJ</code> “Player challenge: Pitch Result”, <code>NJ</code> “Umpire Challenge: Pitch Result”, <code>NA</code> “Umpire review: Tag play”, <code>NH</code> “Umpire review: Home run”</td>
+            <td>every review label</td><td>✅ verified</td>
+          </tr>
+          <tr>
+            <td><a href="https://statsapi.mlb.com/api/v1/eventTypes" target="_blank" rel="noopener">GET /api/v1/eventTypes</a></td>
+            <td><code>os_ruling_pending_primary</code> / <code>os_ruling_pending_prior</code>, both “Official Scorer Ruling Pending”</td>
+            <td>pending-ruling rows</td><td>✅ verified</td>
+          </tr>
+          <tr>
+            <td><a href="https://statsapi.mlb.com/api/v1/teams?sportId=1&fields=teams,id,name,abbreviation" target="_blank" rel="noopener">GET /api/v1/teams</a></td>
+            <td>the 30 official codes (<code>108 LAA … 158 MIL</code>); now mirrored by <code>UI.TEAM_ABBR</code></td>
+            <td>club abbreviations</td><td>✅ verified</td>
+          </tr>
+          <tr>
+            <td><a href="https://statsapi.mlb.com/api/v1/game/775296/boxscore" target="_blank" rel="noopener">GET /api/v1/game/775296/boxscore</a></td>
+            <td><code>teamStats.batting{avg:".206",atBats:34,hits:7,rbi:7}</code>, <code>teamStats.pitching{era:"4.80",inningsPitched:"9.0"}</code>, per-player <code>stats</code> blocks</td>
+            <td>box score</td><td>✅ verified</td>
+          </tr>
+          <tr>
+            <td><a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,statSplits,gameLog&group=hitting&season=2024&sitCodes=vl,vr" target="_blank" rel="noopener">GET /api/v1/people/660271/stats (season, splits, log)</a></td>
+            <td>blocks named <code>season</code>, <code>statSplits</code> (with <code>split.code vl/vr</code>) and <code>gameLog</code> (dated), in one 200 response</td>
+            <td>forecast inputs</td><td>✅ verified</td>
+          </tr>
+          <tr>
+            <td><a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=vsPlayer&group=hitting&opposingPlayerId=543037&season=2024" target="_blank" rel="noopener">GET /api/v1/people/660271/stats (vsPlayer)</a></td>
+            <td><code>vsPlayerTotal{atBats:23,hits:4,avg:".174"}</code> plus five per-season <code>vsPlayer</code> splits; with <code>season=</code> the total comes <strong>first</strong></td>
+            <td>career head-to-head driver</td><td>✅ verified (resolves the earlier ◐ above)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="muted" style="margin-top:14px;">
+        <strong>Two defects this pass found, both fixed:</strong>
+      </p>
+      <ul class="muted small">
+        <li>
+          <strong>Head-to-head read the wrong block.</strong> <code>props.js</code> kept the <em>last</em>
+          <code>stats[]</code> block, but with the client's own <code>season=</code> parameter the official
+          response returns <code>vsPlayerTotal</code> <em>first</em>, so the driver reported one old season
+          (6 AB) instead of the career line (23 AB). It now reads <code>vsPlayerTotal</code> by name, sums
+          the per-season splits only when the total is absent, and shows nothing when neither exists.
+          Regression checks added to <code>tools/hit-model-test.mjs</code> (now 14 checks).
+        </li>
+        <li>
+          <strong>Schedule-sourced teams printed AWY / HOM.</strong> <code>/api/v1/schedule</code> returns
+          <code>teams.&lt;side&gt;.team</code> with only <code>id</code> and <code>name</code> — no
+          <code>abbreviation</code>, even when requested with <code>fields=</code> (see the
+          <a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2024-10-30&fields=dates,games,gamePk,teams,away,home,team,id,name,abbreviation" target="_blank" rel="noopener">official projection</a>).
+          The “Under review now” banner and the “Probables:” line therefore fell back to the literal
+          placeholders. They now use <code>UI.teamAbbr()</code> with the official 30-club table, the
+          synthetic schedule fixture no longer invents the missing field, and
+          <code>tools/ui-labels-test.mjs</code> (5 checks) pins the behaviour.
+        </li>
+        <li>
+          <strong>CI now enforces the suite.</strong> The workflow previously ran only the syntax and local-link
+          steps; it now also runs <code>link-check</code>, <code>review-test</code>, <code>hit-model-test</code>,
+          <code>reviews-feed-test</code>, <code>ui-labels-test</code> and <code>page-render-test</code> on every push
+          and pull request.
+        </li>
+      </ul>
+      <p class="muted small">
+        Still unverified after this pass (unchanged, non-blocking): the upstream repository
+        (<a href="https://api.github.com/repos/buffedlizard55-lab/MLB-Live-PBP" target="_blank" rel="noopener">404</a>),
+        the binary image hosts (<a href="https://www.mlbstatic.com/team-logos/team-cap-on-dark/147.svg" target="_blank" rel="noopener">HTTP 500 to a non-browser client</a>),
+        the <code>v1</code> feed fallback, the exact original 500/250/125&nbsp;ms cadences, the model's
+        calibration constants, and “Confirmed” vs “Stands” (the payload carries only
+        <code>isOverturned</code>). Each remains listed above with its source link.
+      </p>
+    </section>
+
     <footer class="site-footer">
       <p>
         Unofficial fan project. Not affiliated with MLB or MLB Advanced Media.

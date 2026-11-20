@@ -139,7 +139,7 @@ and
 | `statSplits` `split.{code,description}` | `vl` / "vs Left", `vr` / "vs Right" | verified |
 | `statSplits` `stat.{hits,atBats}` | `49/179` (vs L), `95/344` (vs R) | verified |
 | `gameLog` `splits[].{date,isHome,stat.{hits,atBats}}` | dated games from `2026-03-26` | verified |
-| `stats=vsPlayer&opposingPlayerId=…` (head-to-head) | Used by the page; not sampled this session | UNVERIFIED (non-blocking: the model simply omits the head-to-head driver when the response is empty) |
+| `stats=vsPlayer&opposingPlayerId=…` (head-to-head) | Used by the page; **sampled on 2026-11-20 in §10**, which found the payload shape and a parsing defect | verified in §10 (was UNVERIFIED here; the model omits the driver when the response is empty) |
 
 ## 7. Assets and third-party hosts
 
@@ -157,8 +157,9 @@ All tests are network-free and run in CI or locally:
 
 ```
 node tools/review-test.mjs          # 13 checks — parser, counters, diffs, irregularities
-node tools/hit-model-test.mjs       # 12 checks — log5, clamps, count, form, splits
+node tools/hit-model-test.mjs       # 14 checks — log5, clamps, count, form, splits, head-to-head (see §10.1)
 node tools/reviews-feed-test.mjs    #  6 checks — persistence/merge/idempotency
+node tools/ui-labels-test.mjs       #  5 checks — club abbreviations for schedule-sourced teams (§10.2)
 node tools/page-render-test.mjs     #  7 end-to-end page renders in jsdom (no page errors)
 node tools/link-check.mjs           # every internal href/src resolves; no dead docs
 ```
@@ -177,3 +178,78 @@ and are labelled inside each file.
 
 Re-run §9 after the merge that publishes this branch; the result is recorded in
 `COORDINATION.md`.
+
+## 10. Independent re-verification — session 312c81d6 (2026-11-20)
+
+This session re-fetched the endpoints the shipped client uses and compared the values the code
+reads. Every request below is the official host; the observed value is quoted exactly.
+
+| # | Endpoint | Observed value (2026-11-20) | Used by |
+|---|---|---|---|
+| V-1 | [`/api/v1/schedule?date=2024-10-30&hydrate=probablePitcher,linescore,decisions,review`](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2024-10-30&hydrate=probablePitcher,linescore,decisions,review) | `gamePk 775296`, `status{statusCode:"F",detailedState:"Final"}`, Dodgers 7 – Yankees 6, `decisions{winner:"Blake Treinen",loser:"Tommy Kahnle",save:"Walker Buehler"}`, `review{hasChallenges:true,away{used:0,remaining:2},home{used:1,remaining:1}}`, `venue{name:"Yankee Stadium"}` | scoreboard cards, review banner |
+| V-2 | [`/api/v1/game/775296/linescore`](https://statsapi.mlb.com/api/v1/game/775296/linescore) | `currentInning 9`; `teams.home{runs:6,hits:8,errors:2}`, `teams.away{runs:7,hits:7,errors:0}`; nine `innings[]` | card + game page linescore |
+| V-3 | [`/api/v1.1/game/775296/feed/live`](https://statsapi.mlb.com/api/v1.1/game/775296/feed/live?fields=gameData,status,teams,venue,weather,datetime,game,review,flags,probablePitchers) | `gameData.teams.away{id:119,name:"Los Angeles Dodgers",abbreviation:"LAD"}`, `…home{…"NYY"}`, `venue{name:"Yankee Stadium"}`, `weather{condition:"Partly Cloudy",temp:"67",wind:"5 mph, Out To LF"}`, `datetime{officialDate:"2024-10-30"}`, `flags{}`, and **no** `absChallenges` object (pre-ABS season) | game header, counters |
+| V-4 | [`/api/v1.1/game/824638/feed/live`](https://statsapi.mlb.com/api/v1.1/game/824638/feed/live?fields=gameData,absChallenges,hasChallenges,away,home,usedSuccessful,usedFailed,remaining) | `absChallenges{hasChallenges:true,away{usedSuccessful:3,usedFailed:0,remaining:2},home{usedSuccessful:5,usedFailed:0,remaining:2}}` | ABS counters (2026 games) |
+| V-5 | [`/api/v1/game/823109/playByPlay`](https://statsapi.mlb.com/api/v1/game/823109/playByPlay?fields=allPlays,about,atBatIndex,reviewDetails,isOverturned,inProgress,reviewType,challengeTeamId) | four real reviews: `{reviewType:"MJ",isOverturned:true,challengeTeamId:136}`, `{reviewType:"MD",isOverturned:false,challengeTeamId:142}`, `{reviewType:"MA",isOverturned:true,challengeTeamId:136}`, `{reviewType:"NA",isOverturned:false}` (no team id on an umpire review) | Replay Feed rows |
+| V-6 | [`/api/v1/game/775296/playByPlay`](https://statsapi.mlb.com/api/v1/game/775296/playByPlay) | `runners[]{details{isScoringEvent:true,playIndex:4,…}}` on the home-run play; `playIndex` indexes that play's `playEvents[]` | runs-at-risk attribution |
+| V-7 | [`/api/v1/gameStatus`](https://statsapi.mlb.com/api/v1/gameStatus) | `IH` “Instant Replay”; `MA` “Manager challenge: Tag play”; `MD` “Manager challenge: Catch/drop in outfield”; `MJ` “Player challenge: Pitch Result”; `NJ` “Umpire Challenge: Pitch Result”; `NA` “Umpire review: Tag play”; `NH` “Umpire review: Home run” | every review label |
+| V-8 | [`/api/v1/eventTypes`](https://statsapi.mlb.com/api/v1/eventTypes) | `os_ruling_pending_primary` / `os_ruling_pending_prior`, both “Official Scorer Ruling Pending” | pending-ruling rows |
+| V-9 | [`/api/v1/teams?sportId=1`](https://statsapi.mlb.com/api/v1/teams?sportId=1&fields=teams,id,name,abbreviation) | the 30 official codes (`108 LAA … 158 MIL`), now mirrored by `UI.TEAM_ABBR` | club abbreviations |
+| V-10 | [`/api/v1/game/775296/boxscore`](https://statsapi.mlb.com/api/v1/game/775296/boxscore) | `teams.away.teamStats.batting{avg:".206",atBats:34,hits:7,rbi:7}`, `…pitching{era:"4.80",inningsPitched:"9.0"}`, `players{ID…{person{fullName},position{abbreviation},stats{…}}}` | box score |
+| V-11 | [`/api/v1/people/660271/stats?stats=season,statSplits,gameLog&sitCodes=vl,vr`](https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,statSplits,gameLog&group=hitting&season=2024&sitCodes=vl,vr) | blocks named `season`, `statSplits` (with `split.code vl/vr`), `gameLog` (dated) | forecast inputs |
+| V-12 | [`/api/v1/people/660271/stats?stats=vsPlayer&opposingPlayerId=543037&season=2024`](https://statsapi.mlb.com/api/v1/people/660271/stats?stats=vsPlayer&group=hitting&opposingPlayerId=543037&season=2024) | **two** blocks: `vsPlayerTotal{atBats:23,hits:4,avg:".174"}` and `vsPlayer` (five per-season splits). Without `season=`, the order is reversed (`vsPlayer` first) | career head-to-head driver |
+
+### 10.1 Defect found and fixed — head-to-head block order
+
+`assets/js/props.js` picked the head-to-head line by taking the **last** `stats[]` block:
+
+```js
+vsStats.forEach(function (s) { var split = (s.splits || [])[0]; if (split && split.stat) h2h = …; });
+```
+
+The official response contains `vsPlayerTotal` (career) **and** `vsPlayer` (per season), and their
+order depends on the request: without `season=` the total comes last (so the old code happened to be
+right), but with `season=` — which is exactly what `api.js#getVsPlayer` sends — the API returns
+`vsPlayerTotal` **first** (V-12). The loop then kept `vsPlayer`'s first season, so the driver reported
+a single old season (**6 AB, 1 H**, 2018) instead of the career line (**23 AB, 4 H**).
+
+Fix: a pure `Props.parseVsPlayer(payload)` helper reads `vsPlayerTotal` **by name**, sums the
+`vsPlayer` splits when the total is absent, and returns `null` (never a guessed line) when neither
+exists. `tools/hit-model-test.mjs` gained two regression checks that use the official payload in both
+block orders; the suite is now 14 checks.
+
+### 10.2 Defect found and fixed — club codes on schedule-sourced teams
+
+`/api/v1/schedule` returns `teams.<side>.team` as `{ id, name, link }` — **no `abbreviation`**, even
+with `fields=…,abbreviation` in the request (verified: the projection returns
+`{"team":{"id":119,"name":"Los Angeles Dodgers"}}`). `scoreboard.js` read
+`g.teams.away.team.abbreviation`, so the “Under review now” banner and the “Probables:” line fell back
+to the literal placeholders **AWY / HOM** on every live or preview slate.
+
+The synthetic schedule fixture carried an `abbreviation` key that the real payload does not have,
+which is why the render test never caught it. Both sides are fixed:
+
+- `assets/js/ui.js` gained `UI.teamAbbr(team)` and `UI.TEAM_ABBR` — the 30 official codes from V-9.
+  A payload abbreviation always wins; the table is the fallback; an unknown club id degrades to name
+  initials rather than an invented code.
+- `assets/js/scoreboard.js` uses `UI.teamAbbr(...)` for the banner and the probables footer.
+- `tools/fixtures/schedule-2026-06-01.json` no longer invents `abbreviation` on schedule teams, so the
+  fixture matches the official payload (and the render test exercises the real shape).
+- New `tools/ui-labels-test.mjs` (5 checks) pins the table to the official list and proves a
+  schedule-shaped team resolves to `CHC`/`LAD` instead of `AWY`/`HOM`.
+
+### 10.3 Suite state after these changes
+
+```
+node tools/review-test.mjs         # 13 checks
+node tools/hit-model-test.mjs      # 14 checks (2 new head-to-head regressions)
+node tools/reviews-feed-test.mjs   #  6 checks
+node tools/ui-labels-test.mjs      #  5 checks (new)
+node tools/page-render-test.mjs    #  7 page renders, 0 failed
+node tools/link-check.mjs          # every internal href/src resolves
+python3 tools/check-local-links.py # every local HTML href/src exists
+```
+
+All of it now runs in `.github/workflows/verify-site.yml` on every push and pull request (before this
+change CI ran only the syntax and `check-local-links.py` steps, so none of the behavioural tests were
+enforced on `main`).

@@ -147,4 +147,42 @@ check('remaining-PA estimate is zero for a Final game', () => {
   assert.equal(Props.estimateRemainingPAs(feed), 0);
 });
 
+/* Official shape of GET /api/v1/people/{batterId}/stats?stats=vsPlayer&
+ * group=hitting&opposingPlayerId={pitcherId} — values copied verbatim from the
+ * live response for batter 660271 vs pitcher 543037 (2026-11-20). */
+const vsPlayerSplits = [
+  { season: '2018', stat: { hits: 1, atBats: 6, avg: '.167' } },
+  { season: '2019', stat: { hits: 2, atBats: 5, avg: '.400' } },
+  { season: '2021', stat: { hits: 0, atBats: 6, avg: '.000' } },
+  { season: '2022', stat: { hits: 1, atBats: 3, avg: '.333' } },
+  { season: '2026', stat: { hits: 0, atBats: 3, avg: '.000' } },
+];
+const vsPlayerTotalBlock = {
+  type: { displayName: 'vsPlayerTotal' },
+  splits: [{ stat: { hits: 4, atBats: 23, avg: '.174' } }],
+};
+const vsPlayerBlock = { type: { displayName: 'vsPlayer' }, splits: vsPlayerSplits };
+
+check('career H2H is read from vsPlayerTotal, not from whichever block comes last', () => {
+  /* Without `season=`, the API returns vsPlayer first and vsPlayerTotal second. */
+  const totalsLast = Props.parseVsPlayer({ stats: [vsPlayerBlock, vsPlayerTotalBlock] });
+  assert.equal(totalsLast.atBats, 23);
+  assert.equal(totalsLast.hits, 4);
+  assert.ok(Math.abs(totalsLast.rate - 4 / 23) < 1e-9);
+
+  /* With `season=`, the API returns vsPlayerTotal FIRST — the case that used to
+   * report a single old season (6 AB) instead of the career line. */
+  const totalsFirst = Props.parseVsPlayer({ stats: [vsPlayerTotalBlock, vsPlayerBlock] });
+  assert.equal(totalsFirst.atBats, 23, 'season-scoped response must still read the total');
+  assert.equal(totalsFirst.hits, 4);
+});
+
+check('career H2H falls back to summing the per-season splits, and to nothing', () => {
+  const summed = Props.parseVsPlayer({ stats: [vsPlayerBlock] });
+  assert.equal(summed.atBats, 23);
+  assert.equal(summed.hits, 4);
+  assert.equal(Props.parseVsPlayer({ stats: [] }), null);
+  assert.equal(Props.parseVsPlayer(null), null);
+});
+
 console.log('\nhit-model-test: ' + passed + ' checks passed');

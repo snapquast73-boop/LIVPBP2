@@ -69,6 +69,38 @@
   // Primary team-logo path documented by the project (team-cap-on-dark); the
   // onerror handler falls back to the un-suffixed path, then hides the image,
   // so a change in the static host can never break the layout.
+  /* Official club abbreviations, read from GET /api/v1/teams?sportId=1 on
+   * 2026-11-20 (all 30 values matched; see docs/verification-report.md §10).
+   * This table exists because /api/v1/schedule's `teams.<side>.team` object
+   * carries only id/name/link — it has NO `abbreviation`, even when compared
+   * with `fields=…,abbreviation`. Anything rendering a schedule-sourced team
+   * must therefore resolve the abbreviation here instead of printing AWY/HOM. */
+  var TEAM_ABBR = {
+    108: 'LAA', 109: 'AZ', 110: 'BAL', 111: 'BOS', 112: 'CHC', 113: 'CIN', 114: 'CLE',
+    115: 'COL', 116: 'DET', 117: 'HOU', 118: 'KC', 119: 'LAD', 120: 'WSH', 121: 'NYM',
+    133: 'ATH', 134: 'PIT', 135: 'SD', 136: 'SEA', 137: 'SF', 138: 'STL', 139: 'TB',
+    140: 'TEX', 141: 'TOR', 142: 'MIN', 143: 'PHI', 144: 'ATL', 145: 'CWS', 146: 'MIA',
+    147: 'NYY', 158: 'MIL',
+  };
+
+  /**
+   * Club abbreviation for a team node from either payload shape:
+   *   schedule  → { team: { id, name } }        (no abbreviation)
+   *   feed/live → { id, name, abbreviation }    (abbreviation present)
+   * The payload value always wins; the official table is only a fallback, and
+   * an unknown id falls back to name initials rather than an invented code.
+   */
+  function teamAbbr(team) {
+    if (!team) return '';
+    var node = team.team || team;
+    if (node.abbreviation) return node.abbreviation;
+    if (node.id && TEAM_ABBR[node.id]) return TEAM_ABBR[node.id];
+    var name = node.name || '';
+    var words = name.split(/\s+/).filter(Boolean);
+    if (!words.length) return '';
+    return words.map(function (w) { return w.charAt(0); }).join('').slice(0, 3).toUpperCase();
+  }
+
   function teamLogoUrl(teamId) {
     if (!teamId) return '';
     return 'https://www.mlbstatic.com/team-logos/team-cap-on-dark/' + teamId + '.svg';
@@ -202,6 +234,8 @@
     formatDateLabel: formatDateLabel,
     formatTime: formatTime,
     formatDateTime: formatDateTime,
+    teamAbbr: teamAbbr,
+    TEAM_ABBR: TEAM_ABBR,
     teamLogoUrl: teamLogoUrl,
     teamLogoFallbackUrl: teamLogoFallbackUrl,
     teamLogoImg: teamLogoImg,

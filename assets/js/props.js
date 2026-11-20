@@ -79,6 +79,49 @@
     return COUNT_FACTORS[key] ? key : null;
   }
 
+  /**
+   * Career batter-vs-pitcher line from the official
+   * GET /api/v1/people/{batterId}/stats?stats=vsPlayer&group=hitting&opposingPlayerId={pitcherId}
+   * response (verified against the live API on 2026-11-20).
+   *
+   * That response carries two blocks: `vsPlayerTotal` (the career line) and
+   * `vsPlayer` (one split per season faced). When the request also sends
+   * `season=`, the API returns `vsPlayerTotal` FIRST and `vsPlayer` second, so
+   * block order is not a safe way to find the total — an earlier version kept
+   * the last block and reported one arbitrary old season (6 AB instead of the
+   * career 23 AB). Read the total by name, sum the per-season splits when the
+   * total is absent, and return null — never a guessed line — when neither is
+   * present.
+   */
+  function parseVsPlayer(payload) {
+    var stats = (payload && payload.stats) || [];
+    var i;
+    for (i = 0; i < stats.length; i += 1) {
+      var name = (stats[i] && stats[i].type && stats[i].type.displayName) || '';
+      if (name !== 'vsPlayerTotal') continue;
+      var first = ((stats[i].splits || [])[0] || {}).stat;
+      if (!first) continue;
+      var abTotal = Number(first.atBats) || 0;
+      if (!abTotal) return null;
+      var hitsTotal = Number(first.hits) || 0;
+      return { rate: toRate(hitsTotal, abTotal), atBats: abTotal, hits: hitsTotal };
+    }
+    var ab = 0;
+    var hits = 0;
+    for (i = 0; i < stats.length; i += 1) {
+      var kind = (stats[i] && stats[i].type && stats[i].type.displayName) || '';
+      if (kind !== 'vsPlayer') continue;
+      (stats[i].splits || []).forEach(function (row) {
+        var stat = row && row.stat;
+        if (!stat) return;
+        ab += Number(stat.atBats) || 0;
+        hits += Number(stat.hits) || 0;
+      });
+    }
+    if (!ab) return null;
+    return { rate: toRate(hits, ab), atBats: ab, hits: hits };
+  }
+
   function seasonRateFromSplits(statsPayload, group) {
     var stats = (statsPayload && statsPayload.stats) || [];
     for (var i = 0; i < stats.length; i += 1) {
@@ -318,17 +361,7 @@
     ]).then(function (results) {
       var batterCtx = results[0];
       var pitcherCtx = results[1];
-      var h2h = null;
-      var vsStats = (results[2] && results[2].stats) || [];
-      vsStats.forEach(function (s) {
-        var split = (s.splits || [])[0];
-        if (split && split.stat) {
-          h2h = {
-            rate: toRate(Number(split.stat.hits), Number(split.stat.atBats)),
-            atBats: Number(split.stat.atBats) || 0,
-          };
-        }
-      });
+      var h2h = parseVsPlayer(results[2]);
 
       // Split codes are from the batter's point of view ("vs Left" = against a
       // left-handed pitcher), which is also correct for switch hitters.
@@ -482,6 +515,7 @@
     seasonRateFromSplits: seasonRateFromSplits,
     platoonFromSplits: platoonFromSplits,
     formFromGameLog: formFromGameLog,
+    parseVsPlayer: parseVsPlayer,
     buildForecast: buildForecast,
     estimateRemainingPAs: estimateRemainingPAs,
     render: render,

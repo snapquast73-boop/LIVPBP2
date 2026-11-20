@@ -16,6 +16,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Check JavaScript syntax
         run: |
           set -eu
@@ -23,6 +28,23 @@ jobs:
             node --check "$file"
           done
           node --check server.mjs
+          for file in tools/*.mjs tools/lib/*.mjs; do
+            node --check "$file"
+          done
 
       - name: Check local HTML links and assets
         run: python3 tools/check-local-links.py
+
+      - name: Check every external and internal reference
+        run: node tools/link-check.mjs
+
+      - name: Install jsdom (test-only; the shipped site has no dependencies)
+        run: npm install --no-save --no-audit --no-fund jsdom
+
+      - name: Deterministic tool suite (no network)
+        run: |
+          node tools/review-test.mjs
+          node tools/hit-model-test.mjs
+          node tools/reviews-feed-test.mjs
+          node tools/ui-labels-test.mjs
+          node tools/page-render-test.mjs
