@@ -118,6 +118,20 @@
           original project, which could not be verified (upstream 404, above).
         </li>
         <li>
+          <strong>README “Customizing” and file-tree notes name code that does not exist.</strong>
+          The <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/README.md">README</a> says to tune
+          <code>SPORT_ID</code>, <code>LIVE_POLL_MS</code>, <code>REVIEW_POLL_MS</code>, <code>PREVIEW_POLL_MS</code> and
+          <code>FINAL_POLL_MS</code> in <code>assets/js/api.js</code>, and describes <code>api.js</code> as having “retry, fallbacks,
+          formatters” and <code>ui.js</code> as drawing count dots and a runners diamond. None of those identifiers or
+          features exist in the present files: <code>api.js</code> is a plain <code>fetch</code> + JSON wrapper for
+          <a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2024-10-30">schedule</a> and
+          <a href="https://statsapi.mlb.com/api/v1.1/game/775296/feed/live">game feed</a> calls, with no retry, backoff,
+          formatter, sport-id or poll-interval constants (interval values are literals in
+          <code>scoreboard.js</code>, <code>game.js</code>, <code>reviews-feed.js</code>), and <code>ui.js</code> only has
+          escaping, date helpers and the team-logo URL. Left unchanged so the uploaded text stays as-is; the code, not the
+          README, is authoritative for what runs.
+        </li>
+        <li>
           <strong>Hit forecast not implemented.</strong>
           The README’s two-sided hit forecast (log5, platoon splits, form, head-to-head) is not in <code>assets/js/props.js</code>,
           which shows only the current batter/pitcher and bats/throws sides (verified live on game 775296).
