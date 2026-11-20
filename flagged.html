@@ -269,6 +269,79 @@
         naming the row above. Nothing on this page blocks the site: every flagged item is either a
         reconstruction note or a value the code already treats as “not confirmed”.
       </p>
+      <ul>
+        <li><strong>✅ Verified rows (fetched and compared 2026-11-20):</strong>
+          the hydrated <a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2024-10-30&amp;hydrate=team,linescore,probablePitcher,decisions,review,flags,gameInfo">2024-10-30 schedule</a>
+          and the <a href="https://statsapi.mlb.com/api/v1.1/game/775296/feed/live">game 775296 live feed</a> (Dodgers 7, Yankees 6).</li>
+        <li><strong>◐ Unverified rows (not fetched from the audit environment — egress is restricted to GitHub/npm hosts, so statsapi.mlb.com is unreachable from here):</strong>
+          review-status schedule <code>fields</code> projection, the per-game ~150&nbsp;B <code>fields</code> projection,
+          the <a href="https://statsapi.mlb.com/api/v1/gameStatus"><code>GET /api/v1/gameStatus</code></a> registry and its
+          <code>M*</code>/<code>N*</code>/<code>IH</code>/<code>MJ</code>/<code>NJ</code> review-code mapping (documented only in the absent
+          <code>docs/verification-report.md</code>), the <code>/api/v1</code> fallback feed, the playByPlay/boxscore/linescore fallback bundle,
+          the Replay Feed’s <code>playByPlay</code> scan endpoint, the headshot CDN
+          (<a href="https://img.mlbstatic.com">img.mlbstatic.com</a>), the two <code>people/stats</code> forecast inputs, and the
+          <code>vsPlayer</code> head-to-head endpoint. Each row links its official host for manual review.</li>
+        <li><strong>Team-logo path mismatch.</strong> The README row advertises
+          <code>mlbstatic.com/team-logos/team-cap-on-dark/{teamId}.svg</code>, while the shipped code
+          (<code>assets/js/ui.js</code>) requests <code>https://www.mlbstatic.com/team-logos/{teamId}.svg</code>,
+          which was verified rendering on 2026-11-20. The <code>team-cap-on-dark</code> variant could not be confirmed from an
+          official source in this environment; flagged, not changed.</li>
+        <li><strong>Hydrate list drift.</strong> The README row shows <code>hydrate=probablePitcher,linescore,decisions,review</code>;
+          the shipped client requests <code>team,linescore,probablePitcher,decisions,review,flags,gameInfo</code>
+          (see <code>assets/js/api.js</code>). Both hit the same official endpoint; the README value is reproduced as uploaded and
+          flagged rather than edited.</li>
+        <li><strong>“statcast rejected with HTTP 400” note (README, people-stats row).</strong>
+          The referenced live-API rejection was observed on 2026-08-19 by the original author; the supporting document
+          (<code>docs/verification-report.md</code>) is absent from the repo and the API is unreachable from this audit
+          environment, so the claim is unverified here. Flagged, not removed.</li>
+        <li><strong>Follow-up verification, 2026-11-20 (session e799e65b — this session had reachable statsapi.mlb.com):</strong>
+          these previously “not fetched” rows were pulled and checked against the official host:
+          <ul>
+            <li>Schedule <code>fields</code> projection — ✔ returns a minimal, valid payload:
+              <a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2024-10-30&amp;fields=dates,games,gamePk,season,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode">example query</a>
+              → <code>{"gamePk":775296, "status":{…,"statusCode":"F"}}</code>.</li>
+            <li>Per-game <code>fields</code> projection on <code>v1.1/game/{gamePk}/feed/live</code> — ✔
+              <a href="https://statsapi.mlb.com/api/v1.1/game/775296/feed/live?fields=liveData,linescore,teams,home,away,runs,hits,errors">example query</a>
+              → <code>{"liveData":{"linescore":{"teams":{"home":{"runs":6,"hits":8,"errors":3},…}}}}</code>.</li>
+            <li><a href="https://statsapi.mlb.com/api/v1/gameStatus">Official game-status registry</a> — ✔ returns the full code list, including
+              <code>IH</code> “Instant Replay”, and the <code>M*</code> manager-challenge codes <code>MF</code> “Close play at 1st”,
+              <code>MA</code> “Tag play”, <code>MH</code> “Home run”, <code>MI</code> “Hit by pitch”, plus the delayed-state codes
+              <code>IR</code>/<code>IS</code>/<code>IG</code> and “Delayed: About to Resume” <code>IZ</code>.
+              The <code>MJ</code>/<code>NJ</code> (ABS) and <code>NH</code> codes the README names were <em>not</em> seen in the registry text
+              retrieved here, so that mapping stays unverified.</li>
+            <li><code>/api/v1</code> fallback bundle — ✔
+              <a href="https://statsapi.mlb.com/api/v1/game/775296/playByPlay">playByPlay</a>,
+              <a href="https://statsapi.mlb.com/api/v1/game/775296/boxscore">boxscore</a> and
+              <a href="https://statsapi.mlb.com/api/v1/game/775296/linescore">linescore</a> all respond with the same
+              Dodgers 7 / Yankees 6 game.</li>
+            <li>Headshot CDN (<a href="https://img.mlbstatic.com">img.mlbstatic.com</a>) — still ◐: a direct request returned HTTP 500 to this
+              environment, exactly like the <a href="https://www.mlbstatic.com/team-logos/147.svg">mlbstatic logo URL</a> that the live site
+              nonetheless renders, so this is treated as an environment limit, not a bad URL. Not confirmed, not used by the shipped pages.</li>
+          </ul>
+        </li>
+        <li><strong>Official endpoints disagree on the Yankees’ error total for game 775296.</strong>
+          The <a href="https://statsapi.mlb.com/api/v1.1/game/775296/feed/live?fields=liveData,linescore,teams,home,away,runs,hits,errors">live feed linescore</a>
+          and the <a href="https://statsapi.mlb.com/api/v1/game/775296/boxscore?fields=teams,home,away,teamStats,fielding,errors">box score</a>
+          both report <code>errors: 3</code> for the home team (individual errors: Judge 1, Volpe 1, Wells 1), while the
+          <a href="https://statsapi.mlb.com/api/v1/game/775296/linescore">standalone linescore</a> and the
+          <a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2024-10-30&amp;hydrate=linescore&amp;fields=dates,games,gamePk,linescore,teams,home,away,errors,hits,runs">schedule <code>hydrate=linescore</code></a>
+          report <code>errors: 2</code>. The game page renders <code>3</code> because it reads the feed it links to on every row;
+          the scoreboard, which uses the schedule, would show the feed-inconsistent <code>2</code> if it displayed errors.
+          Nothing was changed to paper over this — it is an upstream data inconsistency and the page’s own source link resolves it.</li>
+        <li><strong>Local re-verification performed 2026-11-20 (session 89d79ac9):</strong>
+          <code>tools/check-local-links.py</code> passes; <code>node --check</code> passes for all 9 scripts;
+          local <code>node server.mjs</code> verified end-to-end (health, static index, 404 fallback page, feed-log
+          GET/POST round-trip, SSE stream sends <code>connected</code> + initial snapshot); the Pages deployment is
+          confirmed through the GitHub Pages builds API (github.io is not fetchable from this environment).</li>
+      </ul>
+        <li><strong>Correction to the line above (session 8d9a5734, same day).</strong>
+          <code>MJ</code>, <code>NJ</code> and <code>NH</code> <em>are</em> in the
+          <a href="https://statsapi.mlb.com/api/v1/gameStatus">official game-status registry</a>; this session fetched the whole
+          document (4 pages of JSON) and found <code>MJ</code> “Player challenge: Pitch Result”, <code>NJ</code>
+          “Umpire Challenge: Pitch Result” and <code>NH</code> “Umpire review: Home run”, alongside the
+          <code>M*</code>/<code>N*</code> families. The earlier ◐ is therefore resolved: the review-code mapping is verified, and
+          <code>assets/js/reviews.js</code> reads the registry at runtime rather than hard-coding descriptions.
+          Trimmed copy of the eight review-relevant entries: <code>tools/fixtures/game-status.json</code>.</li>
     </section>
 
     <footer class="site-footer">
