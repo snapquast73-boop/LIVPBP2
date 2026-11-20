@@ -332,22 +332,16 @@
         // observed (score after the previous completed play). Runs already
         // credited to the reviewed event are included in `after`, so they are
         // the only runs an overturn could remove.
+        // A conditional "possible after" score is only offered while the review
+        // is unresolved, and only from runs the payload credits to the reviewed
+        // event itself (never a prediction of the ruling or of runner placement).
         var possible = null;
-        if (scoring.length) {
-          possible = { away: before.away, home: before.home };
-          if (battingSide === 'away') possible.away = Math.max(0, possible.away);
-          else possible.home = Math.max(0, possible.home);
-          // The scoring runs sit inside `after`; removing them gives the
-          // conditional "possible after" score, which is only offered while the
-          // review is unresolved.
-          if (after.away !== null && after.home !== null) {
-            if (battingSide === 'away') possible.away = after.away - scoring.length;
-            else possible.home = after.home - scoring.length;
-            possible.away = Math.max(0, possible.away);
-            possible.home = Math.max(0, possible.home);
-          } else {
-            possible = null;
-          }
+        if (inProgress && scoring.length && after.away !== null && after.home !== null) {
+          possible = { away: after.away, home: after.home };
+          if (battingSide === 'away') possible.away = after.away - scoring.length;
+          else possible.home = after.home - scoring.length;
+          possible.away = Math.max(0, possible.away);
+          possible.home = Math.max(0, possible.home);
         }
 
         var entry = {
