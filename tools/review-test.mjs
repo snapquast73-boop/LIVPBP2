@@ -4,6 +4,7 @@
  * Fixtures are shaped from live StatsAPI responses verified 2026-11-20; see
  * docs/verification-report.md §3–§6 for the request URLs and raw evidence. */
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { createSandbox, loadScripts, readFixture } from './lib/browser-env.mjs';
 
 // Objects created inside the vm sandbox belong to another realm, so compare
@@ -185,6 +186,26 @@ check('a used counter moving backwards is an irregularity', () => {
   assert.equal(out.length, 1);
   assert.equal(out[0].category, 'irregularity');
   assert.match(out[0].detail, /went from 2 to 1/);
+});
+
+/*
+ * The Replay Feed asks for a `fields=` projection, and that projection is
+ * leaf-name based: naming `reviewDetails` alone answers `"reviewDetails": {}`
+ * (verified 2026-11-20 —
+ * https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,playEvents,reviewDetails
+ * returned empty objects, while adding the four leaf names returned
+ * {"isOverturned":false,"inProgress":false,"reviewType":"MF","challengeTeamId":108}).
+ * Without them every row on the live page degraded to "Replay Review / Unknown",
+ * so the leaves are asserted here.
+ */
+check('the Replay Feed projection names the reviewDetails leaves', () => {
+  const src = readFileSync(new URL('../assets/js/reviews-feed.js', import.meta.url), 'utf8');
+  const start = src.indexOf('var FEED_FIELDS = [');
+  const list = src.slice(start, src.indexOf('].join', start));
+  for (const leaf of ['reviewDetails', 'reviewType', 'challengeTeamId', 'isOverturned', 'inProgress']) {
+    assert.ok(list.includes("'" + leaf + "'"),
+      leaf + ' missing from FEED_FIELDS — the API would return reviewDetails as {}');
+  }
 });
 
 console.log('\nreview-test: ' + passed + ' checks passed');

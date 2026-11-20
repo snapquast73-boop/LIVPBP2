@@ -16,6 +16,7 @@ const MD_FILES = ['README.md', 'COORDINATION.md', 'docs/verification-report.md',
   'docs/scoring-changes.md', 'docs/api-compliance.md'];
 
 const missing = [];
+const proseOnly = [];
 const externals = [];
 const checked = new Set();
 
@@ -72,8 +73,19 @@ for (const doc of MD_FILES) {
   const linkRe = /\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
   let m;
   while ((m = linkRe.exec(text)) !== null) checkRef(doc, m[1]);
+  // Backticked paths are prose, not links. In README/docs they are treated as
+  // link targets (they promise a file the reader can open); in the shared board
+  // they are often another session's branch-only file — PR #16's
+  // `tools/smoke-test.mjs`, for example — so there they are reported, not failed.
   const codeRe = /`((?:docs|tools|assets)\/[^`\s]+)`/g;
-  while ((m = codeRe.exec(text)) !== null) checkRef(doc, m[1]);
+  while ((m = codeRe.exec(text)) !== null) {
+    if (doc === 'COORDINATION.md') {
+      const ref = m[1];
+      if (!exists(ref)) proseOnly.push(doc + ' -> ' + ref);
+    } else {
+      checkRef(doc, m[1]);
+    }
+  }
 }
 
 // Every asset the pages load must exist as a file, and every JS file must parse.
@@ -99,6 +111,11 @@ console.log('link-check: ' + checked.size + ' internal references checked across
   HTML_PAGES.length + ' pages and ' + MD_FILES.length + ' documents');
 console.log('link-check: ' + jsFiles.length + ' script files present, ' +
   externals.length + ' external URLs (not fetched)');
+
+if (proseOnly.length) {
+  console.log('\nMentioned on the shared board but not in this branch (historical record, not a link):');
+  proseOnly.forEach((p) => console.log('  ' + p));
+}
 
 if (missing.length) {
   console.error('\nMissing targets:');
