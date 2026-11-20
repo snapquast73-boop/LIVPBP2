@@ -1,0 +1,28 @@
+name: Verify static site
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check JavaScript syntax
+        run: |
+          set -eu
+          for file in assets/js/*.js; do
+            node --check "$file"
+          done
+          node --check server.mjs
+
+      - name: Check local HTML links and assets
+        run: python3 tools/check-local-links.py
