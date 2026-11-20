@@ -143,7 +143,7 @@ mlb.com uses, re-implemented from scratch in vanilla HTML/CSS/JS.
 - No build step, no frameworks, no API keys — it runs on **GitHub Pages** (or any static
   host, or even `file://`).
 
-> **Live demo:** [buffedlizard55-lab.github.io/MLB-Live-PBP](https://buffedlizard55-lab.github.io/MLB-Live-PBP/)
+> **Live demo:** [snapquast73-boop.github.io/LIVPBP2](https://snapquast73-boop.github.io/LIVPBP2/)
 
 ---
 
@@ -345,7 +345,7 @@ with no build step and no workflow permissions:
 2. In the repo: **Settings → Pages → Source → "Deploy from a branch"** → branch
    `main` → folder `/ (root)` → **Save**.
 3. Your site is live at **`https://<your-username>.github.io/<repo-name>/`** —
-   e.g. `https://buffedlizard55-lab.github.io/MLB-Live-PBP/`. Every push to `main`
+   e.g. `https://snapquast73-boop.github.io/LIVPBP2/`. Every push to `main`
    republishes it automatically (takes ~1 minute).
 
 ### Optional: Actions-based deployment & CI smoke test
