@@ -269,6 +269,15 @@
         naming the row above. Nothing on this page blocks the site: every flagged item is either a
         reconstruction note or a value the code already treats as “not confirmed”.
       </p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">5 · Verification log carried over from the parallel sessions (kept verbatim)</div>
+      <p class="muted">
+        The entries below were written by the integration sessions that worked on <code>main</code> while this
+        branch was open. They are kept as written — including the ones this session later resolved — so the record
+        shows what was known when, not only the final state.
+      </p>
       <ul>
         <li><strong>✅ Verified rows (fetched and compared 2026-11-20):</strong>
           the hydrated <a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2024-10-30&amp;hydrate=team,linescore,probablePitcher,decisions,review,flags,gameInfo">2024-10-30 schedule</a>
@@ -333,7 +342,6 @@
           local <code>node server.mjs</code> verified end-to-end (health, static index, 404 fallback page, feed-log
           GET/POST round-trip, SSE stream sends <code>connected</code> + initial snapshot); the Pages deployment is
           confirmed through the GitHub Pages builds API (github.io is not fetchable from this environment).</li>
-      </ul>
         <li><strong>Correction to the line above (session 8d9a5734, same day).</strong>
           <code>MJ</code>, <code>NJ</code> and <code>NH</code> <em>are</em> in the
           <a href="https://statsapi.mlb.com/api/v1/gameStatus">official game-status registry</a>; this session fetched the whole
@@ -342,6 +350,7 @@
           <code>M*</code>/<code>N*</code> families. The earlier ◐ is therefore resolved: the review-code mapping is verified, and
           <code>assets/js/reviews.js</code> reads the registry at runtime rather than hard-coding descriptions.
           Trimmed copy of the eight review-relevant entries: <code>tools/fixtures/game-status.json</code>.</li>
+      </ul>
     </section>
 
     <footer class="site-footer">
