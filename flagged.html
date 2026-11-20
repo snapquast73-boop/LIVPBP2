@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flagged for Review — MLB Live PBP</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-ball">⚾</span>
+      <span>MLB Live PBP</span>
+      <span class="brand-sub">flagged for review</span>
+    </div>
+    <a class="btn btn-ghost" href="index.html">← Scoreboard</a>
+    <a class="btn btn-feed" href="reviews.html">🚨 Replay Feed</a>
+  </header>
+
+  <main class="game-main">
+    <section class="panel">
+      <h1>Flagged for Review</h1>
+      <p style="color:var(--muted);">
+        Items below were flagged during repository verification and reconstruction for GitHub Pages.
+      </p>
+      <ul>
+        <li>
+          <strong>Missing <code>assets/</code> directory in initial upload:</strong>
+          The initial commit (<code>2ee9ca7</code>) contained <code>index.html</code>, <code>game.html</code>,
+          <code>reviews.html</code>, <code>404.html</code>, <code>README.md</code>, and <code>server.mjs</code>,
+          but omitted <code>assets/css/style.css</code> and <code>assets/js/*.js</code>.
+          All referenced static assets were reconstructed to match the HTML interfaces and official
+          <a href="https://statsapi.mlb.com" target="_blank" rel="noopener">MLB StatsAPI</a> endpoints.
+        </li>
+        <li>
+          <strong>Static GitHub Pages hosting:</strong>
+          GitHub Pages serves static files only and does not execute <code>server.mjs</code>.
+          Browser-side persistence uses <code>localStorage</code> via <code>assets/js/feed-log.js</code>.
+        </li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
