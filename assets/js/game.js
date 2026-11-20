@@ -185,10 +185,21 @@
       return;
     }
     const renderTeam = (teamData, label) => {
-      const batters = (teamData.batters || []).map((id) => teamData.players && teamData.players[`ID${id}`]).filter(Boolean);
+      // The boxscore payload keys players by "ID<personId>"; the official
+      // `batters` array is not documented in the v1/v1.1 payload, so treat it
+      // as optional and fall back to ordering by each batter's battingOrder.
+      const playersMap = teamData.players || {};
+      let batters = [];
+      if (Array.isArray(teamData.batters) && teamData.batters.length) {
+        batters = teamData.batters.map((id) => playersMap[`ID${id}`]).filter(Boolean);
+      } else {
+        batters = Object.values(playersMap)
+          .filter((p) => p && p.person && p.battingOrder != null && String(p.battingOrder).trim() !== '' && !Number.isNaN(Number(p.battingOrder)))
+          .sort((a, b) => Number(a.battingOrder) - Number(b.battingOrder));
+      }
       const rows = batters.map((p) => {
         const s = (p.stats && p.stats.batting) || {};
-        return dataRow([p.person?.fullName, s.atBats, s.runs, s.hits, s.rbi]);
+        return dataRow([p.person && p.person.fullName, s.atBats, s.runs, s.hits, s.rbi]);
       }).join('');
       return `
         <h4>${UI.esc(label)}</h4>
@@ -210,9 +221,18 @@
     }
     const bannerWrap = document.getElementById('live-review-banner-wrap');
     const active = items.filter((i) => i.inProgress);
+    const status = (feed.gameData && feed.gameData.status) || {};
+    const statusReviewInProgress = UI.isReviewInProgress(status);
     if (bannerWrap) {
-      bannerWrap.innerHTML = active.length
-        ? `<div class="banner-box" style="margin-top:12px;">🚨 <strong>Active Review:</strong> ${UI.esc(active[0].label)} — ${UI.esc(active[0].reason)}</div>`
+      const parts = [];
+      if (statusReviewInProgress) {
+        parts.push(`🚨 <strong>Under Review:</strong> ${UI.esc(UI.reviewStatusLabel(status))} — official game status (codedGameState ${UI.esc(status.codedGameState || '')}${status.statusCode ? `, ${UI.esc(status.statusCode)}` : ''})`);
+      }
+      if (active.length) {
+        parts.push(`Active review event: <strong>${UI.esc(active[0].label)}</strong> — ${UI.esc(active[0].reason)}`);
+      }
+      bannerWrap.innerHTML = parts.length
+        ? `<div class="banner-box" style="margin-top:12px;" role="alert">${parts.join(' · ')}</div>`
         : '';
     }
     const el = document.getElementById('reviews-wrap');

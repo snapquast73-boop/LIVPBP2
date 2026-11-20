@@ -1,20 +1,32 @@
 (function (global) {
   'use strict';
 
+  /* Official review/challenge classification.
+   * The official MLB StatsAPI status registry (GET /api/v1/gameStatus) defines
+   * manager challenges (codes "M*", e.g. MF = Close play at 1st, MA = Tag play)
+   * and umpire reviews (codes "N*", e.g. NH = Home run, NS = Stadium boundary
+   * call); MJ = Player challenge: Pitch Result and NJ = Umpire challenge: Pitch
+   * Result are the ABS pitch-challenge codes. The reviewDetails payload is not
+   * part of the documented StatsAPI surface, so the classification also falls
+   * back to matching official text descriptions. See
+   * https://statsapi.mlb.com/api/v1/gameStatus and
+   * https://statsapi.mlb.com/api/v1/reviewReasons (the reviews payload shape is
+   * flagged as unverified on the Flagged for Review page). */
   function classifyReview(reviewDetails, evDetails) {
-    const code = (reviewDetails && reviewDetails.reviewType) || '';
-    const desc = ((evDetails && evDetails.description) || (reviewDetails && reviewDetails.reason) || '').toLowerCase();
+    const code = String((reviewDetails && reviewDetails.reviewType) || '').trim();
+    const desc = String((evDetails && evDetails.description) || (reviewDetails && reviewDetails.reason) || '').toLowerCase();
+    const type = code.replace(/[\s-]/g, '').toLowerCase();
 
-    if (code === 'MJ' || desc.includes('abs') || desc.includes('ball-strike')) {
+    if (type === 'mj' || type === 'nj' || type.indexOf('pitchresult') !== -1 || desc.includes('abs') || desc.includes('ball-strike')) {
       return { category: 'abs', label: 'ABS Challenge' };
     }
-    if (code === 'MA' || code === 'MF' || desc.includes('manager challenge')) {
+    if (type === 'ma' || type === 'mf' || type.startsWith('m') || desc.includes('manager challenge')) {
       return { category: 'challenge', label: 'Manager Challenge' };
     }
     if (desc.includes('boundary') || desc.includes('home run')) {
       return { category: 'boundary', label: 'Boundary Call' };
     }
-    if (desc.includes('crew chief') || desc.includes('umpire')) {
+    if (type.startsWith('n') || desc.includes('crew chief') || desc.includes('umpire')) {
       return { category: 'review', label: 'Umpire / Crew Chief Review' };
     }
     return { category: 'review', label: 'Replay Review' };
@@ -76,8 +88,13 @@
         if (ev.reviewDetails) {
           checkReview(ev.reviewDetails, ev, evIdx);
         }
-        const evType = ev.details && ev.details.eventType;
-        if (evType === 'os_ruling_pending_primary' || evType === 'os_ruling_pending_prior') {
+        // The official event-type registry (GET /api/v1/eventTypes) defines
+        // os_ruling_pending_primary / os_ruling_pending_prior ("Official Scorer
+        // Ruling Pending"). Events carry the code in details.code or
+        // details.eventType; accept either shape.
+        const evCodes = [ev.details && ev.details.eventType, ev.details && ev.details.code].filter(Boolean);
+        const evType = evCodes.find((c) => c === 'os_ruling_pending_primary' || c === 'os_ruling_pending_prior');
+        if (evType) {
           items.push({
             id: `${gameData.game ? gameData.game.pk : 'g'}-${playIdx}-os-${evIdx}`,
             gamePk: gameData.game ? gameData.game.pk : null,

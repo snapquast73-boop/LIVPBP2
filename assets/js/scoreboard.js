@@ -47,7 +47,7 @@
   function renderBanner() {
     const el = document.getElementById('banner');
     if (!el) return;
-    const inReview = gamesCache.filter((g) => g.flags && g.flags.inReview);
+    const inReview = gamesCache.filter((g) => UI.isReviewInProgress(g.status) || (g.flags && g.flags.inReview === true));
     if (!inReview.length) {
       el.innerHTML = '';
       return;
@@ -104,7 +104,7 @@
       const home = g.teams.home;
       const state = g.status ? g.status.abstractGameState : 'Preview';
       const ls = g.linescore || {};
-      const inReview = g.flags && g.flags.inReview;
+      const inReview = UI.isReviewInProgress(g.status) || (g.flags && g.flags.inReview === true);
       let pillClass = 'pill-preview';
       let statusText = UI.formatTime(g.gameDate);
       if (state === 'Live') {

@@ -54,6 +54,23 @@
     return `https://www.mlbstatic.com/team-logos/${teamId}.svg`;
   }
 
+  /* Official review / challenge detection.
+   * The MLB StatsAPI status registry (GET https://statsapi.mlb.com/api/v1/gameStatus)
+   * marks a game under review with codedGameState 'M' (manager challenges, incl.
+   * MJ/NJ pitch-result challenges), 'N' (umpire reviews / pitch-result challenges)
+   * and the statusCode 'IH' (Instant Replay). See the official registry. */
+  function isReviewInProgress(status) {
+    if (!status || typeof status !== 'object') return false;
+    const coded = status.codedGameState;
+    const code = status.statusCode;
+    return coded === 'M' || coded === 'N' || code === 'IH';
+  }
+
+  function reviewStatusLabel(status) {
+    if (!status) return '';
+    return status.detailedState || status.statusCode || '';
+  }
+
   global.UI = {
     esc,
     todayStr,
@@ -61,5 +78,7 @@
     formatDateLabel,
     formatTime,
     teamLogoUrl,
+    isReviewInProgress,
+    reviewStatusLabel,
   };
 })(window);
