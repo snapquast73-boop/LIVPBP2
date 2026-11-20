@@ -186,6 +186,50 @@
         </li>
       </ul>
     </section>
+
+    <section class="panel">
+      <h2>Endpoint table — source links &amp; verification status (89d79ac9, 2026-11-20)</h2>
+      <p style="color:var(--muted);">
+        The <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/README.md">README</a> API-calls table now carries a
+        <em>Source (official)</em> column linking every row to the official MLB host
+        (<a href="https://statsapi.mlb.com" target="_blank" rel="noopener">statsapi.mlb.com</a>,
+        <a href="https://www.mlbstatic.com" target="_blank" rel="noopener">mlbstatic.com</a>,
+        <a href="https://img.mlbstatic.com" target="_blank" rel="noopener">img.mlbstatic.com</a>) and a per-row
+        verification status. No value in the table was added, removed, or rewritten — unverifiable rows keep their
+        uploaded values and are flagged here instead.
+      </p>
+      <ul>
+        <li><strong>✅ Verified rows (fetched and compared 2026-11-20):</strong>
+          the hydrated <a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2024-10-30&amp;hydrate=team,linescore,probablePitcher,decisions,review,flags,gameInfo">2024-10-30 schedule</a>
+          and the <a href="https://statsapi.mlb.com/api/v1.1/game/775296/feed/live">game 775296 live feed</a> (Dodgers 7, Yankees 6).</li>
+        <li><strong>◐ Unverified rows (not fetched from the audit environment — egress is restricted to GitHub/npm hosts, so statsapi.mlb.com is unreachable from here):</strong>
+          review-status schedule <code>fields</code> projection, the per-game ~150&nbsp;B <code>fields</code> projection,
+          the <a href="https://statsapi.mlb.com/api/v1/gameStatus"><code>GET /api/v1/gameStatus</code></a> registry and its
+          <code>M*</code>/<code>N*</code>/<code>IH</code>/<code>MJ</code>/<code>NJ</code> review-code mapping (documented only in the absent
+          <code>docs/verification-report.md</code>), the <code>/api/v1</code> fallback feed, the playByPlay/boxscore/linescore fallback bundle,
+          the Replay Feed’s <code>playByPlay</code> scan endpoint, the headshot CDN
+          (<a href="https://img.mlbstatic.com">img.mlbstatic.com</a>), the two <code>people/stats</code> forecast inputs, and the
+          <code>vsPlayer</code> head-to-head endpoint. Each row links its official host for manual review.</li>
+        <li><strong>Team-logo path mismatch.</strong> The README row advertises
+          <code>mlbstatic.com/team-logos/team-cap-on-dark/{teamId}.svg</code>, while the shipped code
+          (<code>assets/js/ui.js</code>) requests <code>https://www.mlbstatic.com/team-logos/{teamId}.svg</code>,
+          which was verified rendering on 2026-11-20. The <code>team-cap-on-dark</code> variant could not be confirmed from an
+          official source in this environment; flagged, not changed.</li>
+        <li><strong>Hydrate list drift.</strong> The README row shows <code>hydrate=probablePitcher,linescore,decisions,review</code>;
+          the shipped client requests <code>team,linescore,probablePitcher,decisions,review,flags,gameInfo</code>
+          (see <code>assets/js/api.js</code>). Both hit the same official endpoint; the README value is reproduced as uploaded and
+          flagged rather than edited.</li>
+        <li><strong>“statcast rejected with HTTP 400” note (README, people-stats row).</strong>
+          The referenced live-API rejection was observed on 2026-08-19 by the original author; the supporting document
+          (<code>docs/verification-report.md</code>) is absent from the repo and the API is unreachable from this audit
+          environment, so the claim is unverified here. Flagged, not removed.</li>
+        <li><strong>Local re-verification performed 2026-11-20 (session 89d79ac9):</strong>
+          <code>tools/check-local-links.py</code> passes; <code>node --check</code> passes for all 9 scripts;
+          local <code>node server.mjs</code> verified end-to-end (health, static index, 404 fallback page, feed-log
+          GET/POST round-trip, SSE stream sends <code>connected</code> + initial snapshot); the Pages deployment is
+          confirmed through the GitHub Pages builds API (github.io is not fetchable from this environment).</li>
+      </ul>
+    </section>
   </main>
 </body>
 </html>

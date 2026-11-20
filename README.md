@@ -173,20 +173,30 @@ sends CORS headers, so any static page can call it directly from the browser.
 
 This project does the same thing with its own front end. The API calls we make:
 
-| What we need | Endpoint |
-| --- | --- |
-| Games for a date (scoreboard cards, probables, live count) | `GET /api/v1/schedule?sportId=1&date=YYYY-MM-DD&hydrate=probablePitcher,linescore,decisions,review` |
-| **Review status for the whole slate** (Replay Feed's 250ms watcher) | `GET /api/v1/schedule?sportId=1&date=YYYY-MM-DD&fields=dates,games,gamePk,season,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode` |
-| **Review status for one game** (game page's 250ms status watcher, ~150 B) | `GET /api/v1.1/game/{gamePk}/feed/live?fields=gameData,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode` |
-| Official game-status registry (source of every review `statusCode` + `reason`) | `GET /api/v1/gameStatus` |
-| Full game state — play-by-play, current at-bat, linescore, box score, decisions, rosters | `GET /api/v1.1/game/{gamePk}/feed/live` |
-| Fallback feed (older games) | `GET /api/v1/game/{gamePk}/feed/live` |
-| Fallback bundle (if the feed 404s) | `GET /api/v1/game/{gamePk}/playByPlay` + `/boxscore` + `/linescore` |
-| Play-by-play only (all-games Replay Feed scans this per game) | `GET /api/v1/game/{gamePk}/playByPlay` |
-| Team logos | `https://www.mlbstatic.com/team-logos/team-cap-on-dark/{teamId}.svg` |
-| Player headshots | `https://img.mlbstatic.com/mlb-photos/image/upload/.../v1/people/{playerId}/headshot/67/current` |
-| Batter / pitcher season inputs for the forecast | `GET /api/v1/people/{playerId}/stats?stats=expectedStatistics,season,statSplits,gameLog&group=hitting&sitCodes=vl,vr&season=YYYY` (same CSV for `group=pitching`). **Note:** the `statcast` stat is rejected with HTTP 400 for `group=hitting` on the live API (verified 2026-08-19), so it is deliberately not requested — xBA comes from `expectedStatistics`. |
-| Career head-to-head for the live forecast | `GET /api/v1/people/{batterId}/stats?stats=vsPlayer&group=hitting&opposingPlayerId={pitcherId}` |
+| What we need | Endpoint | Source (official) | Verified? |
+| --- | --- | --- | --- |
+| Games for a date (scoreboard cards, probables, live count) | `GET /api/v1/schedule?sportId=1&date=YYYY-MM-DD&hydrate=probablePitcher,linescore,decisions,review` | [Hydrated schedule example — 2024-10-30](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2024-10-30&hydrate=team,linescore,probablePitcher,decisions,review,flags,gameInfo) (the shipped client requests `hydrate=team,linescore,probablePitcher,decisions,review,flags,gameInfo` — see `assets/js/api.js`) | ✅ fetched and compared 2026-11-20 (see Flagged for Review → Verified) |
+| **Review status for the whole slate** (Replay Feed's 250ms watcher) | `GET /api/v1/schedule?sportId=1&date=YYYY-MM-DD&fields=dates,games,gamePk,season,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode` | [Same query with example date](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2024-10-30&fields=dates,games,gamePk,season,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode) | ◐ not fetched this session (egress blocked); links the official host for manual review |
+| **Review status for one game** (game page's 250ms status watcher, ~150 B) | `GET /api/v1.1/game/{gamePk}/feed/live?fields=gameData,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode` | [Same query with example gamePk 775296](https://statsapi.mlb.com/api/v1.1/game/775296/feed/live?fields=gameData,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode) | ◐ not fetched this session (egress blocked); links the official host for manual review |
+| Official game-status registry (source of every review `statusCode` + `reason`) | `GET /api/v1/gameStatus` | [statsapi.mlb.com/api/v1/gameStatus](https://statsapi.mlb.com/api/v1/gameStatus) | ◐ not fetched this session (egress blocked); the `M*`/`N*`/`IH`/`MJ`/`NJ` code mapping was documented only in the absent `docs/verification-report.md` — unverified |
+| Full game state — play-by-play, current at-bat, linescore, box score, decisions, rosters | `GET /api/v1.1/game/{gamePk}/feed/live` | [Game 775296 live feed](https://statsapi.mlb.com/api/v1.1/game/775296/feed/live) | ✅ fetched and compared 2026-11-20 (Dodgers 7, Yankees 6) |
+| Fallback feed (older games) | `GET /api/v1/game/{gamePk}/feed/live` | [Game 775296 live feed, v1 path](https://statsapi.mlb.com/api/v1/game/775296/feed/live) | ◐ v1 fallback path not fetched this session; links the official host for manual review |
+| Fallback bundle (if the feed 404s) | `GET /api/v1/game/{gamePk}/playByPlay` + `/boxscore` + `/linescore` | [playByPlay — game 775296](https://statsapi.mlb.com/api/v1/game/775296/playByPlay) · [boxscore](https://statsapi.mlb.com/api/v1/game/775296/boxscore) · [linescore](https://statsapi.mlb.com/api/v1/game/775296/linescore) | ◐ not fetched this session (egress blocked); links the official host for manual review |
+| Play-by-play only (all-games Replay Feed scans this per game) | `GET /api/v1/game/{gamePk}/playByPlay` | [playByPlay — game 775296](https://statsapi.mlb.com/api/v1/game/775296/playByPlay) | ◐ not fetched this session (egress blocked); links the official host for manual review |
+| Team logos | `https://www.mlbstatic.com/team-logos/team-cap-on-dark/{teamId}.svg` | [MLB logo CDN example (119.svg — as served by the shipped code)](https://www.mlbstatic.com/team-logos/119.svg) | ◐ the `team-cap-on-dark` path in this row could not be confirmed; the shipped code requests `https://www.mlbstatic.com/team-logos/{teamId}.svg`, which was verified rendering on 2026-11-20 — see Flagged for Review |
+| Player headshots | `https://img.mlbstatic.com/mlb-photos/image/upload/.../v1/people/{playerId}/headshot/67/current` | [MLB photo CDN (img.mlbstatic.com)](https://img.mlbstatic.com/) | ◐ not fetched this session (egress blocked); links the official CDN for manual review |
+| Batter / pitcher season inputs for the forecast | `GET /api/v1/people/{playerId}/stats?stats=expectedStatistics,season,statSplits,gameLog&group=hitting&sitCodes=vl,vr&season=YYYY` (same CSV for `group=pitching`). **Note:** the `statcast` stat is rejected with HTTP 400 for `group=hitting` on the live API (verified 2026-08-19), so it is deliberately not requested — xBA comes from `expectedStatistics`. | [MLB StatsAPI root (official)](https://statsapi.mlb.com/api/v1/) — stats path is undocumented; the 2026-08-19 “statcast → HTTP 400” note is unverifiable now (document is absent, API unreachable from this environment) | ◐ not fetched this session (egress blocked); unverified |
+| Career head-to-head for the live forecast | `GET /api/v1/people/{batterId}/stats?stats=vsPlayer&group=hitting&opposingPlayerId={pitcherId}` | [MLB StatsAPI root (official)](https://statsapi.mlb.com/api/v1/) — stats path is undocumented | ◐ not fetched this session (egress blocked); unverified |
+
+**Verification note (2026-11-20).** Every row above links an official MLB host (`statsapi.mlb.com`,
+`mlbstatic.com`, `img.mlbstatic.com`). ✅ rows were fetched and compared by the final integration
+session on 2026-11-20 (see the verification list on the site's
+[Flagged for Review](https://snapquast73-boop.github.io/LIVPBP2/flagged.html) page and `COORDINATION.md`).
+◐ rows could **not** be fetched from the build/audit environment (network egress is restricted to
+GitHub and npm registries, so `statsapi.mlb.com` is unreachable from here); they link the official
+host for manual review and their values are reproduced as uploaded, not inferred. Nothing in this
+table was silently corrected.
+
 
 The live feed is the heart of it — one response contains everything Gameday shows:
 
