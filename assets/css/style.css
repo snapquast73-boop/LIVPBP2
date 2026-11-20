@@ -452,3 +452,173 @@ input[type="date"] {
   .game-header { grid-template-columns: 1fr; text-align: center; }
   .header-side, .header-side.home { justify-content: center; text-align: center; }
 }
+
+/* ==========================================================================
+ * Reconstruction additions (session 8d9a5734): at-bat module, base diamond,
+ * count chips, hit-forecast card, score tracker, active strip, badges.
+ * ==========================================================================*/
+
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.panel-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.scroll-x { overflow-x: auto; }
+
+.team-title { font-weight: 700; font-size: 16px; }
+
+/* --- live at-bat module ------------------------------------------------- */
+.live-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-size: 13px;
+  margin-top: 10px;
+}
+.atbat {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+.atbat-side {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.atbat-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 15px;
+}
+.headshot {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.count-row { display: flex; gap: 8px; margin-top: 4px; }
+.count-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-family: var(--mono);
+  font-size: 16px;
+}
+.count-lbl { font-size: 10px; color: var(--muted); font-family: var(--font); }
+.bases-row { margin-top: 8px; }
+.bases-diamond { width: 64px; height: 64px; }
+.diamond-frame { fill: none; stroke: var(--border); stroke-width: 1.5; }
+.base { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+.base.on { fill: var(--amber); stroke: var(--amber); }
+.last-play {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+
+/* --- hit forecast ------------------------------------------------------- */
+.forecast-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 10px;
+}
+.forecast-head {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.forecast-num {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 800;
+  color: #79c0ff;
+}
+.forecast-num.alt { color: #56d364; }
+.tier { font-weight: 700; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.chip-up { color: #56d364; border-color: rgba(46, 160, 67, 0.4); }
+.chip-down { color: #ff7b72; border-color: rgba(224, 49, 49, 0.4); }
+.chip-review { color: #ffdcd7; border-color: rgba(224, 49, 49, 0.5); background: var(--red-bg); }
+.forecast-notes { margin-top: 8px; font-size: 11px; color: var(--muted); }
+.props-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+.props-name { font-weight: 700; font-size: 15px; }
+
+/* --- score tracker / counters ------------------------------------------ */
+.tracker {
+  margin-top: 8px;
+  border-top: 1px dashed var(--border);
+  padding-top: 6px;
+  font-size: 12px;
+}
+.tracker-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 0;
+}
+.counter-line {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #e3b341;
+  font-family: var(--mono);
+}
+
+/* --- active strip ------------------------------------------------------- */
+.active-strip {
+  background: var(--red-bg);
+  border: 1px solid rgba(224, 49, 49, 0.5);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-top: 12px;
+}
+.active-strip-head {
+  font-weight: 700;
+  color: #ffdcd7;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.active-row { font-size: 13px; padding: 2px 0; }
+
+/* --- badges ------------------------------------------------------------- */
+.scoring-change-badge { color: #e3b341; font-weight: 700; }
+.feed-card.flagged { border-color: rgba(210, 153, 34, 0.6); }
+.live-dot.stale { background: var(--amber); }
+.pitching-table { margin-top: 10px; }
+
+@media (max-width: 640px) {
+  .atbat { grid-template-columns: 1fr; }
+  .forecast-head { grid-template-columns: 1fr; }
+}
