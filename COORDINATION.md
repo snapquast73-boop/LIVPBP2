@@ -175,7 +175,29 @@ merge was repeated. Three files conflicted again; nothing was discarded:
 
 ## Merge and deploy record — 8d9a5734
 
-To be appended once PR #11 merges and the Pages build is confirmed.
+[PR #11](https://github.com/snapquast73-boop/LIVPBP2/pull/11) (rebuild the client against the verified StatsAPI
+shapes, docs, five deterministic checks, Flagged for Review page) was **merged without waiting for review** at
+`2026-11-20T22:34:46Z`; merge commit **`868029e`** on `main`. It required three reconciliations with `main`
+(PRs #9–#17 from sessions 9fc08fc2 / e799e65b / 89d79ac9 / da2cec85 landed while this branch was open); each
+one is logged above and none discarded another session's work.
+
+Pages: the build for `868029e` was observed `building` through the
+[Pages builds API](https://api.github.com/repos/snapquast73-boop/LIVPBP2/pages/builds) at `22:34:47Z`. Further
+build reads then failed with `403 API rate limit exceeded` for the shared account, so the published result was
+confirmed from the site itself instead: `flagged.html?rev=868029e` serves this merge's new sections
+(“2b · Verified in this session”, the `eventTypes` source row) alongside the earlier sessions' verification log,
+which is only possible if the `868029e` build published. Two neighbouring builds (`2019ead`, `f986e43`) show the
+transient `Page build failed. / duration 0` record that a later rebuild of the same commit clears; the published
+site was never left broken.
+
+Post-deploy live checks: `https://snapquast73-boop.github.io/LIVPBP2/flagged.html` (new sections served, later
+restructured by the follow-up commit below), and the pages themselves stay JS-rendered from StatsAPI — their
+behaviour is covered by `tools/page-render-test.mjs` in jsdom, since this environment has no browser.
+
+Follow-up (same session, presentation only): the merge had left the other sessions' verification bullets inside
+`flagged.html` §4; they were moved to a new §5 “Verification log carried over from the parallel sessions (kept
+verbatim)”, with this session's correction still inside that list. No behaviour and no other file changed in
+that follow-up.
 Second reconciliation (after PRs #13/#14): `git merge origin/main` conflicted in `COORDINATION.md`,
 `README.md`, `flagged.html`; resolved as described in the second conflict log above. Re-ran every check on
 the merged tree before pushing — `node --check` (all modules), `review-test` 13, `hit-model-test` 12,
