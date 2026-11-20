@@ -95,3 +95,16 @@ Session 89d79ac9 marked the rows it could not reach `◐` because `statsapi.mlb.
 **Official-data irregularity found while verifying:** the Yankees’ error total for `775296` is **3** in the [live feed linescore](https://statsapi.mlb.com/api/v1.1/game/775296/feed/live?fields=liveData,linescore,teams,home,away,runs,hits,errors) and in the [box score](https://statsapi.mlb.com/api/v1/game/775296/boxscore) (Judge, Volpe and Wells each charged one), but **2** in the [standalone linescore](https://statsapi.mlb.com/api/v1/game/775296/linescore) and in [schedule `hydrate=linescore`](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2024-10-30&hydrate=linescore&fields=dates,games,gamePk,linescore,teams,home,away,errors,hits,runs). The game page shows 3 because every row links the feed it reads. No code was changed to hide the disagreement; it is documented on the Flagged page.
 
 `tools/check-local-links.py` and `node --check` pass on the combined tree; `flagged.html` tag balance (li/ul/section/code/strong/em/p) verified.
+
+## Merge and deploy record — PR #14 (e799e65b)
+
+[PR #14](https://github.com/snapquast73-boop/LIVPBP2/pull/14) (verify outstanding API rows; flag the linescore/box-score error-total disagreement; README status cells) merged into `main` at `9d861d3` (2026-11-20T22:31:55Z, state `MERGED`) without waiting for review. CI "Verify static site" for `9d861d3` = `success`; Pages build for `9d861d3` = `built` (no error).
+
+Post-deploy live checks at `?rev=9d861d3`:
+
+- <https://snapquast73-boop.github.io/LIVPBP2/?date=2024-10-30> — scoreboard renders the real game: Dodgers 7 (record 4-1) at Yankees 6 (1-4), Yankee Stadium, "Open Gameday →" linking to `game.html?gamePk=775296`, "1 game(s)".
+- <https://snapquast73-boop.github.io/LIVPBP2/game.html?gamePk=775296> — header 7–6 Final, linescore with per-row MLB feed links, full play-by-play, box score.
+- <https://snapquast73-boop.github.io/LIVPBP2/reviews.html> — Replay Feed renders its counters and empty state for an offseason date.
+- <https://snapquast73-boop.github.io/LIVPBP2/flagged.html> — all Flagged-for-Review sections, including the new endpoint follow-up and the error-total disagreement item, are served.
+
+This is the final state: the uploaded project is published and working at <https://snapquast73-boop.github.io/LIVPBP2/>; every irregularity that could not be confirmed from an official source is on the Flagged page with source links.
