@@ -21,8 +21,14 @@
   var IDLE_SCAN_MS = 60000;
   var SOUND_COOLDOWN_MS = 2500;
 
+  // NOTE: the `fields` projection is leaf-name based. Naming `reviewDetails` alone
+  // returns `"reviewDetails": {}` — the object arrives empty and every row collapses
+  // to "Replay Review / Unknown". The four leaf names below must stay in the list;
+  // tools/review-test.mjs asserts it, and docs/verification-report.md records the
+  // before/after payloads.
   var FEED_FIELDS = [
-    'liveData', 'plays', 'allPlays', 'reviewDetails', 'about', 'atBatIndex', 'inning',
+    'liveData', 'plays', 'allPlays', 'reviewDetails', 'reviewType',
+    'challengeTeamId', 'isOverturned', 'inProgress', 'about', 'atBatIndex', 'inning',
     'halfInning', 'startTime', 'endTime', 'result', 'event', 'eventType', 'description',
     'awayScore', 'homeScore', 'isOut', 'rbi', 'runners', 'details', 'isScoringEvent',
     'playIndex',

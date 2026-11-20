@@ -117,13 +117,27 @@ Evidence B (feed, projection that isolates reviewDetails):
 | `playEvents[].details.{playIndex,description,event,eventType}` exist | Evidence A | verified |
 | Per-team manager-challenge counters: `gameData.review.{away,home}.{used,remaining}` | <https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,review,absChallenges,away,home,used,remaining,usedSuccessful,usedFailed> → `away {used 0, remaining 1}`, `home {used 1, remaining 0}` | verified |
 | Per-team ABS counters: `gameData.absChallenges.{away,home}.{usedSuccessful,usedFailed,remaining}` | same URL → `away {2,2,0}`, `home {1,1,1}` | verified |
-| A whole-play review may be published at `play.reviewDetails` as well | **Not observed** in the sampled games | UNVERIFIED — the parser reads `play.reviewDetails`, `playEvents[i].reviewDetails` **and** `playEvents[i].details.reviewDetails`, and collapses duplicates, so either location works |
+| A whole-play review may be published at `play.reviewDetails` **as well as** on the pitch event | `https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,playEvents` → the last play (Bottom 9, the challenged double play) carries `"reviewDetails":{"isOverturned":false,"inProgress":false,"reviewType":"MF","challengeTeamId":108}` on the **play**, while its pitch events carry only `{}` | verified — the parser reads the play, the pitch event and `playEvents[i].details`, and collapses duplicates, so either location works |
 | Meaning of `challengeTeamId` | Undocumented. Observed `116` (= DET, the batting side) on a DET plate appearance whose official description names no challenging team | UNVERIFIED semantics — treated as "the team that challenged" and flagged on `flagged.html` |
 | Difference between "call stands" and "call confirmed" | The payload exposes only `isOverturned: true/false` | UNVERIFIED — the UI prints "Call Stands / Confirmed" rather than inventing a distinction |
 | `os_ruling_pending_primary` / `os_ruling_pending_prior` event types ("Official Scorer Ruling Pending") | <https://statsapi.mlb.com/api/v1/eventTypes?fields=eventTypes,code,description> → `os_ruling_pending_prior` (`plateAppearance:false`, `baseRunningEvent:true`) and `os_ruling_pending_primary` (`plateAppearance:true`, `baseRunningEvent:false`), both described "Official Scorer Ruling Pending" | verified — the parser still matches only those two exact codes, so nothing is shown when they are absent |
 | Official scoring changes exist and are made by the Official Scorer, the Elias Sports Bureau, or after a player/club review | MLB's own published log: <https://www.mlb.com/official-information/scoring-changes> ("Changes can be made by the Official Scorer, Elias Sports Bureau, or following a review initiated by a player or club.") | verified |
 | The terms attached to the data: "Only individual, non-commercial, non-bulk use of the Materials is permitted" | <http://gdx.mlb.com/components/copyright.txt> (the link the API's own copyright line points to), plus MLB.com Terms of Use §1 at <https://www.mlb.com/official-information/terms-of-use> | verified |
 | The StatsAPI payload contains **no** scoring-change marker, so a change is only observable by diffing consecutive polls | Evidence A/B contain no such field; the published log is a separate web page, not an API endpoint | verified (absence) → the tracker is built on consecutive observations and says so |
+
+### 5a. Gotcha found on the live site after deployment: `fields` is leaf-name based
+
+The Replay Feed asks for a narrow projection. Naming the parent object is **not** enough — the
+API keeps only the leaf names it is told about, so `reviewDetails` came back as `{}`:
+
+| Request | `reviewDetails` in the response |
+| --- | --- |
+| `…/feed/live?fields=liveData,plays,allPlays,playEvents,reviewDetails` | `{}` for every review — every row then rendered as “Replay Review / Unknown” |
+| `…/feed/live?fields=liveData,plays,allPlays,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,playEvents` | `{"isOverturned":true,"inProgress":false,"reviewType":"MJ","challengeTeamId":115}` |
+
+Both URLs were fetched on 2026-11-20. The fix is the four leaf names in
+`assets/js/reviews-feed.js` `FEED_FIELDS`, and `tools/review-test.mjs` now asserts that they stay in
+that list (check 14). The game page was never affected: it requests the feed without a projection.
 
 ## 6. Player inputs for the hit forecast
 
@@ -156,7 +170,8 @@ and
 All tests are network-free and run in CI or locally:
 
 ```
-node tools/review-test.mjs          # 13 checks — parser, counters, diffs, irregularities
+node tools/review-test.mjs          # 14 checks — parser, counters, diffs, irregularities,
+                                    #             and the Replay Feed's `fields` projection
 node tools/hit-model-test.mjs       # 12 checks — log5, clamps, count, form, splits
 node tools/reviews-feed-test.mjs    #  6 checks — persistence/merge/idempotency
 node tools/page-render-test.mjs     #  7 end-to-end page renders in jsdom (no page errors)
@@ -192,6 +207,6 @@ successful rebuild (`2019ead`, `f986e43`); the following build of each pair repo
 survive to the published site.
 
 Local checks re-run on the merged tree before publishing: `node --check` clean on every
-module, `tools/review-test.mjs` 13/13, `tools/hit-model-test.mjs` 12/12,
+module, `tools/review-test.mjs` 14/14, `tools/hit-model-test.mjs` 12/12,
 `tools/reviews-feed-test.mjs` 6/6, `tools/page-render-test.mjs` 7 pages / 0 failed,
 `tools/link-check.mjs` clean, `tools/check-local-links.py` clean.

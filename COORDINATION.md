@@ -117,7 +117,7 @@ endpoint table and on `flagged.html`):
 - Pages publishing: <https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site>; live Pages metadata: <https://api.github.com/repos/snapquast73-boop/LIVPBP2/pages>.
 
 Local checks, all passing before the merge (re-run after it): `node --check` on every `assets/js/*.js`;
-`tools/review-test.mjs` 13/13; `tools/hit-model-test.mjs` 12/12; `tools/reviews-feed-test.mjs` 6/6;
+`tools/review-test.mjs` 14/14; `tools/hit-model-test.mjs` 12/12; `tools/reviews-feed-test.mjs` 6/6;
 `tools/page-render-test.mjs` 7 pages, 0 failed (jsdom, `npm install --no-save jsdom`);
 `tools/link-check.mjs` reports no broken internal links or assets (76 internal references across 5 pages
 and 5 docs, 15 script files, 40+ external URLs, 20 statsapi references).

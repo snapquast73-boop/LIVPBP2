@@ -122,13 +122,6 @@
               <td><a href="https://statsapi.mlb.com/api/v1/gameStatus" target="_blank" rel="noopener">GET /api/v1/gameStatus</a></td>
             </tr>
             <tr>
-              <td>Whole-play <code>play.reviewDetails</code></td>
-              <td>Whether a manager challenge is published on the play object</td>
-              <td><strong>Not observed</strong> in the sampled games. The parser reads the play object, the pitch
-                event, and <code>playEvents[i].details</code>, collapsing duplicates, so either location works.</td>
-              <td><a href="https://statsapi.mlb.com/api/v1/game/822974/playByPlay" target="_blank" rel="noopener">GET /api/v1/game/{pk}/playByPlay</a></td>
-            </tr>
-            <tr>
               <td>Head-to-head stat shape</td>
               <td><code>stats=vsPlayer&amp;opposingPlayerId=…</code></td>
               <td><strong>Unverified</strong> (not sampled). The model simply omits the head-to-head driver when
@@ -224,6 +217,26 @@
                 775296 game feed both report Dodgers 7, Yankees 6. That verifies one example, not every game.</td>
               <td><a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2024-10-30&amp;hydrate=team,linescore,probablePitcher,decisions,review,flags,gameInfo" target="_blank" rel="noopener">schedule 2024-10-30</a> ·
                 <a href="https://statsapi.mlb.com/api/v1.1/game/775296/feed/live" target="_blank" rel="noopener">game 775296</a></td>
+            </tr>
+            <tr>
+              <td>Whole-play <code>play.reviewDetails</code></td>
+              <td><strong>Verified 2026-11-20</strong> — it does exist, but only for reviews of the whole
+                play: the last play of game 824027 carries
+                <code>{"isOverturned":false,"inProgress":false,"reviewType":"MF","challengeTeamId":108}</code>
+                on the play object, while its pitch events carry only <code>{}</code>. The parser reads the
+                play, the pitch event and <code>playEvents[i].details</code>, and dedupes, so both shapes work.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,playEvents" target="_blank" rel="noopener">feed/live (projection)</a></td>
+            </tr>
+            <tr>
+              <td><code>fields=</code> is leaf-name based</td>
+              <td><strong>Found on the live site after the merge and fixed.</strong> Asking for
+                <code>…?fields=…,reviewDetails</code> returns <code>"reviewDetails": {}</code>, so the Replay
+                Feed rendered every row as “Replay Review / Unknown” while the game page (no projection) was
+                correct. Adding <code>reviewType,challengeTeamId,isOverturned,inProgress</code> to the request
+                restored categories and outcomes; <code>tools/review-test.mjs</code> now asserts the four leaves
+                stay in <code>FEED_FIELDS</code> (14 checks).</td>
+              <td><a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,playEvents,reviewDetails" target="_blank" rel="noopener">pruned request (empty objects)</a> ·
+                <a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,playEvents" target="_blank" rel="noopener">fixed request</a></td>
             </tr>
             <tr>
               <td>Missing data is never zero-filled</td>
