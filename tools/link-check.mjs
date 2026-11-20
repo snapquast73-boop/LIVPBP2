@@ -25,7 +25,11 @@ function exists(relPath) {
   // are not links, so they are not checked.
   if (!clean || /[*?]/.test(clean)) return true;
   if (!clean) return true; // pure fragment
-  const abs = path.join(REPO_ROOT, clean.replace(/^\//, ''));
+  // Absolute in-site paths (e.g. /LIVPBP2/index.html on the 404 page, which is served from
+  // any depth) are resolved against the repository root.
+  const SITE_BASE = '/LIVPBP2/';
+  const rel = clean.startsWith(SITE_BASE) ? clean.slice(SITE_BASE.length) : clean.replace(/^\//, '');
+  const abs = path.join(REPO_ROOT, rel);
   return fs.existsSync(abs);
 }
 

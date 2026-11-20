@@ -24,6 +24,7 @@
   var lastFeed = null;
   var lastReviews = [];
   var started = false;
+  var latestRequest = 0;
   var registryReady = Promise.resolve();
 
   function init() {
@@ -122,9 +123,11 @@
 
   function loadGame() {
     var loading = document.getElementById('loading');
+    var request = (latestRequest += 1);
     if (loading) loading.classList.add('show');
     return registryReady.then(function () { return MLBAPI.getGameLive(gamePk); })
       .then(function (feed) {
+        if (request !== latestRequest) return null; // a newer poll already won
         lastFeed = feed;
         var sig = stateSignature(feed);
         updateReviewState(feed);
@@ -224,6 +227,27 @@
 
   /* -------------------------------------------------------------- live panel */
 
+  /**
+   * Values that the payload does not contain are shown blank, never as 0.
+   * (An absent field is "not observed", not "zero".)
+   */
+  function val(value) {
+    return (value === null || value === undefined || value === '') ? '' : value;
+  }
+
+  function feedUrl() {
+    return MLBAPI.BASE_V11 + '/game/' + encodeURIComponent(gamePk) + '/feed/live';
+  }
+
+  /** Trailing cell that attributes a table row to the official MLB feed. */
+  function sourceCell(values) {
+    var missing = values.some(function (v) {
+      return v === null || v === undefined || v === '';
+    });
+    return '<td><a href="' + UI.esc(feedUrl()) + '" target="_blank" rel="noopener">MLB feed</a>' +
+      (missing ? ' · blank = not in payload' : '') + '</td>';
+  }
+
   function basesFrom(linescore) {
     var off = (linescore && linescore.offense) || {};
     return {
@@ -288,7 +312,7 @@
           '<div class="atbat-name">' + UI.headshotImg(batter.id, 'headshot', 46) +
             UI.esc(batter.fullName || '—') + '</div>' +
           '<div class="muted">' + UI.esc(batLine
-            ? (batLine.hits || 0) + '-' + (batLine.atBats || 0) + ' today'
+            ? val(batLine.hits) + '-' + val(batLine.atBats) + ' today'
             : ((matchup.batSide && matchup.batSide.description) || '')) + '</div>' +
         '</div>' +
         '<div class="atbat-side">' +
@@ -296,8 +320,8 @@
           '<div class="atbat-name">' + UI.headshotImg(pitcher.id, 'headshot', 46) +
             UI.esc(pitcher.fullName || '—') + '</div>' +
           '<div class="muted">' + UI.esc(pitchLine
-            ? (pitchLine.inningsPitched || '0') + ' IP · ' + (pitchLine.strikeOuts || 0) + ' K · ' +
-              (pitchLine.baseOnBalls || 0) + ' BB'
+            ? val(pitchLine.inningsPitched) + ' IP · ' + val(pitchLine.strikeOuts) + ' K · ' +
+              val(pitchLine.baseOnBalls) + ' BB'
             : ((matchup.pitchHand && matchup.pitchHand.description) || '')) + '</div>' +
         '</div>' +
         '<div class="atbat-side">' +
@@ -350,20 +374,26 @@
 
     var head = innings.map(function (i) { return '<th>' + UI.esc(i.num) + '</th>'; }).join('');
     function row(totals, side, abbr) {
-      var cells = innings.map(function (i) {
+      var inningRuns = innings.map(function (i) {
         var s = i[side] || {};
-        return '<td>' + (typeof s.runs === 'number' ? s.runs : '-') + '</td>';
+        return typeof s.runs === 'number' ? s.runs : null;
+      });
+      var cells = inningRuns.map(function (r) {
+        return '<td>' + (r === null ? '<span class="muted">·</span>' : r) + '</td>';
       }).join('');
-      return '<tr><td><strong>' + UI.esc(abbr) + '</strong></td>' + cells +
-        '<td><strong>' + (typeof totals.runs === 'number' ? totals.runs : 0) + '</strong></td>' +
-        '<td>' + (typeof totals.hits === 'number' ? totals.hits : 0) + '</td>' +
-        '<td>' + (typeof totals.errors === 'number' ? totals.errors : 0) + '</td>' +
-        '<td>' + (typeof totals.leftOnBase === 'number' ? totals.leftOnBase : 0) + '</td></tr>';
+      var totals4 = [totals.runs, totals.hits, totals.errors, totals.leftOnBase];
+      var totalCells = totals4.map(function (v, idx) {
+        return '<td>' + (idx === 0 ? '<strong>' : '') + (typeof v === 'number' ? v : '') +
+          (idx === 0 ? '</strong>' : '') + '</td>';
+      }).join('');
+      return '<tr><td><strong>' + UI.esc(abbr) + '</strong></td>' + cells + totalCells +
+        sourceCell([abbr].concat(inningRuns, totals4)) + '</tr>';
     }
 
     el.innerHTML = '<div class="panel-title">Linescore</div>' +
       '<div class="scroll-x"><table class="linescore-table">' +
-        '<thead><tr><th>Team</th>' + head + '<th>R</th><th>H</th><th>E</th><th>LOB</th></tr></thead>' +
+        '<thead><tr><th>Team</th>' + head + '<th>R</th><th>H</th><th>E</th><th>LOB</th>' +
+        '<th>Source</th></tr></thead>' +
         '<tbody>' + row(awayTotals, 'away', awayAbbr) + row(homeTotals, 'home', homeAbbr) + '</tbody>' +
       '</table></div>' +
       (ls.currentInning
@@ -403,9 +433,7 @@
           '<span>' + UI.esc(UI.inningLabel(about.inning, about.halfInning)) + ' · ' +
             UI.esc(res.event || '') + (pitches ? ' · ' + pitches + ' pitch' + (pitches === 1 ? '' : 'es') : '') +
           '</span>' +
-          '<span>' + UI.esc(
-            (typeof res.awayScore === 'number' ? res.awayScore : 0) + '–' +
-            (typeof res.homeScore === 'number' ? res.homeScore : 0)) + '</span>' +
+          '<span>' + UI.esc(val(res.awayScore) + '–' + val(res.homeScore)) + '</span>' +
         '</div>' +
         (chips ? '<div class="chips">' + chips + '</div>' : '') +
         '<div class="play-desc">' + UI.esc(res.description || 'In progress…') + '</div>' +
@@ -437,39 +465,40 @@
       var s = (p.stats && p.stats.batting) || {};
       var order = Number(p.battingOrder);
       var slot = Number.isFinite(order) ? Math.round(order / 100) : '';
+      var stats = [s.atBats, s.runs, s.hits, s.rbi, s.baseOnBalls, s.strikeOuts];
       return '<tr>' +
-        '<td>' + UI.esc(slot) + '</td>' +
+        '<td>' + UI.esc(val(slot)) + '</td>' +
         '<td>' + UI.esc((p.person && p.person.fullName) || '') + '</td>' +
         '<td>' + UI.esc((p.position && p.position.abbreviation) || '') + '</td>' +
-        '<td>' + (s.atBats || 0) + '</td><td>' + (s.runs || 0) + '</td>' +
-        '<td>' + (s.hits || 0) + '</td><td>' + (s.rbi || 0) + '</td>' +
-        '<td>' + (s.baseOnBalls || 0) + '</td><td>' + (s.strikeOuts || 0) + '</td>' +
+        stats.map(function (v) { return '<td>' + UI.esc(val(v)) + '</td>'; }).join('') +
+        sourceCell(stats) +
       '</tr>';
     }).join('');
 
     var pitchRows = pitcherIds.map(function (id) { return players['ID' + id]; }).filter(Boolean)
       .map(function (p) {
         var s = (p.stats && p.stats.pitching) || {};
+        var stats = [s.inningsPitched, s.hits, s.runs, s.earnedRuns, s.baseOnBalls, s.strikeOuts];
         return '<tr>' +
           '<td></td>' +
           '<td>' + UI.esc((p.person && p.person.fullName) || '') + '</td>' +
-          '<td>P</td>' +
-          '<td colspan="2">' + UI.esc(s.inningsPitched || '0.0') + ' IP</td>' +
-          '<td>' + (s.hits || 0) + '</td><td>' + (s.runs || 0) + '</td>' +
-          '<td>' + (s.earnedRuns || 0) + '</td><td>' + (s.baseOnBalls || 0) + '</td>' +
-          '<td>' + (s.strikeOuts || 0) + '</td>' +
+          '<td>' + UI.esc((p.position && p.position.abbreviation) || 'P') + '</td>' +
+          '<td>' + UI.esc(val(s.inningsPitched)) + '</td>' +
+          [s.hits, s.runs, s.earnedRuns, s.baseOnBalls, s.strikeOuts]
+            .map(function (v) { return '<td>' + UI.esc(val(v)) + '</td>'; }).join('') +
+          sourceCell(stats) +
         '</tr>';
       }).join('');
 
     return '<div class="panel-title">' + UI.esc(label) + '</div>' +
       '<div class="scroll-x"><table class="boxscore-table">' +
         '<thead><tr><th>#</th><th>Batter</th><th>Pos</th><th>AB</th><th>R</th><th>H</th>' +
-        '<th>RBI</th><th>BB</th><th>SO</th></tr></thead>' +
-        '<tbody>' + (batRows || '<tr><td colspan="9" class="muted">No batting lines yet.</td></tr>') +
+        '<th>RBI</th><th>BB</th><th>SO</th><th>Source</th></tr></thead>' +
+        '<tbody>' + (batRows || '<tr><td colspan="10" class="muted">No batting lines yet.</td></tr>') +
         '</tbody></table></div>' +
       '<div class="scroll-x"><table class="boxscore-table pitching-table">' +
-        '<thead><tr><th>#</th><th>Pitcher</th><th>Pos</th><th colspan="2">IP</th><th>H</th>' +
-        '<th>R</th><th>ER</th><th>BB</th><th>SO</th></tr></thead>' +
+        '<thead><tr><th>#</th><th>Pitcher</th><th>Pos</th><th>IP</th><th>H</th>' +
+        '<th>R</th><th>ER</th><th>BB</th><th>SO</th><th>Source</th></tr></thead>' +
         '<tbody>' + (pitchRows || '<tr><td colspan="10" class="muted">No pitching lines yet.</td></tr>') +
         '</tbody></table></div>';
   }

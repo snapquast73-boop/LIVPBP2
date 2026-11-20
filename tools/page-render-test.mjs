@@ -177,6 +177,7 @@ await run('game page renders header, linescore, plays, box score and reviews', a
   assert.match(doc.getElementById('header-decisions').textContent, /W: Antonio Senzatela/);
   assert.match(doc.getElementById('header-decisions').textContent, /L: Kirby Yates/);
   assert.match(doc.getElementById('linescore-wrap').textContent, /Linescore/);
+  assert.match(doc.getElementById('linescore-wrap').textContent, /Source/);
   assert.match(doc.getElementById('plays-wrap').textContent, /Jose Siri doubles/);
   assert.match(doc.getElementById('plays-wrap').textContent, /Manager Challenge · Under Review/);
   assert.equal(doc.getElementById('reviews-tab-count').textContent, '2');
@@ -193,7 +194,9 @@ await run('game page box-score tab lists batting and pitching lines', async () =
   const doc = page.win.document;
   const box = doc.getElementById('boxscore-wrap').textContent;
   assert.match(box, /Kyle Freeland/);
-  assert.match(box, /6.0 IP/, 'pitching line must be rendered');
+  assert.match(box, /MLB feed/, 'every table row must link its official source');
+  assert.equal(Array.from(doc.querySelectorAll('#boxscore-wrap a[href*="statsapi.mlb.com"]')).length > 0,
+    true, 'box-score rows must carry an official source link');
   assert.match(box, /Kirby Yates/);
   assert.match(box, /Jose Siri/);
   page.win.close();

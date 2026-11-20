@@ -41,6 +41,7 @@
   var ticker = null;
   var countdown = 0;
   var scanning = false;
+  var latestScan = 0;
   var soundOn = localStorage.getItem('livpbp_sound') === '1';
   var notifyOn = localStorage.getItem('livpbp_notify') === '1';
   var lastChimeAt = 0;
@@ -232,6 +233,8 @@
   function scan() {
     if (scanning) return;
     scanning = true;
+    var request = (latestScan += 1);
+    var dateAtScan = currentDate;
     setStatus('Scanning games for reviews & challenges…');
 
     registryReady.then(function () {
@@ -251,10 +254,12 @@
         });
       })
       .then(function (result) {
+        if (request !== latestScan || dateAtScan !== currentDate) return;
         process(result);
         scheduleNextScan(result.games);
       })
       .catch(function (err) {
+        if (request !== latestScan) return;
         console.error(err);
         setStatus('Error scanning schedule: ' + err.message);
         scheduleNextScan([]);

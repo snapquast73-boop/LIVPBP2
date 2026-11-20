@@ -22,6 +22,8 @@
   var timer = null;
   var sweepTimer = null;
   var scoringChanges = {};
+  var latestRequest = 0;
+  var latestSweep = 0;
 
   function init() {
     var params = new URLSearchParams(window.location.search);
@@ -93,9 +95,12 @@
   }
 
   function loadSchedule() {
+    var request = (latestRequest += 1);
+    var dateAtRequest = currentDate;
     setStatus('Loading MLB schedule…');
     return MLBAPI.getSchedule(currentDate, { hydrate: HYDRATE })
       .then(function (data) {
+        if (request !== latestRequest || dateAtRequest !== currentDate) return null;
         var dates = data.dates || [];
         games = dates.length ? (dates[0].games || []) : [];
         indexReviews();
@@ -106,6 +111,7 @@
           ' game(s)' + (MLBAPI.quietRemainingMs() > 0 ? ' · API asked us to slow down' : ''));
       })
       .catch(function (err) {
+        if (request !== latestRequest) return;
         console.error(err);
         setStatus('Error loading schedule: ' + err.message);
         renderError(err);
@@ -128,7 +134,10 @@
 
   /** Lean status sweep: only status fields, so it is a few KB for the slate. */
   function sweepStatus() {
+    var request = (latestSweep += 1);
+    var dateAtRequest = currentDate;
     return MLBAPI.getScheduleStatus(currentDate).then(function (data) {
+      if (request !== latestSweep || dateAtRequest !== currentDate) return;
       var next = {};
       var dates = data.dates || [];
       var list = dates.length ? (dates[0].games || []) : [];

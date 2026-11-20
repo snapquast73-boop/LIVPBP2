@@ -29,7 +29,12 @@
         guessed. The full line-by-line record, including every request URL, is in
         <a href="docs/verification-report.md">docs/verification-report.md</a>.
       </p>
-      <p class="muted small">Checks performed 2026-11-20 against the live MLB StatsAPI and GitHub's API.</p>
+      <p class="muted small">
+        Checks performed 2026-11-20 against the live MLB StatsAPI and GitHub's API. This page also folds in the
+        verification log kept by the parallel integration sessions on <code>main</code> (9fc08fc2, e799e65b,
+        89d79ac9, da2cec85) — their items are kept, and marked where this session's own fetches supersede a
+        “could not fetch” mark they had to leave. Where the two disagreed, the outcome is stated on both sides.
+      </p>
     </section>
 
     <section class="panel">
@@ -62,6 +67,14 @@
           documented in <a href="docs/api-compliance.md">docs/api-compliance.md</a> (3 s live game page, 20 s
           scoreboard/Replay Feed, 5 s status sweep) to stay inside a reasonable request budget. Behaviour is the
           same: pages poll, pause when the tab is hidden, and back off on HTTP 429.
+        </li>
+        <li>
+          <strong>The 404 page needed absolute paths.</strong> A project site is served from
+          <code>/LIVPBP2/</code>, and <code>404.html</code> is returned for <em>any</em> missing path (including
+          paths one level deeper than the repo root), so relative links there resolved to the wrong place.
+          <code>404.html</code> now uses <code>/LIVPBP2/assets/css/style.css</code> and
+          <code>/LIVPBP2/index.html</code>. The trade-off: those paths name this repository, so a fork under a
+          different name needs them edited.
         </li>
         <li>
           <strong><code>server.mjs</code> cannot run on GitHub Pages.</strong> Pages serves static files only, so
@@ -109,14 +122,6 @@
               <td><a href="https://statsapi.mlb.com/api/v1/gameStatus" target="_blank" rel="noopener">GET /api/v1/gameStatus</a></td>
             </tr>
             <tr>
-              <td>“Official Scorer Ruling Pending” event types</td>
-              <td><code>os_ruling_pending_primary</code> / <code>os_ruling_pending_prior</code>, taken from the
-                original README; not observed in the 2026-06-01 sample and not re-verified this session.</td>
-              <td><strong>Unverified.</strong> The parser matches only those two exact codes, so nothing is shown
-                when they are absent — no false rows.</td>
-              <td><a href="https://statsapi.mlb.com/api/v1/eventTypes" target="_blank" rel="noopener">GET /api/v1/eventTypes</a></td>
-            </tr>
-            <tr>
               <td>Whole-play <code>play.reviewDetails</code></td>
               <td>Whether a manager challenge is published on the play object</td>
               <td><strong>Not observed</strong> in the sampled games. The parser reads the play object, the pitch
@@ -160,10 +165,94 @@
     </section>
 
     <section class="panel">
+      <div class="panel-title">2b · Verified in this session (and items earlier sessions had flagged)</div>
+      <p class="muted">
+        Every row here was fetched from the official host and compared with the code. Rows marked
+        “carried forward” were verified by an earlier integration session on this branch's history; they are
+        attributed rather than claimed as this session's work.
+      </p>
+      <div class="scroll-x">
+        <table class="boxscore-table">
+          <thead>
+            <tr><th>Item</th><th>Result</th><th>Source</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Official-scorer pending event codes</td>
+              <td><strong>Verified 2026-11-20</strong> — <code>os_ruling_pending_primary</code>
+                (<code>plateAppearance: true</code>, <code>baseRunningEvent: false</code>) and
+                <code>os_ruling_pending_prior</code> (<code>plateAppearance: false</code>,
+                <code>baseRunningEvent: true</code>) both carry the description
+                “Official Scorer Ruling Pending”. The earlier “unverified” mark is superseded.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/eventTypes?fields=eventTypes,code,description" target="_blank" rel="noopener">GET /api/v1/eventTypes</a></td>
+            </tr>
+            <tr>
+              <td>Review status codes and reasons</td>
+              <td><strong>Verified 2026-11-20</strong> — the registry returns review codes <code>MA</code>, <code>MH</code>, <code>MJ</code>, <code>NH</code>, <code>NS</code>,
+                <code>NJ</code>, <code>IH</code> plus the non-review controls <code>I</code> and <code>F</code>, with
+                <code>detailedState: “Instant Replay”</code>. Copied verbatim into
+                <code>tools/fixtures/game-status.json</code>; no code is invented.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/gameStatus" target="_blank" rel="noopener">GET /api/v1/gameStatus</a></td>
+            </tr>
+            <tr>
+              <td>Schedule shape and hydrations</td>
+              <td><strong>Verified 2026-11-20</strong> — <code>hydrate=team,linescore,probablePitcher,decisions,review,flags</code>
+                returns 9 games for 2026-06-01 with abbreviations, inning linescore, W/L/S decisions,
+                <code>review.away/home.used/remaining</code> and <code>flags</code>. Trimmed copy:
+                <code>tools/fixtures/schedule-2026-06-01.json</code>.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2026-06-01&amp;hydrate=team,linescore,probablePitcher,decisions,review,flags" target="_blank" rel="noopener">GET /api/v1/schedule</a></td>
+            </tr>
+            <tr>
+              <td>Where <code>reviewDetails</code> lives</td>
+              <td><strong>Verified 2026-11-20</strong> — it is a sibling of <code>details</code> on each pitch
+                event (<code>playEvents[i].reviewDetails</code>), with
+                <code>reviewType</code>, <code>challengeTeamId</code>, <code>isOverturned</code>,
+                <code>inProgress</code> — and <strong>no</strong> <code>reason</code> field. The parser still reads
+                all three candidate locations and dedupes, because only one was observed.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress" target="_blank" rel="noopener">feed/live projection</a></td>
+            </tr>
+            <tr>
+              <td><code>/api/v1/game/{pk}/feed/live</code></td>
+              <td><strong>Verified: not served.</strong> The unversioned feed path answers with an API error;
+                <code>v1.1</code> is required. The client therefore uses <code>v1.1</code> and falls back to the
+                <code>playByPlay</code>/<code>boxscore</code>/<code>linescore</code> bundle.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/game/824027/feed/live" target="_blank" rel="noopener">GET /api/v1/game/824027/feed/live</a></td>
+            </tr>
+            <tr>
+              <td>Against a published score</td>
+              <td><strong>Carried forward</strong> (session 9fc08fc2): the 2024-10-30 schedule and the
+                775296 game feed both report Dodgers 7, Yankees 6. That verifies one example, not every game.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2024-10-30&amp;hydrate=team,linescore,probablePitcher,decisions,review,flags,gameInfo" target="_blank" rel="noopener">schedule 2024-10-30</a> ·
+                <a href="https://statsapi.mlb.com/api/v1.1/game/775296/feed/live" target="_blank" rel="noopener">game 775296</a></td>
+            </tr>
+            <tr>
+              <td>Missing data is never zero-filled</td>
+              <td><strong>Adopted from session 9fc08fc2</strong>, applied to every table: a value the payload does
+                not contain is rendered blank, and each linescore/box-score row ends with an
+                <a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live" target="_blank" rel="noopener">MLB feed</a>
+                source link plus a “blank = not in payload” note when something is missing.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live" target="_blank" rel="noopener">GET /api/v1.1/game/{gamePk}/feed/live</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted small">
+        <strong>Resolved from earlier flag lists</strong> (these were accurate when written, and are now fixed):
+        the missing <code>docs/</code> and <code>tools/</code> files now exist; the two-sided hit forecast is
+        implemented in <code>assets/js/props.js</code>; the poll cadences are documented in
+        <code>docs/api-compliance.md</code> and in the README; the README endpoint table now carries an official
+        source link and a verification status per row; and the 404 page uses absolute paths (see §1).
+        <strong>Not resolved</strong>: the upstream repository is still 404, so no screen can be proven identical
+        to the original.
+      </p>
+    </section>
+
+    <section class="panel">
       <div class="panel-title">3 · Official sources used for the verified rows</div>
       <ul class="muted small">
         <li><a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags" target="_blank" rel="noopener">GET /api/v1/schedule</a> — games, records, linescore, probables, decisions, review counters</li>
         <li><a href="https://statsapi.mlb.com/api/v1/gameStatus" target="_blank" rel="noopener">GET /api/v1/gameStatus</a> — every review status code and reason (MA, MJ, NH, NJ, IH, …)</li>
+        <li><a href="https://statsapi.mlb.com/api/v1/eventTypes?fields=eventTypes,code,description" target="_blank" rel="noopener">GET /api/v1/eventTypes</a> — official play-event codes, including the official-scorer pending pair</li>
         <li><a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live" target="_blank" rel="noopener">GET /api/v1.1/game/{gamePk}/feed/live</a> — live state, linescore, box score, decisions, challenge counters</li>
         <li><a href="https://statsapi.mlb.com/api/v1/game/822974/playByPlay" target="_blank" rel="noopener">GET /api/v1/game/{gamePk}/playByPlay</a> — play events, runner movements, review attachments</li>
         <li><a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,statSplits,gameLog&group=hitting&sitCodes=vl,vr&season=2026" target="_blank" rel="noopener">GET /api/v1/people/{id}/stats</a> — season, platoon splits (vl/vr), game log</li>
@@ -188,6 +277,7 @@
         · <a href="index.html">Scoreboard</a>
         · <a href="reviews.html">Replay Feed</a>
         · <a href="docs/verification-report.md">Verification report</a>
+        · <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/COORDINATION.md">Coordination board</a>
       </p>
     </footer>
   </main>
