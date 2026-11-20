@@ -174,6 +174,38 @@ merge was repeated. Three files conflicted again; nothing was discarded:
   `GET /api/v1/gameStatus`; `MJ` “Player challenge: Pitch Result”, `NJ` “Umpire Challenge: Pitch Result”,
   `NH` “Umpire review: Home run”), so their ◐ on the review-code mapping is resolved rather than deleted.
 
+## Post-merge defect found on the live site — 8d9a5734 (PRs #25, #27)
+
+Reading the deployed `reviews.html?date=2026-06-01` after PR #11 showed **49 rows, every one
+“Replay Review / Unknown”**, while `game.html?gamePk=824027` on the same date was correct (ABS and
+manager challenges classified properly). Cause, established against the official API: the `fields=`
+projection is **leaf-name based**, so `…?fields=…,reviewDetails` answers `"reviewDetails": {}`; the
+client was reading empty objects. Naming `reviewType,challengeTeamId,isOverturned,inProgress` fixes it:
+
+- `…?fields=liveData,plays,allPlays,playEvents,reviewDetails` → `{}` everywhere
+- `…?fields=…,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,playEvents` →
+  `{"isOverturned":true,"inProgress":false,"reviewType":"MJ","challengeTeamId":115}`
+
+[PR #25](https://github.com/snapquast73-boop/LIVPBP2/pull/25) added the four leaves to
+`FEED_FIELDS` and a 14th check (remove a leaf → the check fails; restore it → passes). The same
+projection also verified that a whole-play review **is** published at `play.reviewDetails`
+(`reviewType MF` on the last play of 824027), which resolves an earlier UNVERIFIED row.
+
+A second defect then became visible: the header read “Reviews & Challenges 2” beside “ABS Challenges
+49”, because the **All** tab filtered ABS rows out. [PR #27](https://github.com/snapquast73-boop/LIVPBP2/pull/27)
+makes All list every review event (data-quality notes keep the Flagged tab) and extends the tab test.
+
+Post-deploy verification at `reviews.html?date=2026-06-01&rev=389c97b`: 2 manager/umpire challenges +
+49 ABS challenges, each card with its category, outcome (“Call Stands / Confirmed” / “Overturned”),
+challenger and code (`code MF`, `code MJ`), pitch number and count, the reviewed play text, before/after
+score, and the official challenges-remaining line. The scoreboard (`?date=2026-06-01`, 9 games),
+game page (`?gamePk=824027`, linescore with a source link on every row) and `flagged.html` were
+re-fetched at the same time and are correct.
+
+New irregularity recorded on `flagged.html`: a pitch-level ABS row can show “Overturned” above a play
+description that ends “…call on the field was confirmed” — the flag belongs to the pitch, the text to
+the play. Both are official and both are shown as returned; nothing is reconciled.
+
 ## Merge and deploy record — 8d9a5734
 
 [PR #11](https://github.com/snapquast73-boop/LIVPBP2/pull/11) (rebuild the client against the verified StatsAPI

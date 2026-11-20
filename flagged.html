@@ -239,6 +239,17 @@
                 <a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,playEvents" target="_blank" rel="noopener">fixed request</a></td>
             </tr>
             <tr>
+              <td>Pitch outcome vs. play description</td>
+              <td><strong>Ambiguity observed on the live feed.</strong> A pitch-level ABS row can read
+                “Overturned” (from <code>reviewDetails.isOverturned: true</code> for that pitch) above a play
+                description that ends “…call on the field was confirmed”, because the description is the
+                play's final text while the flag belongs to one pitch. Both values are official and both are
+                shown as returned; the page does not reconcile or rewrite them. Seen on
+                <a href="https://snapquast73-boop.github.io/LIVPBP2/reviews.html?date=2026-06-01">2026-06-01</a>
+                (game 825078, Top 4).</td>
+              <td><a href="https://statsapi.mlb.com/api/v1.1/game/825078/feed/live?fields=liveData,plays,allPlays,playEvents,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,details,description,pitchNumber,result,event" target="_blank" rel="noopener">feed/live (pitch-level reviewDetails)</a></td>
+            </tr>
+            <tr>
               <td>Missing data is never zero-filled</td>
               <td><strong>Adopted from session 9fc08fc2</strong>, applied to every table: a value the payload does
                 not contain is rendered blank, and each linescore/box-score row ends with an
