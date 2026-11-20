@@ -451,4 +451,447 @@ input[type="date"] {
 @media (max-width: 640px) {
   .game-header { grid-template-columns: 1fr; text-align: center; }
   .header-side, .header-side.home { justify-content: center; text-align: center; }
+  .live-grid { grid-template-columns: 1fr; }
+  .forecast-head { flex-direction: column; align-items: flex-start; }
 }
+
+/* --- BSO Count Dots & Runners Diamond --- */
+.bso-grid {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 3px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+.bso-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.bso-lbl {
+  width: 11px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.bso-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.bso-dot.dot-b { background: #3fb950; border-color: #3fb950; }
+.bso-dot.dot-s { background: #f85149; border-color: #f85149; }
+.bso-dot.dot-o { background: #e3b341; border-color: #e3b341; }
+
+.base-diamond { display: block; flex-shrink: 0; }
+.base-sq {
+  fill: var(--surface-2);
+  stroke: var(--muted);
+  stroke-width: 1.8;
+}
+.base-sq.base-on {
+  fill: #e3b341;
+  stroke: #ffd33d;
+}
+
+/* --- Scoreboard Enhancements --- */
+.card-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+.pill-scoring {
+  background: rgba(47, 129, 247, 0.16);
+  color: #79c0ff;
+}
+.card-review-reason {
+  font-size: 12px;
+  color: #ff9c95;
+  margin-bottom: 6px;
+}
+.card-live-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+.card-sub-meta {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.team-row.team-winner .team-name,
+.team-row.team-winner .team-score {
+  color: #ffffff;
+}
+
+/* --- Game Live Panel --- */
+.live-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+.live-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.player-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.player-headshot {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.player-name {
+  font-weight: 700;
+  font-size: 15px;
+}
+.player-line {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+.live-state {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.live-count-text {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+.live-queue {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.counter-summary-line {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+.last-play-line {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+
+/* --- Two-Sided Hit Forecast --- */
+.forecast-inline {
+  margin-top: 10px;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.forecast-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.forecast-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.forecast-headline {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.forecast-big {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 800;
+}
+.forecast-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+.forecast-fallback {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #e3b341;
+}
+.forecast-multi {
+  text-align: right;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.forecast-tier {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.tier-elite { background: rgba(46, 160, 67, 0.25); color: #56d364; }
+.tier-favorable { background: rgba(47, 129, 247, 0.22); color: #79c0ff; }
+.tier-neutral { background: var(--surface-2); color: var(--text); }
+.tier-tough { background: var(--amber-bg); color: #e3b341; }
+.tier-pitcher { background: var(--red-bg); color: #ff7b72; }
+
+.driver-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.driver-chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.driver-chip.chip-pos { color: #56d364; border-color: rgba(46, 160, 67, 0.45); }
+.driver-chip.chip-neg { color: #ff7b72; border-color: rgba(224, 49, 49, 0.45); }
+.driver-chip.chip-neu { color: var(--muted); }
+
+.matchup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+.matchup-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  font-family: var(--mono);
+}
+.source-note {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* --- Play-by-Play Enhancements --- */
+.inning-divider {
+  margin-top: 12px;
+  padding: 4px 8px;
+  background: var(--surface-2);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.inning-divider:first-child { margin-top: 0; }
+.play-item.play-reviewed {
+  border-left: 3px solid var(--red);
+  padding-left: 10px;
+}
+.play-head-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.play-score {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--text);
+}
+.play-hit-meta {
+  margin-top: 4px;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--muted);
+}
+.pitch-details {
+  margin-top: 6px;
+  font-size: 12px;
+}
+.pitch-details summary {
+  cursor: pointer;
+  color: var(--muted);
+  user-select: none;
+}
+.pitch-list {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pitch-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.pitch-num {
+  font-family: var(--mono);
+  color: var(--muted);
+  width: 24px;
+}
+.pitch-badge {
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.pitch-ball { background: var(--green-bg); color: #56d364; }
+.pitch-strike { background: var(--red-bg); color: #ff7b72; }
+.pitch-inplay { background: rgba(47, 129, 247, 0.18); color: #79c0ff; }
+.pitch-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* --- Replay Feed Enhancements --- */
+.risk-banner {
+  border-color: var(--red);
+  box-shadow: 0 0 12px rgba(224, 49, 49, 0.28);
+}
+.active-strip {
+  background: var(--surface);
+  border: 1px solid rgba(224, 49, 49, 0.5);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+.active-strip-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #ff7b72;
+  margin-bottom: 8px;
+}
+.active-strip-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.active-chip {
+  display: block;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: var(--text);
+  min-width: 220px;
+}
+.active-chip:hover {
+  border-color: var(--accent);
+  text-decoration: none;
+}
+.active-chip.risk {
+  border-color: var(--red);
+  background: rgba(224, 49, 49, 0.1);
+}
+.active-chip-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.active-chip-reason {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text);
+}
+.active-chip-counters {
+  margin-top: 4px;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--muted);
+}
+.score-tracker {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.st-lbl {
+  color: var(--muted);
+  font-weight: 600;
+}
+.review-meta-line {
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.review-irreg-line {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #e3b341;
+  font-weight: 600;
+}
+.feed-card-desc {
+  margin-top: 4px;
+  font-size: 13px;
+}
+.feed-card-foot {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.live-dot.pulsing {
+  animation: pulse-dot 0.9s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* --- Flagged for Review Verification Table --- */
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 13px;
+}
+.audit-table th, .audit-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.audit-table th {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+

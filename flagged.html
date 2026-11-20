@@ -264,6 +264,74 @@
           confirmed through the GitHub Pages builds API (github.io is not fetchable from this environment).</li>
       </ul>
     </section>
+
+    <section class="panel">
+      <h2>Functional Restoration &amp; Full Registry Verification (3bff1e0c, 2026-11-20)</h2>
+      <p style="color:var(--muted);">
+        All 4 chunks of the official MLB <code>gameStatus</code> registry, live 2026 season schedules and
+        game feeds (<code>824638</code>, <code>824877</code>), team IDs, and player stats/H2H endpoints were
+        fetched and verified against official MLB endpoints. Previously flagged client gaps in
+        <code>assets/js/*.js</code> and <code>assets/css/style.css</code> were fixed and verified with
+        <code>node tools/verify-app.mjs</code> (22 automated checks). Unverified upstream values remain
+        blank and flagged below.
+      </p>
+      <div style="overflow-x:auto;">
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Verified Value</th>
+              <th>Status</th>
+              <th>Official Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Full <code>gameStatus</code> review codes (all 4 chunks)</td>
+              <td><code>IH</code> (Instant Replay), <code>M*</code> incl. <code>MJ</code> (Player challenge: Pitch Result), <code>N*</code> incl. <code>NH</code> (Home run) &amp; <code>NJ</code> (Umpire Challenge: Pitch Result)</td>
+              <td><span class="pill pill-final">Verified &amp; Wired</span></td>
+              <td><a href="https://statsapi.mlb.com/api/v1/gameStatus" target="_blank" rel="noopener">GET /api/v1/gameStatus</a></td>
+            </tr>
+            <tr>
+              <td>Active review detection on Scoreboard / Game / Replay Feed</td>
+              <td>Replaced nonexistent <code>game.flags.inReview</code> with official <code>statusCode</code> / <code>codedGameState</code> registry + lean status sweep</td>
+              <td><span class="pill pill-final">Fixed &amp; Verified</span></td>
+              <td><a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2026-08-28&amp;hydrate=probablePitcher,linescore,decisions,review,flags,team" target="_blank" rel="noopener">Sample Schedule (2026-08-28)</a></td>
+            </tr>
+            <tr>
+              <td>Live ABS &amp; Manager Challenge counters + <code>reviewDetails</code></td>
+              <td><code>gameData.review.away/home.{used,remaining}</code>, <code>gameData.absChallenges.away/home.{usedSuccessful,usedFailed,remaining}</code>, <code>reviewDetails.{isOverturned,inProgress,reviewType,challengeTeamId}</code></td>
+              <td><span class="pill pill-final">Verified &amp; Wired</span></td>
+              <td><a href="https://statsapi.mlb.com/api/v1.1/game/824638/feed/live" target="_blank" rel="noopener">Game 824638</a> · <a href="https://statsapi.mlb.com/api/v1.1/game/824877/feed/live" target="_blank" rel="noopener">Game 824877</a></td>
+            </tr>
+            <tr>
+              <td>Two-Sided Hit Forecast inputs (hitting, pitching, multi-team splits, H2H)</td>
+              <td><code>expectedStatistics</code>, <code>season</code> (combined split for traded players), <code>statSplits</code> (<code>vl</code>/<code>vr</code>), pre-game <code>gameLog</code>, <code>vsPlayer</code></td>
+              <td><span class="pill pill-final">Verified &amp; Implemented</span></td>
+              <td><a href="https://statsapi.mlb.com/api/v1/people/682829/stats?stats=expectedStatistics,season,statSplits,gameLog&amp;group=hitting&amp;sitCodes=vl,vr&amp;season=2026" target="_blank" rel="noopener">Batter 682829</a> · <a href="https://statsapi.mlb.com/api/v1/people/656849/stats?stats=expectedStatistics,season,statSplits,gameLog&amp;group=pitching&amp;sitCodes=vl,vr&amp;season=2026" target="_blank" rel="noopener">Pitcher 656849</a></td>
+            </tr>
+            <tr>
+              <td>Official MLB team IDs (<code>sportId=1</code>)</td>
+              <td>30 active MLB teams verified</td>
+              <td><span class="pill pill-final">Verified</span></td>
+              <td><a href="https://statsapi.mlb.com/api/v1/teams?sportId=1" target="_blank" rel="noopener">GET /api/v1/teams?sportId=1</a></td>
+            </tr>
+            <tr>
+              <td>Replay Feed alerts, active strip, 3-row score tracker, scoring changes &amp; SSE/<code>localStorage</code> persistence</td>
+              <td>Implemented Web Audio raindrop chime, desktop notifications, <code>#active-strip</code>, strict <code>playIndex</code> Runs at Risk, scoring-change diffing, HTTP 429 throttle, and optional <code>server.mjs</code> SSE sync with static GitHub Pages fallback</td>
+              <td><span class="pill pill-final">Implemented &amp; Tested</span></td>
+              <td><a href="https://www.mlb.com/official-information/scoring-changes" target="_blank" rel="noopener">MLB Scoring Changes</a> · <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages" target="_blank" rel="noopener">GitHub Pages Docs</a></td>
+            </tr>
+            <tr>
+              <td>Original upstream calibration weights &amp; absent <code>docs/</code>/<code>tools/</code> files</td>
+              <td></td>
+              <td><span class="pill pill-risk">Unverified</span></td>
+              <td><a href="https://github.com/buffedlizard55-lab/MLB-Live-PBP" target="_blank" rel="noopener">Upstream repository (HTTP 404)</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </main>
 </body>
 </html>
