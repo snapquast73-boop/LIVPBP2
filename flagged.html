@@ -264,6 +264,42 @@
           confirmed through the GitHub Pages builds API (github.io is not fetchable from this environment).</li>
       </ul>
     </section>
+
+    <section class="panel">
+      <h2>Verified fixes — official-status review detection &amp; boxscore fallback (c91e09d9, 2026-11-20)</h2>
+      <p style="color:var(--muted);">
+        Two findings from this session were fixed and re-verified. The original reconstructed code is preserved in the
+        git history; these are additive.
+      </p>
+      <ul>
+        <li><strong>Dead <code>flags.inReview</code> review detection — fixed.</strong>
+          The scoreboard and the game page treated <code>flags.inReview</code> as the in-review signal, but the
+          schedule payload returns <code>flags</code> only with <code>noHitter</code>/<code>perfectGame</code> booleans
+          (verified 2026-11-20 against the <a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2024-10-30&amp;hydrate=team,linescore,probablePitcher,decisions,review,flags,gameInfo">hydrated schedule</a>).
+          In-review detection now uses the <a href="https://statsapi.mlb.com/api/v1/gameStatus" target="_blank" rel="noopener">official gameStatus registry</a>
+          (<code>IH</code> — Instant Replay; <code>M*</code> manager challenges, incl. <code>MJ</code>/<code>NJ</code> ABS pitch-result challenges;
+          <code>N*</code> umpire reviews) via <code>status.statusCode</code> / <code>codedGameState</code>.</li>
+        <li><strong>Box score rendered empty tables — fixed.</strong>
+          The game page read <code>teams.{away,home}.batters</code>, which the
+          <a href="https://statsapi.mlb.com/api/v1/game/775296/boxscore" target="_blank" rel="noopener">boxscore payload</a>
+          never carries — players are keyed by <code>ID&lt;personId&gt;</code> with no <code>batters</code> array (verified 2026-11-20).
+          It now falls back to the players map ordered by each player's <code>battingOrder</code> (e.g. 701 = #1 batter),
+          which is why the Final game tab now shows Juan Brito and Luis Campusano instead of empty tables.</li>
+        <li><strong>Review classification hardened</strong> to official registry codes with text fallbacks for
+          unobserved payloads. The <code>reviewDetails</code> shape remains unverified (see the
+          <em>Irregularities</em> section above); classification is defensive and clearly flagged unverified.
+          <code>os_ruling_pending_primary</code> / <code>os_ruling_pending_prior</code> are now accepted via
+          <code>details.eventType</code> or <code>details.code</code> — both are defined in the
+          <a href="https://statsapi.mlb.com/api/v1/eventTypes" target="_blank" rel="noopener">official eventTypes registry</a>.</li>
+        <li><strong>Smoke test added.</strong> <code>tools/smoke-test.mjs</code> (dependency-free, no npm) boots the three
+          pages against synthetic fixtures modeled on the official payload shapes and asserts 18 render-path checks;
+          <code>node tools/smoke-test.mjs</code> — all 18 pass. The fixtures are synthetic, not real game data.
+          The other <code>tools/*.mjs</code> files named in the README are still absent (see the Irregularities section).</li>
+        <li><strong>Concurrent work, not re-verified here:</strong> PR #11 (session 8d9a5734) rewrites <code>assets/js/*</code>
+          and adds <code>docs/</code> + <code>tools/</code> + fixtures — still open, unmerged. These fixes were not tested
+          against that in-flight rewrite; it remains the user's review call.</li>
+      </ul>
+    </section>
   </main>
 </body>
 </html>
