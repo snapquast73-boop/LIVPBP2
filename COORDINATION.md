@@ -199,3 +199,17 @@ This is the final state: the uploaded project is published and working at <https
 
 [PR #13](https://github.com/snapquast73-boop/LIVPBP2/pull/13) (documentation-only: records the PR #9 merge and Pages result) merged into `main` at `4745f60` (state `MERGED`, 2026-11-20T22:31:00Z, no review wait per instructions). GitHub Pages build for `4745f60` reported **`built`** (build 1388346377; polled building → built over ~2 min; error `null`); top-level Pages status was `built` afterwards. (PR #14 was then opened by this session to record this entry; it was merged by e799e65b as `9d861d3` and is recorded above; this section supersedes the stale "PR #14 to reference this entry" wording that was in this file's conflicted copy.)
 
+
+## Final state verification — e799e65b (post-merge, after PR #11 rebuild)
+
+Session `e799e65b` (this row's owner) re-checked the deployed site after `8d9a5734`'s PR #11 rebuild was merged (`868029e`, with `fff9975` and `3c2bee8` following). Detailed line-by-line re-verification of that rebuild is owned by the in-progress session `9a7095ef`; nothing here duplicates or pre-empts it — this is only the final deploy confirmation for the integration row above.
+
+- Latest `main` checked: `3c2bee8`; Pages build for `3c2bee8` = **`built`** (no error). One earlier doc-only commit (`f986e43`) recorded an instant "Page build failed" (duration 0) — the same transient GitHub-side failure another session logged for `2019ead`; the immediately following builds succeeded, so no repository change was needed.
+- Local checks on `3c2bee8`: `tools/check-local-links.py` passes; `node --check` passes for all `assets/js/*.js` and `server.mjs`; `tools/review-test.mjs` 13 checks, `tools/reviews-feed-test.mjs` 6 checks, `tools/hit-model-test.mjs` 12 checks pass; `tools/page-render-test.mjs` passes **7/7 page renders, 0 failed** after `npm install --no-save jsdom` (the dependency the README documents; nothing added to the repo, `node_modules/` stays ignored).
+- Live pages (fetched with `?rev=3c2bee8` to bypass CDN staleness):
+  - <https://snapquast73-boop.github.io/LIVPBP2/?date=2024-10-30> — "1 game(s)": Dodgers 7 (4-1) at Yankees 6 (1-4), Yankee Stadium, `W: Blake Treinen · L: Tommy Kahnle · SV: Walker Buehler`.
+  - <https://snapquast73-boop.github.io/LIVPBP2/game.html?gamePk=775296> — 7–6 Final, weather line, count/outs, on-deck/in-the-hole, linescore with LOB and per-row [MLB feed](https://statsapi.mlb.com/api/v1.1/game/775296/feed/live) links (NYY E = 3, matching the feed and box score), every play with pitch counts, and the top-8 challenge as "Manager Challenge · Call Stands / Confirmed".
+  - <https://snapquast73-boop.github.io/LIVPBP2/reviews.html?date=2024-10-30> — Replay Feed shows the real review row with Before/Actual-after score (6–6) and challenge counters (LAD 2 MGR — NYY 1 MGR). Its outcome chip reads "Unknown" where the payload only exposes `isOverturned`, which is the honest behaviour documented on the Flagged page.
+  - <https://snapquast73-boop.github.io/LIVPBP2/flagged.html> — the rebuilt review page is served, with per-item sources and the carried-forward rows from earlier sessions.
+  - `404.html` uses the absolute `/LIVPBP2/…` paths the project site needs.
+- Conclusion: the uploaded project is live and working at <https://snapquast73-boop.github.io/LIVPBP2/>; no broken site was merged.
