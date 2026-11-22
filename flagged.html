@@ -641,6 +641,169 @@
 
     </section>
 
+    <section class="panel" id="session-3615863d">
+      <h2>12 · Functional fixes and re-verification (session 3615863d, 2026-11-22)</h2>
+      <p class="muted">
+        This pass re-checked the live behaviour of every page and every table against the official MLB
+        StatsAPI. Each item below is either a defect that was found and fixed, or a value that could not be
+        confirmed from an official source and is therefore left unverified here instead of being guessed.
+      </p>
+
+      <div class="panel-title">12a · Defects found and fixed</div>
+      <div class="scroll-x">
+        <table class="boxscore-table">
+          <thead>
+            <tr><th>Defect</th><th>What was wrong</th><th>Fix and how it was checked</th><th>Source</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Live game page froze</strong></td>
+              <td><code>assets/js/game.js</code> started a countdown that reached zero and restarted, but never
+                requested the game again. A live game therefore rendered once and then stopped updating — the
+                opposite of the live play-by-play the site exists to provide. Reproduced by driving the page
+                with stubbed responses and counting feed requests.</td>
+              <td>The countdown is now display-only and the next poll is armed with its own timer. Covered by
+                <code>tools/page-render-test.mjs</code> → “game page keeps polling while a game is live”, which
+                fails on the old code and passes now.</td>
+              <td><a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/assets/js/game.js" target="_blank" rel="noopener">assets/js/game.js</a> ·
+                <a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live" target="_blank" rel="noopener">official game feed</a></td>
+            </tr>
+            <tr>
+              <td><strong>Pitcher season / platoon rate used a partial season</strong></td>
+              <td>The API returns <strong>one row per team</strong> for a player who changed clubs, plus its own
+                league-wide total row for <code>stats=season</code>. The client read the first row only. For
+                pitcher 622608 (Colorado + Milwaukee) that gave <code>51/199</code> — Colorado only — instead of
+                the official <code>73/280</code>; the vs-Left platoon read <code>10/31</code> instead of the
+                official <code>33/131</code>. The hit forecast would have shown the wrong matchup rate.</td>
+              <td>The official total row is used when the API provides one, otherwise the club rows are summed.
+                Nine new checks in <code>tools/hit-model-test.mjs</code> use verbatim copies of the official
+                responses (<code>tools/fixtures/stats-*.json</code>).</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/people/622608/stats?stats=season&amp;group=pitching&amp;season=2026" target="_blank" rel="noopener">season rows (73/280 total + one per club)</a> ·
+                <a href="https://statsapi.mlb.com/api/v1/people/622608/stats?stats=statSplits&amp;group=pitching&amp;season=2026&amp;sitCodes=vl,vr" target="_blank" rel="noopener">platoon rows (33/131 vs L total)</a></td>
+            </tr>
+            <tr>
+              <td><strong>Head-to-head used one season, not the career</strong></td>
+              <td><code>stats=vsPlayer</code> returns <strong>one row per season</strong> plus a
+                <code>vsPlayerTotal</code> career row. The client showed the first season (2018, <code>1/2</code>)
+                while the README promises the career line (<code>2/6</code>).</td>
+              <td>The <code>vsPlayerTotal</code> row is preferred, season rows are summed when it is absent, and
+                nothing is shown when there are no rows. Covered by <code>tools/hit-model-test.mjs</code>.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=vsPlayer&amp;group=hitting&amp;opposingPlayerId=605483" target="_blank" rel="noopener">vsPlayer sample (per-season rows + total)</a></td>
+            </tr>
+            <tr>
+              <td><strong>Off-days looked like errors</strong></td>
+              <td>An empty slate (an off-day, or the off-season — there are no MLB games on the real calendar
+                date this pass ran) rendered “No games found for this date/filter.” and “No matching review
+                events…”, which reads like a broken page.</td>
+              <td>The pages now say “No games scheduled for &lt;date&gt;.” and, on the Replay Feed, an explicit
+                off-day line; a filter that simply matches nothing keeps its own wording. Covered by
+                <code>tools/empty-state-test.mjs</code>.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2026-11-22" target="_blank" rel="noopener">official schedule, 2026-11-22 (empty)</a></td>
+            </tr>
+            <tr>
+              <td><strong>Six test tools were never run by CI</strong></td>
+              <td>The “Verify static site” workflow only checked JavaScript syntax and local links, so none of
+                the behaviour above was guarded.</td>
+              <td>CI now installs jsdom and runs all six deterministic, network-free suites, then the internal
+                link check.</td>
+              <td><a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/.github/workflows/verify-site.yml" target="_blank" rel="noopener">verify-site.yml</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel-title">12b · Rows verified against the official host in this pass</div>
+      <div class="scroll-x">
+        <table class="boxscore-table">
+          <thead>
+            <tr><th>Item</th><th>Result</th><th>Source</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Scoreboard review sweep (the lean <code>fields</code> projection, previously ◐ unverified)</td>
+              <td><strong>Verified 2026-11-22</strong> — the exact projection the 5-second sweep issues returns
+                <code>status.statusCode</code>, <code>abstractGameState</code>, <code>codedGameState</code>,
+                <code>detailedState</code>, <code>startTimeTBD</code>, <code>abstractGameCode</code> and team ids
+                for all nine 2026-06-01 games.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2026-06-01&amp;fields=dates,games,gamePk,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode,teams,away,home,team,id,abbreviation" target="_blank" rel="noopener">same fields projection</a></td>
+            </tr>
+            <tr>
+              <td><code>stats=season,expectedStatistics</code> (previously ◐ unverified)</td>
+              <td><strong>Verified 2026-11-22</strong> — responds, with the season row plus an
+                <code>expectedStatistics</code> block. The client does not currently display the expected block.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,expectedStatistics&amp;group=hitting&amp;season=2026" target="_blank" rel="noopener">expectedStatistics sample</a></td>
+            </tr>
+            <tr>
+              <td><code>gameData.review</code> counters on the schedule</td>
+              <td><strong>Verified 2026-11-22</strong> — <code>hydrate=review</code> returns
+                <code>review.away/home.{used,remaining}</code> for every game, matching the values shown on the
+                Replay Feed rows (e.g. CIN <code>used: 1, remaining: 0</code>).</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2026-06-01&amp;hydrate=flags,review" target="_blank" rel="noopener">hydrate=flags,review sample</a></td>
+            </tr>
+            <tr>
+              <td>Whole review-status registry (supersedes the eight-code summary in section 2b)</td>
+              <td><strong>Verified 2026-11-22</strong> — the full registry lists the manager family
+                <code>MA–MV, MX</code>, the umpire family <code>NA–NX</code>, <code>MJ</code> “Player challenge:
+                Pitch Result”, <code>NJ</code> “Umpire Challenge: Pitch Result” and <code>IH</code> “Instant
+                Replay” (reason “Review”), which is what <code>isReviewStatus()</code> matches.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/gameStatus" target="_blank" rel="noopener">GET /api/v1/gameStatus</a></td>
+            </tr>
+            <tr>
+              <td>Game 775296 error totals (the disagreement recorded in section 2b)</td>
+              <td><strong>Still disagreeing 2026-11-22</strong> — the standalone
+                <code>/api/v1/game/775296/linescore</code> reports home <code>errors: 2</code> (inning 5 carries
+                both), while the page's own totals come from the live feed. Published as an upstream
+                disagreement, not corrected.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/game/775296/linescore" target="_blank" rel="noopener">official linescore for 775296</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel-title">12c · Still unverified (nothing invented to fill the gap)</div>
+      <ul>
+        <li><strong>Exact parity with the original site.</strong> The upstream repository this project was
+          copied from (<code>buffedlizard55-lab/MLB-Live-PBP</code>) and its user account both return 404 from
+          the official GitHub API, so no screen here can be diffed against the original.
+          <a href="https://api.github.com/repos/buffedlizard55-lab/MLB-Live-PBP" target="_blank" rel="noopener">Evidence</a></li>
+        <li><strong>Cross-origin access to the StatsAPI.</strong> The sandbox this pass ran in cannot open a
+          socket to <code>statsapi.mlb.com</code>; every payload above was read through a text-fetching proxy,
+          which does not return response headers. The code's own claim that the API sends CORS headers is
+          therefore still not re-proven here — the live pages working in a browser is the only evidence.
+          <a href="https://statsapi.mlb.com/api/v1/" target="_blank" rel="noopener">StatsAPI root</a></li>
+        <li><strong>Team logo and headshot URLs.</strong> Still HTTP 500 to non-browser clients from this
+          sandbox (unchanged from section 2). The three-step fallback chain is what keeps the layout intact.
+          <a href="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" target="_blank" rel="noopener">logo path</a></li>
+        <li><strong>“Call stands” vs “call confirmed”.</strong> Unchanged: the payload exposes only
+          <code>isOverturned</code>, so rows keep saying “Call Stands / Confirmed” rather than inventing the
+          distinction. <a href="https://statsapi.mlb.com/api/v1/gameStatus" target="_blank" rel="noopener">status registry</a></li>
+        <li><strong>Meaning of <code>challengeTeamId</code>.</strong> Still undocumented; the UI still prefers
+          the official play description when it names a club.
+          <a href="https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,isOverturned,inProgress,reviewType,challengeTeamId" target="_blank" rel="noopener">sample payload</a></li>
+        <li><strong>Hit-forecast coefficients and the original polling cadences.</strong> Unchanged from
+          section 2: the model is a labelled reconstruction, and the original 500 ms / 125 ms / 250 ms watcher
+          cadences were not in the upload.
+          <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/assets/js/props.js" target="_blank" rel="noopener">assets/js/props.js</a></li>
+        <li><strong>Public deployment permissions.</strong> Unchanged open question; see the MLB terms link in
+          section 2.</li>
+      </ul>
+
+      <div class="panel-title">12d · How this pass was checked</div>
+      <ul>
+        <li>Six network-free suites, all passing: <code>review-test</code> 14, <code>feed-fields-test</code> 9,
+          <code>hit-model-test</code> 21, <code>reviews-feed-test</code> 6, <code>page-render-test</code> 8 and
+          <code>empty-state-test</code> 3.</li>
+        <li>Every tab, date control, sound/notification toggle and inline handler on the three pages was driven
+          in a headless DOM; no page logged a console error. A CSS audit confirmed every literal class the
+          pages emit has a rule, and a static analysis pass (ESLint <code>no-undef</code> and the error-class
+          correctness rules) reported no undefined references.</li>
+        <li>The optional <code>server.mjs</code> was started locally: static files, the 404 page and the
+          <code>/api/feed-log</code> GET/POST round-trip all respond correctly.</li>
+        <li>These are sample and automated checks. They are <strong>not</strong> an exhaustive line-by-line
+          audit of every dynamic value, historical game or future live update.</li>
+      </ul>
+    </section>
+
     <footer class="site-footer">
       <p>
         Unofficial fan project. Not affiliated with MLB or MLB Advanced Media.
