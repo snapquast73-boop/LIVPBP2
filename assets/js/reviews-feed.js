@@ -58,6 +58,7 @@
   var seenIds = {};
   var audioCtx = null;
   var registryReady = Promise.resolve();
+  var lastSlateSize = null;   // games on the last scanned date (null = not scanned yet)
 
   function init() {
     var params = new URLSearchParams(window.location.search);
@@ -278,6 +279,7 @@
   }
 
   function process(result) {
+    lastSlateSize = result.games.length;
     var collected = [];
     var irregularities = [];
     var snapshotNext = {};
@@ -568,7 +570,12 @@
       return String(b.timestamp || '').localeCompare(String(a.timestamp || ''));
     });
     if (!rows.length) {
-      el.innerHTML = '<div class="empty-state">No matching review events for this date/filter.</div>';
+      // An off-day (or the off-season) is not a filter miss: say so, the way
+      // the reference build does, instead of implying that tracking failed.
+      el.innerHTML = lastSlateSize === 0
+        ? '<div class="empty-state">No games scheduled for ' + UI.esc(UI.formatDateLabel(currentDate)) +
+          ' — nothing to track today.</div>'
+        : '<div class="empty-state">No matching review events for this date/filter.</div>';
       return;
     }
     el.innerHTML = rows.map(entryHtml).join('');
@@ -578,6 +585,7 @@
 
   function goToDate(next) {
     currentDate = next;
+    lastSlateSize = null;
     log = FeedLog.loadDate(currentDate, function (merged) {
       log = merged;
       rebuildSeen();

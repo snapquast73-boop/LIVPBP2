@@ -335,7 +335,15 @@
     if (!el) return;
     var filtered = games.filter(passesFilter);
     if (!filtered.length) {
-      el.innerHTML = '<div class="empty-state">No games found for this date/filter.</div>';
+      // Distinguish "no games at all that day" (an off-day / the off-season)
+      // from "no game matches this tab", so an empty slate never reads like a
+      // broken page. Wording follows the reference build: "No games scheduled
+      // for <date>." / "No games match this filter for <date>."
+      el.innerHTML = games.length
+        ? '<div class="empty-state">No games match this filter for ' +
+          UI.esc(UI.formatDateLabel(currentDate)) + '.</div>'
+        : '<div class="empty-state">No games scheduled for ' +
+          UI.esc(UI.formatDateLabel(currentDate)) + '.</div>';
       return;
     }
     el.innerHTML = filtered.map(gameCard).join('');
