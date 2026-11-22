@@ -525,6 +525,33 @@
       </ul>
     </section>
 
+    <section class="panel" id="session-60c618e8">
+      <div class="panel-title">9 · Line-by-line re-verification (session 60c618e8, 2026-11-22)</div>
+      <p class="muted">
+        Every row below was fetched from the official host on 2026-11-22 and compared with the live
+        <a href="https://snapquast73-boop.github.io/LIVPBP2/">site</a>. ✅ = matched the official source
+        exactly. ⚠ = irregularity flagged for review, not changed. Values that could not be confirmed
+        are left blank — nothing was inferred.
+      </p>
+      <div class="scroll-x">
+      <table class="boxscore-table">
+        <thead><tr><th>Item</th><th>Live site</th><th>Official value</th><th>Status</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>Scoreboard 2026-06-01 — all 9 games (DET 10–TB 9, MIA 7–WSH 3, KC 9–CIN 2, CWS 6–MIN 9, SF 2–MIL 16, TEX 2–STL 1, COL 9–LAA 8, LAD 1–AZ 4, NYM 2–SEA 3)</td><td>9 cards, same teams/scores/venues/decisions</td><td>9 games, same scores</td><td>✅</td><td><a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2026-06-01&amp;hydrate=team,linescore,probablePitcher,decisions,review,flags&amp;fields=dates,games,gamePk,status,abstractGameState,detailedState,teams,away,home,team,abbreviation,score,leagueRecord,wins,losses,linescore,currentInning,currentInningOrdinal,inningState,outs,decisions,winner,loser,save,review,used,remaining,flags,venue,name" target="_blank" rel="noopener">schedule 2026-06-01</a></td></tr>
+          <tr><td>Game 824027 linescore — COL innings 1 0 1 0 1 0 0 5 1 · R/H/E/LOB 9/10/4/12; LAA 0 0 5 0 1 0 0 2 0 · 8/10/1/7</td><td>identical table on <a href="https://snapquast73-boop.github.io/LIVPBP2/game.html?gamePk=824027">game page</a></td><td>identical</td><td>✅</td><td><a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,teams,away,home,runs,hits,errors,leftOnBase,innings,num,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes" target="_blank" rel="noopener">feed/live linescore</a></td></tr>
+          <tr><td>Game 824027 last play — MF manager challenge, call stands, LAA challenged (play at 1st)</td><td>“Manager Challenge · Call Stands / Confirmed · code MF · LAA challenge” on <a href="https://snapquast73-boop.github.io/LIVPBP2/reviews.html?date=2026-06-01">Replay Feed</a> and game page</td><td><code>reviewDetails: {isOverturned: false, inProgress: false, reviewType: MF, challengeTeamId: 108}</code> (108 = LAA) on atBatIndex 89</td><td>✅</td><td><a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,about,atBatIndex,description,result,event" target="_blank" rel="noopener">feed/live reviewDetails</a></td></tr>
+          <tr><td>Game 824027 challenge counters — LAA 0 manager left (1 used); COL 1 MGR · 0 ABS — LAA 0 MGR · 1 ABS</td><td>same lines on Replay Feed row</td><td><code>review: away {used 0, remaining 1}, home {used 1, remaining 0}; absChallenges: away {2 succ, 2 fail, 0 rem}, home {1 succ, 1 fail, 1 rem}</code></td><td>✅</td><td><a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,review,absChallenges,away,home,used,remaining,usedSuccessful,usedFailed" target="_blank" rel="noopener">gameData counters</a></td></tr>
+          <tr><td>Review status registry — MF/MA/MJ/NH/NS/NJ/IH codes and reasons</td><td>code reads MF, ABS MJ, boundary NH/NS, IH Instant Replay</td><td>MF “Manager challenge: Close play at 1st”, MJ “Player challenge: Pitch Result”, NJ “Umpire Challenge: Pitch Result”, NH “Umpire review: Home run”, NS “Umpire review: Stadium boundary call”, IH “Instant Replay” (reason Review)</td><td>✅</td><td><a href="https://statsapi.mlb.com/api/v1/gameStatus" target="_blank" rel="noopener">GET /api/v1/gameStatus</a></td></tr>
+          <tr><td>Official-scorer pending codes — <code>os_ruling_pending_primary</code> / <code>os_ruling_pending_prior</code></td><td>both map to “Official Scorer Ruling Pending”</td><td><code>os_ruling_pending_prior</code> (plateAppearance false, baseRunningEvent true), <code>os_ruling_pending_primary</code> (true, false), both “Official Scorer Ruling Pending”</td><td>✅</td><td><a href="https://statsapi.mlb.com/api/v1/eventTypes?fields=eventTypes,code,description" target="_blank" rel="noopener">GET /api/v1/eventTypes</a></td></tr>
+          <tr><td>Local checks — JS syntax, local links, internal links, deterministic tests</td><td><code>node --check</code> 9/9 OK; <code>check-local-links.py</code> pass; <code>link-check.mjs</code> 79 refs, 0 broken; review 14, hit-model 12, reviews-feed 6, feed-fields 9, page-render 7 — all pass</td><td>—</td><td>✅</td><td><a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/.github/workflows/verify-site.yml" target="_blank" rel="noopener">verify-site.yml</a></td></tr>
+          <tr><td>Stale PR #19 (pre-rebuild client, CONFLICTING)</td><td>closed 2026-11-22 without merging (superseded by PR #11 rebuild)</td><td>—</td><td>⚠ closed, not merged — merging would have reverted PRs #11/#24/#25/#27/#31</td><td><a href="https://github.com/snapquast73-boop/LIVPBP2/pull/19" target="_blank" rel="noopener">PR #19</a></td></tr>
+          <tr><td>Repository homepage field (empty)</td><td></td><td>—</td><td>⚠ unverified — API returns 403 for the integration token, so it cannot be set programmatically. Set manually: GitHub → repo → Settings → General → Website → <code>https://snapquast73-boop.github.io/LIVPBP2/</code></td><td><a href="https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-your-repository" target="_blank" rel="noopener">GitHub docs: about your repository</a></td></tr>
+          <tr><td>Hit-forecast coefficients; meaning of <code>challengeTeamId</code>; team-logo/headshot CDN (HTTP 500 to non-browser clients)</td><td>forecast labelled as estimate; challenger prefers official description; logos/headshots hide on error</td><td></td><td>⚠ still unverified — carried forward from §2, unchanged</td><td><a href="https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress" target="_blank" rel="noopener">feed/live sample</a></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+
     <footer class="site-footer">
       <p>
         Unofficial fan project. Not affiliated with MLB or MLB Advanced Media.
