@@ -513,6 +513,26 @@ Both were caught by re-reading the rendered output line by line rather than by t
   "auto-refreshes"-equivalent checks ("a Final game is re-read inside the documented grace window")
   depend on the poll clock actually re-invoking `loadGame`, which both PRs also fix.
 
+**RESOLVED — 2026-11-22.** PR #41 (`3615863d`) merged into `main` as `abde5b5` while this branch was
+open, so the predicted conflict happened and was resolved the documented way. `git pull --rebase`
+onto `abde5b5` hit four conflicts, all resolved without discarding either side:
+
+- `assets/js/game.js` (x2) — **main's** merged `startTimer`/`stopTimer` (`pollTimer` naming) is kept
+  verbatim; this branch only re-adds what it owns: `stopAllTimers()`, `stopProbe()`, `probeStatus()`,
+  `scheduleProbe()`, `postFinalDelay()`. The `startTimer` JSDoc was moved back onto `startTimer`
+  after the auto-merge detached it.
+- `tools/game-page-test.mjs` — kept **both** new checks, `a two-way player appears in both the
+  batting and pitching tables` (from `main`) and `box score still lists the starting lineup before
+  the first pitch` (this branch). The suite now runs 8 checks.
+- `package.json` — kept `main`'s `empty-state-test` **and** added `game-page-test`.
+- `COORDINATION.md` (x3) — main's session records kept first, this session's sections after.
+
+Post-rebase verification on the rebased tree: `npm test` green — review 16, hit-model 22,
+reviews-feed 6, feed-fields 9, page-render 8 pages/0 failed, empty-state 3, game-page 8/0,
+link-check no broken internal links. PR #40 (`6455b5eb`) is **still open** and rewrites the same
+`startTimer`/`stopTimer` region, so the same rule applies to it: whoever lands second rebases and
+keeps the newer poll implementation, then re-runs `node tools/game-page-test.mjs`.
+
 ## Claim and scope — 1066de74 (2026-11-22)
 
 Session `1066de74`, branch `arena/1066de74-livpbp2`, forked from `b0d7504` (PR #34) and rebased with
