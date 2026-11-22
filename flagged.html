@@ -649,7 +649,7 @@
         confirmed from an official source and is therefore left unverified here instead of being guessed.
       </p>
 
-      <div class="panel-title">12a · Defects found and fixed</div>
+      <div class="panel-title">12a · Defects found and fixed (this pass found 2, 3 and 4; 1 was found independently by session 1731ad28)</div>
       <div class="scroll-x">
         <table class="boxscore-table">
           <thead>
@@ -660,11 +660,13 @@
               <td><strong>Live game page froze</strong></td>
               <td><code>assets/js/game.js</code> started a countdown that reached zero and restarted, but never
                 requested the game again. A live game therefore rendered once and then stopped updating — the
-                opposite of the live play-by-play the site exists to provide. Reproduced by driving the page
-                with stubbed responses and counting feed requests.</td>
-              <td>The countdown is now display-only and the next poll is armed with its own timer. Covered by
-                <code>tools/page-render-test.mjs</code> → “game page keeps polling while a game is live”, which
-                fails on the old code and passes now.</td>
+                opposite of the live play-by-play the site exists to provide. Reproduced independently by driving
+                the page with stubbed responses and counting feed requests.</td>
+              <td><strong>Fixed twice, independently, and reconciled.</strong> Session 1731ad28 made the countdown
+                trigger the fetch (merged first); this pass armed the next poll with its own timer. Both are
+                equivalent — the merged code keeps one timer per poll and the display countdown — and the
+                regression test is <code>tools/page-render-test.mjs</code> → “game page auto-refreshes on its poll
+                clock”, which times out on the pre-fix code.</td>
               <td><a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/assets/js/game.js" target="_blank" rel="noopener">assets/js/game.js</a> ·
                 <a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live" target="_blank" rel="noopener">official game feed</a></td>
             </tr>
@@ -790,9 +792,12 @@
 
       <div class="panel-title">12d · How this pass was checked</div>
       <ul>
-        <li>Six network-free suites, all passing: <code>review-test</code> 14, <code>feed-fields-test</code> 9,
-          <code>hit-model-test</code> 21, <code>reviews-feed-test</code> 6, <code>page-render-test</code> 8 and
-          <code>empty-state-test</code> 3.</li>
+        <li>Six network-free suites plus the internal link check, all passing as run by <code>npm test</code>:
+          <code>review-test</code> 14, <code>hit-model-test</code> 22, <code>reviews-feed-test</code> 6,
+          <code>feed-fields-test</code> 9, <code>page-render-test</code> 8 and <code>empty-state-test</code> 3
+          checks, then <code>link-check</code> (82 internal references, no broken links). The <code>hit-model-test</code>
+          total is 22, not 21: the <code>game-log</code> check merged in from <code>main</code> is one of the listed
+          checks. <strong>Correction:</strong> the count of 21 printed earlier on this page was the pre-merge figure.</li>
         <li>Every tab, date control, sound/notification toggle and inline handler on the three pages was driven
           in a headless DOM; no page logged a console error. A CSS audit confirmed every literal class the
           pages emit has a rule, and a static analysis pass (ESLint <code>no-undef</code> and the error-class
