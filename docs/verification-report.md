@@ -21,7 +21,7 @@ repository was filled in from memory or inferred from another site.
 | Pages deploy method | Branch publishing ("Deploy from a branch"), exactly what GitHub documents | https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site |
 | The original demo repository named in `README.md` (`buffedlizard55-lab/MLB-Live-PBP`) | **Not found** (`404`) — the original site could not be diffed against | `GET https://api.github.com/repos/buffedlizard55-lab/MLB-Live-PBP` → `{"message":"Not Found"}` |
 | `assets/` (CSS + all JS) in the initial upload | **Missing**; reconstructed by session `26bf496d`, verified and rewritten in this session | commit history of `main`; `COORDINATION.md` |
-| Files the README references but that were absent: `docs/verification-report.md`, `docs/scoring-changes.md`, `docs/api-compliance.md`, `docs/workflows/`, `tools/*.mjs` | Missing; the three documents, the workflow templates and seven deterministic checks are now present. The remaining tool files named in the original README were **not recovered** — see §7 | `node tools/link-check.mjs` before/after |
+| Files the README references but that were absent: `docs/verification-report.md`, `docs/scoring-changes.md`, `docs/api-compliance.md`, `docs/workflows/`, `tools/*.mjs` | Missing; the three documents, the workflow templates and nine deterministic checks are now present. The remaining tool files named in the original README were **not recovered** — see §7 | `node tools/link-check.mjs` before/after |
 
 Because the upstream demo repository returns 404, "identical to the original"
 cannot be proven for anything. What *can* be proven is that every screen is
@@ -171,11 +171,17 @@ and
 All tests are network-free and run in CI or locally:
 
 ```
-node tools/review-test.mjs          # 14 checks — parser, counters, diffs, irregularities,
+node tools/review-test.mjs          # 16 checks — parser, counters, diffs, irregularities,
                                     #             and the Replay Feed's `fields` projection
-node tools/hit-model-test.mjs       # 13 checks — log5, clamps, count, form, splits + form-window ISO-date regression
-node tools/reviews-feed-test.mjs    #  6 checks — persistence/merge/idempotency
+node tools/hit-model-test.mjs       # 23 checks — log5, clamps, count, form, splits, multi-club/multi-season
+                                    #             rows, career head-to-head + form-window ISO-date regression
+node tools/reviews-feed-test.mjs    #  6 checks — client FeedLog normalize/merge/persistence/idempotency
+                                    #             (server envelope contract: tools/server-test.mjs)
 node tools/feed-fields-test.mjs     #  9 checks — FEED_FIELDS projection keeps the reviewDetails leaves
+node tools/empty-state-test.mjs     #  3 checks — off-day / empty-slate wording (jsdom)
+node tools/server-test.mjs          #  6 checks — server.mjs HTTP endpoints, feed-log envelope merge
+                                    #             (incl. retired { gamePk, review } / note-array shapes),
+                                    #             SSE stream, malformed-URL and traversal safety
 node tools/page-render-test.mjs     #  8 end-to-end page renders in jsdom (no page errors)
 node tools/link-check.mjs           # every internal href/src resolves; no dead docs
 python3 tools/check-local-links.py  # every local href/src in the HTML pages resolves (CI)
@@ -210,6 +216,8 @@ successful rebuild (`2019ead`, `f986e43`); the following build of each pair repo
 survive to the published site.
 
 Local checks re-run on the merged tree before publishing: `node --check` clean on every
-module, `tools/review-test.mjs` 14/14, `tools/hit-model-test.mjs` 13/13,
-`tools/reviews-feed-test.mjs` 6/6, `tools/page-render-test.mjs` 8 pages / 0 failed,
+module, `tools/review-test.mjs` 16/16, `tools/hit-model-test.mjs` 23/23,
+`tools/reviews-feed-test.mjs` 6/6, `tools/feed-fields-test.mjs` 9/9,
+`tools/empty-state-test.mjs` 3/3, `tools/server-test.mjs` 6/6 (incl. one retired-envelope-shape
+check added in this pass), `tools/page-render-test.mjs` 8 pages / 0 failed,
 `tools/link-check.mjs` clean, `tools/check-local-links.py` clean.

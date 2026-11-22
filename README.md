@@ -14,7 +14,7 @@
 >
 > - **Live site:** <https://snapquast73-boop.github.io/LIVPBP2/> (static GitHub Pages; `server.mjs` does not run there).
 > - **Present:** `docs/verification-report.md`, `docs/scoring-changes.md`, `docs/api-compliance.md`,
->   `docs/workflows/` (two optional templates) and seven network-free checks under `tools/` — each one runs
+>   `docs/workflows/` (two optional templates) and nine network-free checks under `tools/` — each one runs
 >   offline against the fixtures in `tools/fixtures/`.
 > - **Implemented:** the two-sided hit forecast (`assets/js/props.js`), review/ABS/challenge tracking,
 >   scoring-change detection by diffing consecutive polls, and browser-local replay-log persistence
@@ -41,11 +41,13 @@ mlb.com uses, re-implemented from scratch in vanilla HTML/CSS/JS.
 > reads was re-checked against the live `statsapi.mlb.com` on 2026-11-20; the request
 > URLs, the values they returned and every item that could **not** be confirmed are
 > written down in [`docs/verification-report.md`](docs/verification-report.md) and on the
-> [Flagged for Review](flagged.html) page. Seven network-free checks back the claim:
+> [Flagged for Review](flagged.html) page. Nine network-free checks back the claim:
 > `node tools/review-test.mjs` (parser, counters, diffs, projection), `tools/hit-model-test.mjs`
 > (hit forecast), `tools/reviews-feed-test.mjs` (feed-log persistence), `tools/feed-fields-test.mjs`
 > (`FEED_FIELDS` reviewDetails projection), `tools/page-render-test.mjs` (renders all three pages
-> in jsdom), `tools/link-check.mjs` (no dead internal links) and `tools/check-local-links.py`
+> in jsdom), `tools/empty-state-test.mjs` (off-day / empty-slate wording), `tools/server-test.mjs`
+> (server.mjs endpoints and the feed-log envelope contract, including retired shapes),
+> `tools/link-check.mjs` (no dead internal links) and `tools/check-local-links.py`
 > (local href/src must resolve; used by CI).
 
 - **Scoreboard** (like [MLB.com](https://www.mlb.com/scoreboard)) — every game for any

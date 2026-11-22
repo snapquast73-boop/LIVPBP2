@@ -868,7 +868,92 @@
       </div>
     </section>
 
-    <footer class="site-footer">
+        <!-- ===== 26686e12: independent verification pass (unique items; the server-envelope and
+         vsPlayer-shape defects this session also found were fixed in parallel sessions — see §12/§13) ===== -->
+    <section class="panel">
+      <div class="panel-title">14 · Independent verification pass — unique items (session 26686e12, 2026-11-22)</div>
+      <p>
+        This pass re-verified the live deployment against the official host (<code>statsapi.mlb.com</code>)
+        and independently found two defects that parallel sessions had just fixed — the
+        <code>server.mjs</code> feed-log envelope contract (fixed in <a href="https://github.com/snapquast73-boop/LIVPBP2/pull/42" target="_blank" rel="noopener">PR #42</a>,
+        §13) and the two-type <code>vsPlayer</code> shape (fixed as <code>careerVsPitcher</code> in
+        <a href="https://github.com/snapquast73-boop/LIVPBP2/pull/41" target="_blank" rel="noopener">PR #41</a>,
+        §12). The merged fixes were kept; only the items those sections do not cover are listed here.
+      </p>
+      <table>
+        <thead><tr><th>Item</th><th>Status</th><th>Finding (with the official source fetched in this pass)</th><th>Official source</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>playEvents[].index</code> → <code>events[d.playIndex]</code> lookup in <code>game.js</code></td>
+            <td class="ok">✓ Verified</td>
+            <td>On the official play-by-play, <code>index</code> restarts at 0 within each at-bat and equals the
+            event's array position, so <code>events[d.playIndex]</code> (and the left/right half-inning split at
+            <code>index === 2</code>) is correct. Example: <a href="https://statsapi.mlb.com/api/v1.1/game/825078/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,index,isPitch,pitchNumber,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress" target="_blank" rel="noopener">game 825078</a>
+            at-bat 26 carries three review records (two overturned pitch-level <code>MJ</code> + one play-level
+            <code>MJ</code>), exactly the multi-event case the lookup has to survive.</td>
+            <td><a href="https://statsapi.mlb.com/api/v1.1/game/825078/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,index,isPitch,pitchNumber,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress" target="_blank" rel="noopener">statsapi.mlb.com playEvents index</a></td>
+          </tr>
+          <tr>
+            <td>Game-page count &amp; outs display</td>
+            <td class="ok">✓ Verified</td>
+            <td>The rendered <code>1 B · 3 S · 3 OUT</code> equals the official
+            <a href="https://statsapi.mlb.com/api/v1.1/game/775296/feed/live?fields=liveData,plays,currentPlay,count,balls,strikes,outs" target="_blank" rel="noopener">currentPlay.count</a>
+            <code>{"balls":1,"strikes":3,"outs":3}</code> for game 775296 — displayed exactly as returned, no
+            counting invented.</td>
+            <td><a href="https://statsapi.mlb.com/api/v1.1/game/775296/feed/live?fields=liveData,plays,currentPlay,count,balls,strikes,outs" target="_blank" rel="noopener">statsapi.mlb.com currentPlay.count</a></td>
+          </tr>
+          <tr>
+            <td><code>challengeTeamId</code> as challenger attribution — corroboration samples (evidence only)</td>
+            <td class="warn">Corroborated</td>
+            <td>In every sampled manager challenge the id equals the team named in the official play text:
+            game <a href="https://statsapi.mlb.com/api/v1.1/game/775296/feed/live?fields=gameData,teams,away,home,id,abbreviation,liveData,plays,allPlays,atBatIndex,description,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress" target="_blank" rel="noopener">775296</a>
+            <code>MV / challengeTeamId 147</code> + “Yankees challenged (catcher interference)” (147 = NYY);
+            game <a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,teams,away,home,teamName,clubName,shortName,name,abbreviation,liveData,plays,allPlays,about,atBatIndex,result,description,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress" target="_blank" rel="noopener">824027</a>
+            <code>MF / 108</code> + “Angels challenged (play at 1st)” (108 = LAA). MLB publishes no definition of
+            the field (§2/§10), so this is <em>evidence for human review, not proof</em> — the merged Replay Feed
+            keeps a39d7ac1's text-only attribution and adds no inference from the id.</td>
+            <td><a href="https://statsapi.mlb.com/api/v1.1/game/775296/feed/live?fields=gameData,teams,away,home,id,abbreviation,liveData,plays,allPlays,atBatIndex,description,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress" target="_blank" rel="noopener">statsapi.mlb.com 775296</a> · <a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,teams,away,home,teamName,clubName,shortName,name,abbreviation,liveData,plays,allPlays,about,atBatIndex,result,description,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress" target="_blank" rel="noopener">824027</a></td>
+          </tr>
+          <tr>
+            <td>Expected-statistics values differ between same-day official fetches</td>
+            <td class="warn">⚑ Flagged</td>
+            <td>The endpoint is verified (both fetches return the <code>expectedStatistics</code> block), but the
+            values returned for the same player/season differed on 2026-11-22: this session read
+            <code>avg .285 / slg .549 / woba .393</code> at
+            <a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,expectedStatistics&amp;group=hitting&amp;season=2026" target="_blank" rel="noopener">this URL</a>,
+            while §13 records <code>.285 / .593 / .399</code> from the equivalent combined call the same day.
+            Expected stats are restated upstream, so exact values can drift; both observations are recorded and
+            neither was adjusted by hand.</td>
+            <td><a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,expectedStatistics&amp;group=hitting&amp;season=2026" target="_blank" rel="noopener">statsapi.mlb.com expectedStatistics</a></td>
+          </tr>
+          <tr>
+            <td>Team logos / headshots (<code>www.mlbstatic.com/team-logos/team-cap-on-dark/{id}.svg</code>)</td>
+            <td class="warn">◐ Still unverified</td>
+            <td>Re-checked 2026-11-22: the CDN still returns HTTP 500 to non-browser clients
+            (<a href="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" target="_blank" rel="noopener">sample</a>),
+            so exact asset parity cannot be confirmed from here. The deployed site's layout falls back to monogram
+            chips/initials — same graceful degradation as the reference deployment. Row stays flagged.</td>
+            <td><a href="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" target="_blank" rel="noopener">www.mlbstatic.com sample</a></td>
+          </tr>
+          <tr>
+            <td>README: hit forecast in “completed PBP rows” with “PBP chips”</td>
+            <td class="unverified">Unverified — human decision requested</td>
+            <td>Line-by-line review found no PBP-chips display anywhere in the codebase (<code>game.js</code> /
+            <code>props.js</code> render the live at-bat card and the Props &amp; Matchup tab only), and the
+            <a href="https://github.com/snapquast73-boop/LIVPBP2#two-sided-hit-forecast" target="_blank" rel="noopener">README claim</a>
+            names it. The original screen is unrecoverable (upstream repository deleted — §2), and the sibling
+            reference <a href="https://github.com/snapquast73-boop/POSTSSNALRT/blob/main/flagged-for-review.html" target="_blank" rel="noopener">POSTSSNALRT F-04</a>
+            ships no forecast probabilities at all and explicitly refuses to invent them. Nothing was invented
+            here. <strong>Decision requested:</strong> keep the README wording as-is (historical description), or
+            add a clearly labelled per-play hit-probability chip in the PBP table using the same estimator as the
+            at-bat card. Default while undecided: leave the behavior unchanged.</td>
+            <td>— (no official source can confirm an original display; left blank per policy)</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+<footer class="site-footer">
       <p>
         Unofficial fan project. Not affiliated with MLB or MLB Advanced Media.
         · <a href="index.html">Scoreboard</a>
