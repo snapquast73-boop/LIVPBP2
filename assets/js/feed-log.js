@@ -148,8 +148,17 @@
     return pathname;
   }
 
+  /**
+   * Fetch one date's remote log (null when no server is running).
+   *
+   * `serverAvailable` caches only whether a server answered, never the payload:
+   * it is per (server, date), and this used to return the cached BOOLEAN on the
+   * second call, so after the first lookup every later date merged the local log
+   * against `true` instead of the remote rows — cross-browser restore worked for
+   * one date per page load and silently did nothing afterwards.
+   */
   function probeServer(dateStr) {
-    if (serverAvailable !== null) return Promise.resolve(serverAvailable);
+    if (serverAvailable === false) return Promise.resolve(null);
     return fetch(endpoint('/api/feed-log?date=' + encodeURIComponent(dateStr)), {
       headers: { Accept: 'application/json' },
     }).then(function (res) {
@@ -157,7 +166,8 @@
       return res.json();
     }).then(function (payload) {
       serverAvailable = !!(payload && payload.v === 1);
-      return payload;
+      if (!serverAvailable) return null;
+      return normalize(payload, dateStr);
     }).catch(function () {
       serverAvailable = false;
       return null;

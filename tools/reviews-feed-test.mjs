@@ -102,4 +102,51 @@ check('snapshots from one game do not collide with another game', () => {
   assert.equal(diff.changes.length, 0);
 });
 
+/* Every date must restore from the server, not just the first one.
+ *
+ * probeServer used to cache a BOOLEAN once a server had answered and return it
+ * on later calls, so loadDate merged the local log against `true` for every date
+ * after the first: cross-browser restore silently did nothing. This drives the
+ * real loadDate path with fetch stubbed, across two different dates. */
+await (async () => {
+  const remoteByDate = {
+    '2026-06-01': FeedLog.normalize({
+      v: 1, date: '2026-06-01', entries: [row('remote-a', '2026-06-01T10:00:00Z')],
+    }, '2026-06-01'),
+    '2026-06-02': FeedLog.normalize({
+      v: 1, date: '2026-06-02', entries: [row('remote-b', '2026-06-02T10:00:00Z')],
+    }, '2026-06-02'),
+  };
+  const seen = [];
+  const sandbox = createSandbox({
+    fetch: (url) => {
+      const m = String(url).match(/date=([\d-]+)/);
+      const date = m ? m[1] : null;
+      const payload = date ? remoteByDate[date] : null;
+      return Promise.resolve({
+        ok: !!payload,
+        status: payload ? 200 : 404,
+        json: () => Promise.resolve(payload),
+        headers: { get: () => null },
+      });
+    },
+  });
+  loadScripts(sandbox, ['assets/js/ui.js', 'assets/js/api.js', 'assets/js/reviews.js', 'assets/js/feed-log.js']);
+
+  for (const date of ['2026-06-01', '2026-06-02']) {
+    await new Promise((resolve) => {
+      sandbox.FeedLog.loadDate(date, (merged) => {
+        seen.push({ date, ids: merged.entries.map((e) => e.id) });
+        resolve();
+      });
+    });
+  }
+  check('the second date also restores its rows from the server', () => {
+    assert.equal(seen.length, 2);
+    assert.deepEqual(seen[0].ids, ['remote-a'], 'first date restores');
+    assert.deepEqual(seen[1].ids, ['remote-b'],
+      'second date restores too — the probe must not hand back a cached boolean');
+  });
+})();
+
 console.log('\nreviews-feed-test: ' + passed + ' checks passed');
