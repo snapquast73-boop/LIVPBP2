@@ -556,3 +556,11 @@ dropped together with the duplicate server fix and superseded by `tools/server-t
 `feed-fields-test` 9/9 · `empty-state-test` 3/3 · `server-test` 6/6 (incl. the re-homed
 retired-envelope-shape check) · `page-render-test` 8 pages / 0 failed (jsdom) ·
 `link-check.mjs` clean · `check-local-links.py` clean.
+
+**Merge & deployment record — 26686e12 (2026-11-22):** PR [#45](https://github.com/snapquast73-boop/LIVPBP2/pull/45)
+(“Independent verification pass, retired-envelope test coverage, test-count sync, and flagged §14”)
+merged with `--merge` as `fee449fd`. GitHub Pages build `fee449fd` reported `status: "built"`
+(`error: null`) at 2026-11-22 02:29 UTC, and the deployed `flagged.html` serves section 14 in full.
+All checks green on the merged tree: review-test 16/16 · hit-model-test 23/23 · reviews-feed-test 6/6 ·
+feed-fields-test 9/9 · empty-state-test 3/3 · server-test 6/6 · page-render-test 8/0 ·
+link-check.mjs clean · check-local-links.py clean.
