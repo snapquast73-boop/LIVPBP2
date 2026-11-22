@@ -488,12 +488,19 @@
     if (isPreview) {
       var ppAway = gd.teams && gd.teams.away && gd.teams.away.probablePitcher;
       var ppHome = gd.teams && gd.teams.home && gd.teams.home.probablePitcher;
+      // Every field below is optional in the official payload: a game that has
+      // not started yet can carry no `teams` block and no probables, so each
+      // read is guarded (an unguarded `gd.teams.away` here threw a TypeError and
+      // left the whole live panel blank).
+      var awayTeam = (gd.teams && gd.teams.away) || {};
+      var homeTeam = (gd.teams && gd.teams.home) || {};
       el.innerHTML = '<div class="live-row"><div><strong>First pitch:</strong> ' +
         UI.esc(UI.formatDateTime(gd.datetime && gd.datetime.dateTime) || 'TBD') + '</div>' +
         '<div><strong>Probable pitchers:</strong> ' +
-        UI.esc((gd.teams.away.abbreviation || 'AWY') + ' ' + ((ppAway && ppAway.fullName) || 'TBD')) +
-        ' · ' + UI.esc((gd.teams.home.abbreviation || 'HOM') + ' ' + ((ppHome && ppHome.fullName) || 'TBD')) +
-        '</div></div>';
+        UI.esc((awayTeam.abbreviation || 'AWY') + ' ' + ((ppAway && ppAway.fullName) || 'TBD')) +
+        ' · ' + UI.esc((homeTeam.abbreviation || 'HOM') + ' ' + ((ppHome && ppHome.fullName) || 'TBD')) +
+        '</div>' +
+        '</div>';
       return;
     }
 
@@ -676,12 +683,22 @@
     return false;
   }
 
+  /** In the starting lineup or the batting order at some point (not a pitcher). */
+  function inLineup(player) {
+    if (!player) return false;
+    if (player.battingOrder) return true;
+    var s = (player.stats && player.stats.batting) || null;
+    return !!(s && s.note);
+  }
+
   function orderedBatterIds(team) {
     var players = team.players || {};
     var order = Array.isArray(team.battingOrder) ? team.battingOrder : [];
     var ids = order.filter(function (id) {
       var p = players['ID' + id];
-      return p && hasBattingLine(p);
+      // A lineup member is always listed, even before his first plate
+      // appearance (an early-called game can have a starter at 0 PA).
+      return p && (inLineup(p) || hasBattingLine(p));
     });
     if (ids.length) {
       // A substitute who batted but is not in the starting order goes after
@@ -691,12 +708,15 @@
       ids.forEach(function (id) { seen[String(id)] = true; });
       var extras = (Array.isArray(team.batters) ? team.batters : []).filter(function (id) {
         var p = players['ID' + id];
-        return !seen[String(id)] && p && hasBattingLine(p);
+        return !seen[String(id)] && p && (inLineup(p) || hasBattingLine(p));
       });
       return ids.concat(extras);
     }
+    // No `battingOrder` array in this payload: fall back to `batters`, keeping
+    // anyone with a real batting line or a lineup marker.
     return (Array.isArray(team.batters) ? team.batters : []).filter(function (id) {
-      return hasBattingLine(players['ID' + id]);
+      var p = players['ID' + id];
+      return p && (inLineup(p) || hasBattingLine(p));
     }).sort(function (a, b) {
       return battingOrderValue(players['ID' + a]) - battingOrderValue(players['ID' + b]);
     });
@@ -716,9 +736,14 @@
     var players = team.players || {};
     var pitcherIds = Array.isArray(team.pitchers) ? team.pitchers : [];
 
+    // orderedBatterIds() has already decided who is a batter (the starting
+    // lineup, plus anyone who actually batted). Do not re-filter on
+    // hasBattingLine() here: a starter at 0 PA before the first pitch is a
+    // legitimate row with blank stats, which is what an official box score
+    // prints for a scheduled game.
     var batters = orderedBatterIds(team)
       .map(function (id) { return players['ID' + id]; })
-      .filter(function (p) { return p && hasBattingLine(p); });
+      .filter(Boolean);
 
     var batRows = batters.map(function (p) {
       var s = (p.stats && p.stats.batting) || {};

@@ -472,6 +472,15 @@ folded in the 2026-11-22 verification note; kept main's tool list and added the 
 `assets/js/props.js` — auto-merged with main's independent `statSplits`/`gameLog` fixes; both are present and the
 full suite passes.
 
+### Additional defects found and fixed during the item-by-item review (1066de74)
+
+| # | Defect | Evidence | Source |
+| --- | --- | --- | --- |
+| 6 | **A scheduled (Preview) game crashed the live panel.** `renderLivePanel`'s Preview branch read `gd.teams.away.abbreviation` and `gd.teams.home.abbreviation` with the probables guarded but **not** `gd.teams` itself, so any payload without a `teams` block threw a `TypeError` and the panel stayed empty. Each read is now guarded independently. | A Preview feed built from the verified shape (status block only) throws on the old code; the guarded version renders "First pitch: … · Probable pitchers: …". Reproduction: `tools/game-page-test.mjs`, check "box score still lists the starting lineup before the first pitch" builds the same Preview state. | [official Preview-shape probe, game 822971](https://statsapi.mlb.com/api/v1.1/game/822971/feed/live?fields=gameData,game,status,teams,away,home,abbreviation,datetime,dateTime,probablePitcher) |
+| 7 | **A starter who had not batted yet was dropped from the box score.** Filtering batters on "has a batting line" also hid every lineup member at 0 PA, so a scheduled game or a just-started game showed an empty batting table. The renderer now lists the official `team.battingOrder` members unconditionally and uses the batting-line test only to decide *extra* (substitute) rows. | With `stats.batting` emptied for every non-note player, the old code rendered 1 row (the pinch hitter only); the new code renders all nine lineup members plus the substitute. | [official boxscore, game 824027](https://statsapi.mlb.com/api/v1/game/824027/boxscore?fields=teams,away,batters,pitchers,battingOrder,note) |
+
+Both were caught by re-reading the rendered output line by line rather than by trusting the diff, and both now have a regression check. `tools/game-page-test.mjs` is 7 checks; **5 of them fail on the pre-fix `game.js`** (verified by stashing the change and re-running).
+
 ## Conflict log and intervention request — 1066de74 (2026-11-22)
 
 - **Rebase conflict on `COORDINATION.md` (resolved, nothing discarded).** While this branch was open,

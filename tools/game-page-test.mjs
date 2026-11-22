@@ -227,6 +227,46 @@ await run('a two-way player appears in both the batting and pitching tables', as
   page.win.close();
 });
 
+await run('box score still lists the starting lineup before the first pitch', async () => {
+  // A Preview/Scheduled game has `battingOrder` set but no at-bats yet. Every
+  // starter must still be listed (with blank stat cells, which is the correct
+  // official state), while the pitchers must not leak into the batting table.
+  const preview = feedWithOfficialBoxscore();
+  preview.gameData.status = {
+    abstractGameState: 'Preview', codedGameState: 'S', detailedState: 'Scheduled',
+    statusCode: 'S', abstractGameCode: 'P',
+  };
+  for (const side of ['away', 'home']) {
+    Object.keys(preview.liveData.boxscore.teams[side].players).forEach((key) => {
+      const p = preview.liveData.boxscore.teams[side].players[key];
+      if (p.stats && p.stats.batting && !p.stats.batting.note) p.stats.batting = {};
+    });
+  }
+  const page = await renderGamePage({
+    until: (win) => (win.document.getElementById('boxscore-wrap').textContent || '').includes('McCarthy'),
+    fetchOpts: { feed: preview },
+  });
+  const doc = page.win.document;
+  const colBatRows = Array.from(doc.querySelectorAll('#boxscore-wrap table')[0].querySelectorAll('tbody tr'));
+  const names = colBatRows.map((r) => r.querySelectorAll('td')[1].textContent.trim());
+  // The nine players in official `team.battingOrder` must ALL be listed even
+  // though every stat is blank, plus the pinch hitter, plus the two starters
+  // who share a lineup slot with a substitute (slot "201"/"701" — the payload
+  // keeps the replaced starter in `battingOrder`, which an official box score
+  // also prints). What must NOT happen is a pitcher appearing as a batter.
+  for (const starter of ['Jake McCarthy', 'TJ Rumfield', 'Hunter Goodman', 'Troy Johnston',
+    'Willi Castro', 'Ezequiel Tovar', 'Sterlin Thompson', 'Kyle Karros']) {
+    assert.ok(names.some((n) => n.indexOf(starter) === 0),
+      starter + ' is in the official batting order and must be listed before his first PA');
+  }
+  assert.ok(names.some((n) => n.indexOf('Chad Stevens') === 0), 'the pinch hitter is listed');
+  for (const pitcher of ['Kyle Freeland', 'Seth Halvorsen', 'Jaden Hill', 'Antonio Senzatela']) {
+    assert.ok(!names.some((n) => n.indexOf(pitcher) === 0),
+      pitcher + ' is a pitcher and must never be a batting row, with or without at-bats');
+  }
+  page.win.close();
+});
+
 /* -------------------------------------------------------- 2. unknown gamePk */
 
 await run('an unknown gamePk says so instead of rendering an empty shell', async () => {
