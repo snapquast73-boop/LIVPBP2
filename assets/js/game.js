@@ -18,7 +18,8 @@
   var FINAL_POLL_MS = 30000;
 
   var gamePk = null;
-  var timer = null;
+  var pollTimer = null;
+  var ticker = null;
   var countdown = 0;
   var lastSignature = '';
   var lastFeed = null;
@@ -77,25 +78,24 @@
   }
 
   function stopTimer() {
-    if (timer) { clearInterval(timer); timer = null; }
+    if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+    if (ticker) { clearInterval(ticker); ticker = null; }
   }
 
+  /**
+   * Arm the next poll. The countdown is display-only; the fetch itself is
+   * scheduled by a separate timer, so the page keeps updating while a game is
+   * live (a countdown that only counts down and restarts never refreshes).
+   */
   function startTimer(delayMs) {
     stopTimer();
     countdown = Math.round(delayMs / 1000);
     paintCountdown();
-    timer = setInterval(function () {
+    ticker = setInterval(function () {
       countdown -= 1;
       paintCountdown();
-      if (countdown <= 0) {
-        // The countdown is the poll clock: reaching zero triggers the next
-        // fetch. loadGame() restarts this timer when it completes (success
-        // and error paths both call startTimer), so the interval is stopped
-        // here first to avoid overlapping polls while one is in flight.
-        stopTimer();
-        loadGame();
-      }
     }, 1000);
+    pollTimer = setTimeout(loadGame, delayMs);
   }
 
   function paintCountdown() {
