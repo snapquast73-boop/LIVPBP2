@@ -1,0 +1,595 @@
+{
+  "_source": "Trimmed copy of the OFFICIAL StatsAPI response fetched 2026-11-22: https://statsapi.mlb.com/api/v1/game/824027/boxscore?fields=teams,away,home,batters,pitchers,battingOrder,note,person,fullName,stats,batting,pitching,atBats,hits,runs,rbi,baseOnBalls,strikeOuts,inningsPitched,earnedRuns,position,abbreviation,allPositions",
+  "_note": "Values and array order are verbatim from that response; only unused stat keys are dropped. Used by tools/game-page-test.mjs to prove the box score splits batters from pitchers.",
+  "teams": {
+    "away": {
+      "team": {
+        "abbreviation": "COL",
+        "name": "Colorado Rockies"
+      },
+      "players": {
+        "ID677060": {
+          "person": {
+            "id": 677060,
+            "fullName": "Chad Stevens"
+          },
+          "position": {
+            "abbreviation": "2B"
+          },
+          "stats": {
+            "batting": {
+              "note": "a-",
+              "atBats": 1,
+              "runs": 0,
+              "hits": 0,
+              "rbi": 0,
+              "baseOnBalls": 0,
+              "strikeOuts": 0
+            },
+            "pitching": {}
+          },
+          "battingOrder": "701",
+          "allPositions": [
+            {
+              "abbreviation": "PH"
+            },
+            {
+              "abbreviation": "2B"
+            }
+          ]
+        },
+        "ID664983": {
+          "person": {
+            "id": 664983,
+            "fullName": "Jake McCarthy"
+          },
+          "position": {
+            "abbreviation": "CF"
+          },
+          "stats": {
+            "batting": {
+              "atBats": 4,
+              "runs": 2,
+              "hits": 2,
+              "rbi": 1,
+              "baseOnBalls": 2,
+              "strikeOuts": 1
+            },
+            "pitching": {}
+          },
+          "battingOrder": "100",
+          "allPositions": [
+            {
+              "abbreviation": "CF"
+            }
+          ]
+        },
+        "ID671289": {
+          "person": {
+            "id": 671289,
+            "fullName": "Tyler Freeman"
+          },
+          "position": {
+            "abbreviation": "RF"
+          },
+          "stats": {
+            "batting": {
+              "atBats": 4,
+              "runs": 2,
+              "hits": 1,
+              "rbi": 1,
+              "baseOnBalls": 1,
+              "strikeOuts": 1
+            },
+            "pitching": {}
+          },
+          "battingOrder": "200",
+          "allPositions": [
+            {
+              "abbreviation": "RF"
+            }
+          ]
+        },
+        "ID681198": {
+          "person": {
+            "id": 681198,
+            "fullName": "TJ Rumfield"
+          },
+          "position": {
+            "abbreviation": "1B"
+          },
+          "stats": {
+            "batting": {
+              "atBats": 0,
+              "runs": 0,
+              "hits": 0,
+              "rbi": 1,
+              "baseOnBalls": 0,
+              "strikeOuts": 0
+            },
+            "pitching": {}
+          },
+          "battingOrder": "201",
+          "allPositions": [
+            {
+              "abbreviation": "1B"
+            }
+          ]
+        },
+        "ID696100": {
+          "person": {
+            "id": 696100,
+            "fullName": "Hunter Goodman"
+          },
+          "position": {
+            "abbreviation": "C"
+          },
+          "stats": {
+            "batting": {
+              "atBats": 5,
+              "runs": 1,
+              "hits": 1,
+              "rbi": 3,
+              "baseOnBalls": 1,
+              "strikeOuts": 1
+            },
+            "pitching": {}
+          },
+          "battingOrder": "300",
+          "allPositions": [
+            {
+              "abbreviation": "C"
+            }
+          ]
+        },
+        "ID687859": {
+          "person": {
+            "id": 687859,
+            "fullName": "Troy Johnston"
+          },
+          "position": {
+            "abbreviation": "RF"
+          },
+          "stats": {
+            "batting": {
+              "atBats": 5,
+              "runs": 0,
+              "hits": 2,
+              "rbi": 1,
+              "baseOnBalls": 0,
+              "strikeOuts": 1
+            },
+            "pitching": {}
+          },
+          "battingOrder": "400",
+          "allPositions": [
+            {
+              "abbreviation": "LF"
+            },
+            {
+              "abbreviation": "RF"
+            }
+          ]
+        },
+        "ID650489": {
+          "person": {
+            "id": 650489,
+            "fullName": "Willi Castro"
+          },
+          "position": {
+            "abbreviation": "LF"
+          },
+          "stats": {
+            "batting": {
+              "atBats": 1,
+              "runs": 1,
+              "hits": 0,
+              "rbi": 0,
+              "baseOnBalls": 3,
+              "strikeOuts": 0
+            },
+            "pitching": {}
+          },
+          "battingOrder": "500",
+          "allPositions": [
+            {
+              "abbreviation": "2B"
+            },
+            {
+              "abbreviation": "LF"
+            }
+          ]
+        },
+        "ID678662": {
+          "person": {
+            "id": 678662,
+            "fullName": "Ezequiel Tovar"
+          },
+          "position": {
+            "abbreviation": "SS"
+          },
+          "stats": {
+            "batting": {
+              "atBats": 5,
+              "runs": 0,
+              "hits": 0,
+              "rbi": 0,
+              "baseOnBalls": 0,
+              "strikeOuts": 5
+            },
+            "pitching": {}
+          },
+          "battingOrder": "600",
+          "allPositions": [
+            {
+              "abbreviation": "SS"
+            }
+          ]
+        },
+        "ID666397": {
+          "person": {
+            "id": 666397,
+            "fullName": "Edouard Julien"
+          },
+          "position": {
+            "abbreviation": "1B"
+          },
+          "stats": {
+            "batting": {
+              "atBats": 2,
+              "runs": 0,
+              "hits": 0,
+              "rbi": 0,
+              "baseOnBalls": 2,
+              "strikeOuts": 1
+            },
+            "pitching": {}
+          },
+          "battingOrder": "700",
+          "allPositions": [
+            {
+              "abbreviation": "1B"
+            }
+          ]
+        },
+        "ID694514": {
+          "person": {
+            "id": 694514,
+            "fullName": "Sterlin Thompson"
+          },
+          "position": {
+            "abbreviation": "DH"
+          },
+          "stats": {
+            "batting": {
+              "atBats": 4,
+              "runs": 1,
+              "hits": 2,
+              "rbi": 1,
+              "baseOnBalls": 1,
+              "strikeOuts": 1
+            },
+            "pitching": {}
+          },
+          "battingOrder": "800",
+          "allPositions": [
+            {
+              "abbreviation": "DH"
+            }
+          ]
+        },
+        "ID691720": {
+          "person": {
+            "id": 691720,
+            "fullName": "Kyle Karros"
+          },
+          "position": {
+            "abbreviation": "3B"
+          },
+          "stats": {
+            "batting": {
+              "atBats": 4,
+              "runs": 2,
+              "hits": 2,
+              "rbi": 1,
+              "baseOnBalls": 0,
+              "strikeOuts": 0
+            },
+            "pitching": {}
+          },
+          "battingOrder": "900",
+          "allPositions": [
+            {
+              "abbreviation": "3B"
+            }
+          ]
+        },
+        "ID607536": {
+          "person": {
+            "id": 607536,
+            "fullName": "Kyle Freeland"
+          },
+          "position": {
+            "abbreviation": "P"
+          },
+          "stats": {
+            "batting": {},
+            "pitching": {
+              "inningsPitched": "5.2",
+              "hits": 7,
+              "runs": 6,
+              "earnedRuns": 5,
+              "baseOnBalls": 1,
+              "strikeOuts": 4
+            }
+          },
+          "allPositions": [
+            {
+              "abbreviation": "P"
+            }
+          ]
+        },
+        "ID678020": {
+          "person": {
+            "id": 678020,
+            "fullName": "Seth Halvorsen"
+          },
+          "position": {
+            "abbreviation": "P"
+          },
+          "stats": {
+            "batting": {},
+            "pitching": {
+              "inningsPitched": "1.1",
+              "hits": 1,
+              "runs": 0,
+              "earnedRuns": 0,
+              "baseOnBalls": 0,
+              "strikeOuts": 1
+            }
+          },
+          "allPositions": [
+            {
+              "abbreviation": "P"
+            }
+          ]
+        },
+        "ID677955": {
+          "person": {
+            "id": 677955,
+            "fullName": "Jaden Hill"
+          },
+          "position": {
+            "abbreviation": "P"
+          },
+          "stats": {
+            "batting": {},
+            "pitching": {
+              "inningsPitched": "0.1",
+              "hits": 0,
+              "runs": 2,
+              "earnedRuns": 2,
+              "baseOnBalls": 2,
+              "strikeOuts": 0
+            }
+          },
+          "allPositions": [
+            {
+              "abbreviation": "P"
+            }
+          ]
+        },
+        "ID622608": {
+          "person": {
+            "id": 622608,
+            "fullName": "Antonio Senzatela"
+          },
+          "position": {
+            "abbreviation": "P"
+          },
+          "stats": {
+            "batting": {},
+            "pitching": {
+              "inningsPitched": "1.2",
+              "hits": 2,
+              "runs": 0,
+              "earnedRuns": 0,
+              "baseOnBalls": 1,
+              "strikeOuts": 0
+            }
+          },
+          "allPositions": [
+            {
+              "abbreviation": "P"
+            }
+          ]
+        }
+      },
+      "batters": [
+        664983,
+        671289,
+        681198,
+        696100,
+        687859,
+        650489,
+        678662,
+        666397,
+        677060,
+        694514,
+        691720,
+        607536,
+        678020,
+        677955,
+        622608
+      ],
+      "pitchers": [
+        607536,
+        678020,
+        677955,
+        622608
+      ],
+      "battingOrder": [
+        664983,
+        681198,
+        696100,
+        687859,
+        650489,
+        678662,
+        677060,
+        694514,
+        691720
+      ]
+    },
+    "home": {
+      "team": {
+        "abbreviation": "LAA",
+        "name": "Los Angeles Angels"
+      },
+      "players": {
+        "ID624428": {
+          "person": {
+            "id": 624428,
+            "fullName": "Adam Frazier"
+          },
+          "position": {
+            "abbreviation": "2B"
+          },
+          "stats": {
+            "batting": {
+              "note": "a-",
+              "atBats": 0,
+              "runs": 1,
+              "hits": 0,
+              "rbi": 0,
+              "baseOnBalls": 1,
+              "strikeOuts": 0
+            },
+            "pitching": {}
+          },
+          "battingOrder": "701",
+          "allPositions": [
+            {
+              "abbreviation": "PH"
+            },
+            {
+              "abbreviation": "2B"
+            }
+          ]
+        },
+        "ID672724": {
+          "person": {
+            "id": 672724,
+            "fullName": "Oswald Peraza"
+          },
+          "position": {
+            "abbreviation": "SS"
+          },
+          "stats": {
+            "batting": {
+              "atBats": 5,
+              "runs": 1,
+              "hits": 2,
+              "rbi": 0,
+              "baseOnBalls": 0,
+              "strikeOuts": 0
+            },
+            "pitching": {}
+          },
+          "battingOrder": "500",
+          "allPositions": [
+            {
+              "abbreviation": "SS"
+            }
+          ]
+        },
+        "ID642350": {
+          "person": {
+            "id": 642350,
+            "fullName": "Jose Siri"
+          },
+          "position": {
+            "abbreviation": "LF"
+          },
+          "stats": {
+            "batting": {
+              "atBats": 5,
+              "runs": 1,
+              "hits": 1,
+              "rbi": 4,
+              "baseOnBalls": 0,
+              "strikeOuts": 0
+            },
+            "pitching": {}
+          },
+          "battingOrder": "600",
+          "allPositions": [
+            {
+              "abbreviation": "LF"
+            }
+          ]
+        },
+        "ID622268": {
+          "person": {
+            "id": 622268,
+            "fullName": "Donovan Walton"
+          },
+          "position": {
+            "abbreviation": "3B"
+          },
+          "stats": {
+            "batting": {
+              "atBats": 3,
+              "runs": 2,
+              "hits": 1,
+              "rbi": 0,
+              "baseOnBalls": 1,
+              "strikeOuts": 0
+            },
+            "pitching": {}
+          },
+          "battingOrder": "900",
+          "allPositions": [
+            {
+              "abbreviation": "3B"
+            }
+          ]
+        },
+        "ID667755": {
+          "person": {
+            "id": 667755,
+            "fullName": "José Soriano"
+          },
+          "position": {
+            "abbreviation": "P"
+          },
+          "stats": {
+            "batting": {},
+            "pitching": {
+              "inningsPitched": "4.2",
+              "hits": 3,
+              "runs": 3,
+              "earnedRuns": 2,
+              "baseOnBalls": 7,
+              "strikeOuts": 7
+            }
+          }
+        }
+      },
+      "batters": [
+        672724,
+        624428,
+        642350,
+        622268
+      ],
+      "pitchers": [
+        667755
+      ],
+      "battingOrder": [
+        624428,
+        672724,
+        642350,
+        622268
+      ]
+    }
+  }
+}

@@ -1,12 +1,28 @@
 /* ============================================================================
  * game.js — the Game page (game.html?gamePk=<id>).
  *
- * One request per poll: GET /api/v1.1/game/{gamePk}/feed/live
+ * One full request per poll: GET /api/v1.1/game/{gamePk}/feed/live
  *   liveData.plays.allPlays[]  → play-by-play, reviews, current at-bat
  *   liveData.linescore         → inning lines, count, outs, base runners
  *   liveData.boxscore          → batting/pitching lines
  *   liveData.decisions         → W/L/S
  *   gameData.teams/players     → names, records, venue, status, hands
+ *
+ * Plus one lean status probe while a game is live (STATUS_PROBE_MS):
+ *   GET /api/v1.1/game/{gamePk}/feed/live?fields=gameData,status,…
+ * MLB flips `status.statusCode` the instant a review is CALLED, but the play
+ * description only appears when the review RESOLVES, so the review banner can
+ * be painted from the ~150-byte probe long before the next full feed lands.
+ * The projection and response shape are verified in docs/verification-report.md
+ * and on flagged.html; the probe is skipped entirely once a game is Final.
+ *
+ * After a game goes Final the page keeps re-reading the feed inside a bounded
+ * grace window (POST_FINAL_*), because the Official Scorer and the Elias Sports
+ * Bureau publish rulings - and MLB publishes scoring changes - AFTER the last
+ * pitch (https://www.mlb.com/official-information/scoring-changes). The cadence
+ * is the one the uploaded README documents: 1 s for the first two minutes,
+ * 2.5 s to five minutes, then 15 s to the end of the 30-minute window.
+ *
  * The page only rebuilds the DOM when the baseball state actually changes, and
  * pauses entirely while the tab is hidden.
  * ==========================================================================*/
@@ -16,14 +32,35 @@
   var LIVE_POLL_MS = 3000;
   var IDLE_POLL_MS = 30000;
   var FINAL_POLL_MS = 30000;
+  var STATUS_PROBE_MS = 5000;
+
+  // Post-Final scorer-ruling grace window (uploaded README's documented tiers).
+  var POST_FINAL_GRACE_MS = 30 * 60 * 1000;
+  var POST_FINAL_TIERS = [
+    { untilMs: 2 * 60 * 1000, pollMs: 1000 },
+    { untilMs: 5 * 60 * 1000, pollMs: 2500 },
+    { untilMs: POST_FINAL_GRACE_MS, pollMs: 15000 },
+  ];
+
+  // Lean per-game status projection. `fields` is leaf-name based, so every key
+  // the probe reads is named explicitly (same lesson as FEED_FIELDS in
+  // reviews-feed.js).
+  var STATUS_FIELDS = 'gameData,game,pk,status,abstractGameState,codedGameState,' +
+    'detailedState,statusCode,reason,startTimeTBD,abstractGameCode,datetime,dateTime,' +
+    'officialDate,endTime';
 
   var gamePk = null;
   var pollTimer = null;
   var ticker = null;
   var countdown = 0;
+  var probeTimer = null;
   var lastSignature = '';
   var lastFeed = null;
   var lastReviews = [];
+  var lastProbeStatus = null;
+  var finalObservedAt = null;
+  var graceEnded = false;
+  var missingGame = false;
   var started = false;
   var latestRequest = 0;
   var registryReady = Promise.resolve();
@@ -48,7 +85,7 @@
       refreshBtn.addEventListener('click', function () { loadGame(); });
     }
     document.addEventListener('visibilitychange', function () {
-      if (document.hidden) stopTimer();
+      if (document.hidden) stopAllTimers();
       else loadGame();
     });
     loadGame();
@@ -80,6 +117,96 @@
   function stopTimer() {
     if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
     if (ticker) { clearInterval(ticker); ticker = null; }
+  }
+
+  /** Stop every clock — used when the tab is hidden or the game is unknown. */
+  function stopAllTimers() {
+    stopTimer();
+    stopProbe();
+  }
+
+  function stopProbe() {
+    if (probeTimer) { clearTimeout(probeTimer); probeTimer = null; }
+  }
+
+  /**
+   * Lean per-game status probe. Returns the projected `gameData` or null.
+   * Any failure is swallowed: the probe is an optimisation over the full feed,
+   * never the source of truth for anything else on the page.
+   */
+  function probeStatus() {
+    if (!gamePk) return Promise.resolve(null);
+    return MLBAPI.getGameLive(gamePk, { fields: STATUS_FIELDS, retries: 0, timeout: 8000 })
+      .then(function (data) {
+        var gd = (data && data.gameData) || null;
+        return gd && gd.status ? gd : null;
+      })
+      .catch(function () { return null; });
+  }
+
+  /** How often the lean probe should run, given what the full feed last said. */
+  function probeDelay(feed) {
+    var state = (feed && feed.gameData && feed.gameData.status &&
+      feed.gameData.status.abstractGameState) || 'Preview';
+    return state === 'Live' ? STATUS_PROBE_MS : IDLE_POLL_MS;
+  }
+
+  /**
+   * Official game status rendered from the lean probe alone. MLB flips the
+   * status code the moment a review is called, so this paints the banner and
+   * the tab badge while the full feed is still in flight. It never invents a
+   * review: the code is validated against the API's own /gameStatus registry
+   * (Reviews.isReviewStatus) exactly as the scoreboard does.
+   */
+  function applyProbeStatus(gameData) {
+    if (!gameData || !gameData.status) return;
+    var status = gameData.status;
+    var sig = [status.statusCode, status.detailedState, status.reason,
+      status.abstractGameState].join('|');
+    if (sig === lastProbeStatus) return;
+    lastProbeStatus = sig;
+
+    var code = status.statusCode;
+    var inReview = (code && Reviews.isReviewStatus(code)) ||
+      (gameData.flags && gameData.flags.inReview === true);
+    var bannerWrap = document.getElementById('live-review-banner-wrap');
+    var statusLine = document.getElementById('status-line');
+
+    if (inReview) {
+      var label = (status.detailedState || 'Review');
+      var reason = status.reason ? ' · ' + status.reason : '';
+      if (bannerWrap) {
+        bannerWrap.innerHTML = '<div class="review-banner">🚨 <strong>Under review now</strong> — ' +
+          UI.esc(label) + UI.esc(reason) + ' <span class="muted">(official game status ' +
+          UI.esc(code) + ', read from the lean status probe)</span></div>';
+      }
+    } else if (status.abstractGameState === 'Live' || status.abstractGameState === 'Final') {
+      // Leave a resolved full-feed banner alone; clear only a probe-painted one.
+      if (bannerWrap && /lean status probe/.test(bannerWrap.innerHTML)) bannerWrap.innerHTML = '';
+    }
+
+    // While a review is in progress the official status IS the headline (MLB
+    // flips it the instant a review is called), so it goes on the status line.
+    // Otherwise the full feed owns that line -- it carries the update time.
+    if (statusLine && inReview) {
+      statusLine.textContent = 'Official status: ' + (status.detailedState || code) +
+        (status.reason ? ' (' + status.reason + ')' : '');
+    }
+  }
+
+  // Only ONE probe loop may exist. loadGame() calls scheduleProbe() after every
+  // full feed, so without this guard a slow probe would be cancelled and
+  // restarted by each poll and could never fire.
+  function scheduleProbe(feed) {
+    if (probeTimer || !gamePk || missingGame) return;
+    var delay = probeDelay(feed);
+    probeTimer = setTimeout(function () {
+      probeTimer = null;
+      probeStatus().then(function (gameData) {
+        applyProbeStatus(gameData);
+        scheduleProbe(lastFeed);
+      });
+    }, delay);
   }
 
   /**
@@ -118,12 +245,54 @@
     ].join('|');
   }
 
+  /**
+   * Post-Final re-scan cadence. Rulings and scoring changes are published after
+   * the last pitch, so the page keeps reading the feed on the tiers the uploaded
+   * README documents until the bounded grace window closes, then falls back to
+   * the idle cadence.
+   */
+  function postFinalDelay() {
+    if (finalObservedAt === null) finalObservedAt = Date.now();
+    var elapsed = Date.now() - finalObservedAt;
+    for (var i = 0; i < POST_FINAL_TIERS.length; i += 1) {
+      if (elapsed < POST_FINAL_TIERS[i].untilMs) return POST_FINAL_TIERS[i].pollMs;
+    }
+    graceEnded = true;
+    return FINAL_POLL_MS;
+  }
+
   function pollDelay(feed) {
     var state = (feed && feed.gameData && feed.gameData.status &&
       feed.gameData.status.abstractGameState) || 'Preview';
     if (state === 'Live') return LIVE_POLL_MS;
-    if (state === 'Final') return FINAL_POLL_MS;
+    if (state === 'Final') return postFinalDelay();
     return IDLE_POLL_MS;
+  }
+
+  /**
+   * Unknown gamePk. Says so plainly instead of showing an empty "Away / Home"
+   * page, and stops polling: every retry would get the same answer.
+   */
+  function showMissingGame() {
+    missingGame = true;
+    stopAllTimers();
+    var loading = document.getElementById('loading');
+    if (loading) loading.classList.remove('show');
+    var status = document.getElementById('status-line');
+    if (status) status.textContent = '';
+    var main = document.getElementById('main');
+    if (main) {
+      main.innerHTML = '<div class="panel"><div class="panel-title">Game not found</div>' +
+        '<p>The MLB StatsAPI has no game with <code>gamePk=' +
+        UI.esc(String(gamePk).replace(/[^0-9]/g, '')) + '</code>. Nothing was rendered ' +
+        'because there is no data to render.</p>' +
+        '<p class="muted">Checked against ' +
+        '<a href="' + UI.esc(MLBAPI.BASE_V11 + '/game/' +
+          encodeURIComponent(gamePk) + '/feed/live') + '" target="_blank" rel="noopener">' +
+        'the official live feed</a>, which returns <code>gameData.game.pk: 0</code> with an ' +
+        'empty status for an unknown id.</p>' +
+        '<p><a class="btn" href="index.html">← Back to the scoreboard</a></p></div>';
+    }
   }
 
   function loadGame() {
@@ -135,6 +304,27 @@
     return registryReady.then(function () { return MLBAPI.getGameLive(gamePk); })
       .then(function (feed) {
         if (request !== latestRequest) return null; // a newer poll already won
+        // The StatsAPI answers HTTP 200 for a gamePk it does not know, with
+        // `gameData.game.pk: 0` and an empty status (verified 2026-11-22:
+        // https://statsapi.mlb.com/api/v1.1/game/999999999/feed/live?fields=gameData,game,pk,status).
+        // Without this check the page renders an empty shell that claims success.
+        var pk = feed && feed.gameData && feed.gameData.game && feed.gameData.game.pk;
+        var hasStatus = !!(feed && feed.gameData && feed.gameData.status &&
+          (feed.gameData.status.abstractGameState || feed.gameData.status.statusCode));
+        if (!hasStatus || !pk) {
+          showMissingGame();
+          return null;
+        }
+        missingGame = false;
+        // Track when this page first saw the game as Final so the post-Final
+        // re-scan window is measured from the game, not from page load.
+        var state = feed.gameData.status.abstractGameState;
+        if (state === 'Final') {
+          if (finalObservedAt === null) finalObservedAt = Date.now();
+        } else {
+          finalObservedAt = null;
+          graceEnded = false;
+        }
         lastFeed = feed;
         var sig = stateSignature(feed);
         updateReviewState(feed);
@@ -149,6 +339,7 @@
             (MLBAPI.quietRemainingMs() > 0 ? ' · API asked us to slow down' : '');
         }
         startTimer(pollDelay(feed));
+        scheduleProbe(feed);
         return feed;
       })
       .catch(function (err) {
@@ -457,26 +648,92 @@
     return Number.isFinite(n) ? n : 9999;
   }
 
+  /**
+   * `team.batters` is every player who has a batting line, including the
+   * pitchers in a DH-less lineup and pinch hitters who stayed in the game, so
+   * it is NOT the batting order. The official batting order is the separate
+   * `team.battingOrder` array of player ids (verified 2026-11-22:
+   * https://statsapi.mlb.com/api/v1/game/824027/boxscore?fields=teams,away,batters,pitchers,battingOrder,note
+   * → `batters` has 15 ids incl. four pitchers, `battingOrder` has the nine
+   * starters). Prefer that array; fall back to sorting by `battingOrder`
+   * then to the raw id list, so an older payload without it still renders.
+   */
+  /**
+   * Did this player actually take a plate appearance? `stats.batting` is
+   * present but EMPTY (`{}`) for pitchers who never batted, so the object's
+   * existence proves nothing; an at-bat, a plate appearance or an official
+   * `note` does. Verified 2026-11-22 against game 824027, where the four COL
+   * pitchers carry `batting: {}` while Chad Stevens (pinch hitter, `note:
+   * "a-"`) carries `atBats: 1`.
+   */
+  function hasBattingLine(player) {
+    var s = (player && player.stats && player.stats.batting) || null;
+    if (!s) return false;
+    if (s.note) return true;
+    if (Number(s.atBats) > 0 || Number(s.plateAppearances) > 0) return true;
+    if (Number(s.baseOnBalls) > 0 || Number(s.hitByPitch) > 0 ||
+        Number(s.sacBunts) > 0 || Number(s.sacFlies) > 0) return true;
+    return false;
+  }
+
+  function orderedBatterIds(team) {
+    var players = team.players || {};
+    var order = Array.isArray(team.battingOrder) ? team.battingOrder : [];
+    var ids = order.filter(function (id) {
+      var p = players['ID' + id];
+      return p && hasBattingLine(p);
+    });
+    if (ids.length) {
+      // A substitute who batted but is not in the starting order goes after
+      // the order, in the payload's own sequence (pinch hitters, pinch
+      // runners, position players who entered).
+      var seen = {};
+      ids.forEach(function (id) { seen[String(id)] = true; });
+      var extras = (Array.isArray(team.batters) ? team.batters : []).filter(function (id) {
+        var p = players['ID' + id];
+        return !seen[String(id)] && p && hasBattingLine(p);
+      });
+      return ids.concat(extras);
+    }
+    return (Array.isArray(team.batters) ? team.batters : []).filter(function (id) {
+      return hasBattingLine(players['ID' + id]);
+    }).sort(function (a, b) {
+      return battingOrderValue(players['ID' + a]) - battingOrderValue(players['ID' + b]);
+    });
+  }
+
+  /** Official `note` field, e.g. `a-` = announced as a pinch hitter. */
+  function battingNoteLabel(note) {
+    if (!note) return '';
+    if (note === 'a-') return 'a-';
+    return String(note);
+  }
+
   function boxscoreTeam(feed, side, label) {
     var teams = (feed.liveData && feed.liveData.boxscore && feed.liveData.boxscore.teams) || {};
     var team = teams[side];
     if (!team) return '<div class="muted">' + UI.esc(label) + ' box score not available.</div>';
     var players = team.players || {};
-    var batterIds = Array.isArray(team.batters) ? team.batters : [];
     var pitcherIds = Array.isArray(team.pitchers) ? team.pitchers : [];
 
-    var batters = batterIds.map(function (id) { return players['ID' + id]; }).filter(Boolean)
-      .sort(function (a, b) { return battingOrderValue(a) - battingOrderValue(b); });
+    var batters = orderedBatterIds(team)
+      .map(function (id) { return players['ID' + id]; })
+      .filter(function (p) { return p && hasBattingLine(p); });
 
     var batRows = batters.map(function (p) {
       var s = (p.stats && p.stats.batting) || {};
       var order = Number(p.battingOrder);
       var slot = Number.isFinite(order) ? Math.round(order / 100) : '';
       var stats = [s.atBats, s.runs, s.hits, s.rbi, s.baseOnBalls, s.strikeOuts];
+      var positions = (p.allPositions || []).map(function (x) { return x && x.abbreviation; })
+        .filter(Boolean).join('-');
+      var pos = positions || (p.position && p.position.abbreviation) || '';
       return '<tr>' +
         '<td>' + UI.esc(val(slot)) + '</td>' +
-        '<td>' + UI.esc((p.person && p.person.fullName) || '') + '</td>' +
-        '<td>' + UI.esc((p.position && p.position.abbreviation) || '') + '</td>' +
+        '<td>' + UI.esc((p.person && p.person.fullName) || '') +
+          (s.note ? ' <span class="muted">' + UI.esc(battingNoteLabel(s.note)) + '</span>' : '') +
+        '</td>' +
+        '<td>' + UI.esc(pos) + '</td>' +
         stats.map(function (v) { return '<td>' + UI.esc(val(v)) + '</td>'; }).join('') +
         sourceCell(stats) +
       '</tr>';
@@ -532,7 +789,9 @@
     if (!bannerWrap) return;
     var active = lastReviews.filter(function (r) { return r.inProgress; });
     if (!active.length) {
-      bannerWrap.innerHTML = '';
+      // The lean probe sees the official "review called" flip before the play
+      // text exists, so a probe-painted banner outranks an empty full feed.
+      if (!/lean status probe/.test(bannerWrap.innerHTML)) bannerWrap.innerHTML = '';
       return;
     }
     bannerWrap.innerHTML = '<div class="banner-box">🚨 <strong>Under review:</strong> ' +

@@ -4,7 +4,7 @@
   "private": true,
   "description": "MLB Live PBP \u2014 static GitHub Pages site (scoreboard, game view, Replay Feed). No build step; the site is served as-is. This file exists only so CI can install the jsdom test dependency deterministically.",
   "scripts": {
-    "test": "node tools/review-test.mjs && node tools/hit-model-test.mjs && node tools/reviews-feed-test.mjs && node tools/feed-fields-test.mjs && node tools/page-render-test.mjs && node tools/empty-state-test.mjs && node tools/link-check.mjs"
+    "test": "node tools/review-test.mjs && node tools/hit-model-test.mjs && node tools/reviews-feed-test.mjs && node tools/feed-fields-test.mjs && node tools/page-render-test.mjs && node tools/empty-state-test.mjs && node tools/game-page-test.mjs && node tools/link-check.mjs"
   },
   "devDependencies": {
     "jsdom": "^26.0.0"

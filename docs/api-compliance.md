@@ -41,6 +41,8 @@ all is an open question that this code cannot answer. It is listed on
 | `index.html` scoreboard | full hydrated schedule every **20 s** while any game is live, every **60 s** otherwise (`LIVE_POLL_MS`, `IDLE_POLL_MS` in `assets/js/scoreboard.js`) | 1 |
 | `index.html` status sweep | lean `fields`-projected schedule every **5 s** while live (`STATUS_SWEEP_MS`) | 1 |
 | `game.html` live game | full feed every **3 s** (`LIVE_POLL_MS` in `assets/js/game.js`); **30 s** for preview/final games | 1 |
+| `game.html` lean status probe | `fields`-projected per-game status every **5 s** while the game is live (`STATUS_PROBE_MS`); **skipped entirely once the game is Final**, and absent while the tab is hidden | 1 |
+| `game.html` post-Final re-scan | after a game goes Final, the feed is re-read every **1 s** for 2 min, then **2.5 s** to 5 min, then **15 s** to the end of a bounded **30 min** window (`POST_FINAL_TIERS`, `POST_FINAL_GRACE_MS`), then it drops to 30 s. Bounded because the Official Scorer and Elias publish rulings after the last pitch — <https://www.mlb.com/official-information/scoring-changes> | 1 |
 | `reviews.html` Replay Feed | one schedule + one `fields`-projected feed per non-Preview game, every **20 s** while live, **60 s** otherwise | 1 + N |
 | Player stats (hit forecast) | only when a live at-bat card or the Props tab is on screen; responses cached 10 min in memory | 3 per batter/pitcher pair |
 
