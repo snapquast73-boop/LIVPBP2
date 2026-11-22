@@ -118,18 +118,29 @@
       });
   }
 
-  function indexReviews() {
-    reviewGamePks = {};
-    games.forEach(function (g) {
+  /**
+   * A game is under review when its OFFICIAL status code says so.
+   *
+   * `flags.inReview` is deliberately not read any more: `flags` comes back as an
+   * empty object `{}` on every sampled response (verified 2026-11-22 on
+   * https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2025-06-01&hydrate=team,review,flags&fields=dates,games,gamePk,flags,inReview,review
+   * and the 2026-06-01 slate), so the old check could only ever be false and just
+   * implied a second data source that does not exist. The registry codes are the
+   * documented source (docs/verification-report.md §3).
+   */
+  function collectReviews(list) {
+    var found = {};
+    (list || []).forEach(function (g) {
       var code = g.status && g.status.statusCode;
-      var flagged = g.flags && g.flags.inReview === true;
-      if (flagged || (code && Reviews.isReviewStatus(code))) {
-        reviewGamePks[g.gamePk] = {
-          code: code || '',
-          reason: (g.status && g.status.reason) || '',
-        };
+      if (code && Reviews.isReviewStatus(code)) {
+        found[g.gamePk] = { code: code, reason: (g.status && g.status.reason) || '' };
       }
     });
+    return found;
+  }
+
+  function indexReviews() {
+    reviewGamePks = collectReviews(games);
   }
 
   /** Lean status sweep: only status fields, so it is a few KB for the slate. */
@@ -138,17 +149,9 @@
     var dateAtRequest = currentDate;
     return MLBAPI.getScheduleStatus(currentDate).then(function (data) {
       if (request !== latestSweep || dateAtRequest !== currentDate) return;
-      var next = {};
       var dates = data.dates || [];
       var list = dates.length ? (dates[0].games || []) : [];
-      list.forEach(function (g) {
-        var code = g.status && g.status.statusCode;
-        var flagged = g.flags && g.flags.inReview === true;
-        if (flagged || (code && Reviews.isReviewStatus(code))) {
-          next[g.gamePk] = { code: code || '', reason: (g.status && g.status.reason) || '' };
-        }
-      });
-      reviewGamePks = next;
+      reviewGamePks = collectReviews(list);
       renderBanner();
       renderGames();
       renderTabs();

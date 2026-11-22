@@ -31,6 +31,7 @@ const schedule = read('schedule.json');
 const gameStatusDoc = read('game-status.json');
 const gameStatus = Array.isArray(gameStatusDoc) ? gameStatusDoc : gameStatusDoc.registry;
 const feed = read('feed-824027.json');
+const vsPlayer = read('vs-player-660271-622608.json');
 
 let passed = 0;
 const failures = [];
@@ -47,10 +48,12 @@ function run(name, fn) {
   }
 }
 
-function ctx() {
+function ctx(withProps) {
   const sandbox = createSandbox();
-  loadScripts(sandbox, ['assets/js/api.js', 'assets/js/ui.js', 'assets/js/reviews.js',
-    'assets/js/feed-log.js', 'assets/js/reviews-feed.js']);
+  const files = ['assets/js/api.js', 'assets/js/ui.js', 'assets/js/reviews.js',
+    'assets/js/feed-log.js', 'assets/js/reviews-feed.js'];
+  if (withProps) files.push('assets/js/props.js');
+  loadScripts(sandbox, files);
   return sandbox;
 }
 
@@ -123,6 +126,49 @@ run('the Replay Feed "All" tab keeps the categories its own README lists', () =>
   assert.equal(s.ReplayFeed.inAllTab(challengeRow), true);
   assert.equal(s.ReplayFeed.inAllTab(absRow), false,
     'ABS keeps its own tab — documented in the original README, L60-66');
+});
+
+run('head-to-head reads the career vsPlayerTotal block, not the first season', () => {
+  const s = ctx(true);
+  const h2h = s.Props.headToHeadFrom(vsPlayer);
+  assert.ok(h2h, 'a career line is returned');
+  // The career line is 5-for-11 (.455). The first `vsPlayer` split is 2024's
+  // 3-for-5 (.600); reading that one instead is the defect this guards.
+  assert.equal(h2h.atBats, 11, 'career at-bats, not one season');
+  assert.equal(h2h.hits, 5, 'career hits, not one season');
+  assert.equal(h2h.scope, 'career');
+  assert.ok(Math.abs(h2h.rate - 5 / 11) < 1e-9, 'career rate is hits/atBats');
+});
+
+run('remaining plate appearances respect a 7-inning game', () => {
+  const s = ctx(true);
+  // A doubleheader game is scheduled for 7 innings; `scheduledInnings` is on
+  // liveData.linescore. Reading it from gameData.game (which only carries
+  // pk/season) made every such game look like a 9-inning one.
+  const dh = {
+    gameData: { status: { abstractGameState: 'Live' }, game: { pk: 1, season: '2026' } },
+    liveData: { linescore: { currentInning: 5, scheduledInnings: 7 } },
+  };
+  const nine = {
+    gameData: { status: { abstractGameState: 'Live' }, game: { pk: 2, season: '2026' } },
+    liveData: { linescore: { currentInning: 5, scheduledInnings: 9 } },
+  };
+  assert.equal(s.Props.estimateRemainingPAs(dh), 1,
+    'inning 5 of 7 leaves 3 innings -> round(3 * 0.45) = 1');
+  assert.equal(s.Props.estimateRemainingPAs(nine), 2,
+    'inning 5 of 9 leaves 5 innings -> round(5 * 0.45) = 2');
+  assert.equal(s.Props.estimateRemainingPAs({ gameData: { status: { abstractGameState: 'Final' } } }), 0,
+    'a final game has no plate appearances left');
+});
+
+run('head-to-head survives a payload with no total block', () => {
+  const s = ctx(true);
+  const h2h = s.Props.headToHeadFrom({ stats: [vsPlayer.stats[0]] });
+  assert.equal(h2h.hits, 5, 'per-season rows are summed (3+2+0)');
+  assert.equal(h2h.atBats, 11, 'per-season at-bats are summed (5+3+3)');
+  assert.equal(h2h.scope, 'summed-seasons', 'the fallback labels what it did');
+  assert.equal(s.Props.headToHeadFrom({ stats: [] }), null,
+    'no data means no row, never a zero line');
 });
 
 console.log('\nlive-slate-test: ' + passed + ' checks passed, ' + failures.length + ' failed');

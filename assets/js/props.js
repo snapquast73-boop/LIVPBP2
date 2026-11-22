@@ -252,6 +252,55 @@
     };
   }
 
+  /**
+   * Career batter-vs-pitcher line from `stats=vsPlayer`.
+   *
+   * The official response carries TWO stat blocks (verified 2026-11-22 on
+   * https://statsapi.mlb.com/api/v1/people/660271/stats?stats=vsPlayer&group=hitting&opposingPlayerId=622608):
+   *
+   *   [ { type.displayName: "vsPlayer",      splits: [ one row PER SEASON ] },
+   *     { type.displayName: "vsPlayerTotal", splits: [ one career-total row ] } ]
+   *
+   * Reading `stats[0].splits[0]` therefore returned a single (usually the
+   * oldest) season, not the career line — a 5-for-11 career showed up as a
+   * 3-for-5 one. Use the explicit `vsPlayerTotal` block and keep the per-season
+   * breakdown only as a labelled fallback when the payload omits it.
+   */
+  function headToHeadFrom(statsPayload) {
+    var stats = (statsPayload && statsPayload.stats) || [];
+    var total = null;
+    var seasons = [];
+    stats.forEach(function (s) {
+      var type = (s && s.type && s.type.displayName) || '';
+      var splits = (s && s.splits) || [];
+      if (type === 'vsPlayerTotal') {
+        var t = splits[0];
+        if (t && t.stat) total = t.stat;
+      } else if (type === 'vsPlayer') {
+        seasons = seasons.concat(splits.filter(function (x) { return x && x.stat; }));
+      }
+    });
+    var chosen = total;
+    var scope = 'career';
+    if (!chosen && seasons.length) {
+      // No total block: sum the per-season rows rather than picking one, and
+      // report the scope so the UI can say what the number is.
+      var hits = 0;
+      var ab = 0;
+      seasons.forEach(function (x) {
+        hits += Number(x.stat.hits) || 0;
+        ab += Number(x.stat.atBats) || 0;
+      });
+      chosen = { hits: hits, atBats: ab };
+      scope = 'summed-seasons';
+    }
+    if (!chosen) return null;
+    var atBats = Number(chosen.atBats) || 0;
+    var rate = toRate(Number(chosen.hits), atBats);
+    if (rate === null) return null;
+    return { rate: rate, atBats: atBats, hits: Number(chosen.hits) || 0, scope: scope };
+  }
+
   /* ------------------------------------------------------- live stat loading */
 
   var ctxCache = new Map();
@@ -318,17 +367,7 @@
     ]).then(function (results) {
       var batterCtx = results[0];
       var pitcherCtx = results[1];
-      var h2h = null;
-      var vsStats = (results[2] && results[2].stats) || [];
-      vsStats.forEach(function (s) {
-        var split = (s.splits || [])[0];
-        if (split && split.stat) {
-          h2h = {
-            rate: toRate(Number(split.stat.hits), Number(split.stat.atBats)),
-            atBats: Number(split.stat.atBats) || 0,
-          };
-        }
-      });
+      var h2h = headToHeadFrom(results[2]);
 
       // Split codes are from the batter's point of view ("vs Left" = against a
       // left-handed pitcher), which is also correct for switch hitters.
@@ -393,7 +432,14 @@
     var status = (feed && feed.gameData && feed.gameData.status) || {};
     if (status.abstractGameState === 'Final') return 0;
     var inning = Number(ls.currentInning || ls.scheduledInnings || 1);
-    var scheduled = Number((feed.gameData && feed.gameData.game && feed.gameData.game.scheduledInnings) || 9);
+    // `scheduledInnings` lives on `liveData.linescore`, NOT on `gameData.game`
+    // (`game` only carries `pk`/`season`/`id`/`gameType` — verified 2026-11-22:
+    // https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,game,pk,season,scheduledInnings
+    // returns just pk+season). The old path always fell through to the 9 default,
+    // which silently reported extra remaining plate appearances for a 7-inning
+    // doubleheader game.
+    var scheduled = Number(ls.scheduledInnings) ||
+      Number((feed && feed.gameData && feed.gameData.game && feed.gameData.game.scheduledInnings)) || 9;
     var inningsLeft = Math.max(0, scheduled - inning + 1);
     // ~4.5 plate appearances per team per inning is far too high; one batter sees
     // roughly 0.45 PA per remaining half-inning.
@@ -482,6 +528,7 @@
     seasonRateFromSplits: seasonRateFromSplits,
     platoonFromSplits: platoonFromSplits,
     formFromGameLog: formFromGameLog,
+    headToHeadFrom: headToHeadFrom,
     buildForecast: buildForecast,
     estimateRemainingPAs: estimateRemainingPAs,
     render: render,

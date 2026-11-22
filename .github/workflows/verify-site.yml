@@ -26,3 +26,23 @@ jobs:
 
       - name: Check local HTML links and assets
         run: python3 tools/check-local-links.py
+
+      # These need no network: review-test, hit-model-test, reviews-feed-test,
+      # feed-fields-test and live-slate-test run against committed fixtures that
+      # are trimmed copies of real StatsAPI responses. page-render-test needs
+      # jsdom, so it is installed just for that step and never vendored.
+      - name: Run deterministic parser and model checks
+        run: |
+          set -eu
+          node tools/review-test.mjs
+          node tools/hit-model-test.mjs
+          node tools/reviews-feed-test.mjs
+          node tools/feed-fields-test.mjs
+          node tools/live-slate-test.mjs
+          node tools/link-check.mjs
+
+      - name: Render the three pages in jsdom
+        run: |
+          set -eu
+          npm install --no-save --no-package-lock jsdom@26
+          node tools/page-render-test.mjs

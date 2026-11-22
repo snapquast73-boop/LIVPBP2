@@ -1,0 +1,24 @@
+{
+ "_source": "https://statsapi.mlb.com/api/v1/people/660271/stats?stats=vsPlayer&group=hitting&opposingPlayerId=622608",
+ "_note": "VERBATIM response fetched 2026-11-22, trimmed to the fields the forecast reads. Two stat blocks: `vsPlayer` (one split per season) and `vsPlayerTotal` (one career-total split). Splits are in the order the API returned them: 2024, 2025, 2026.",
+ "stats": [
+  {
+   "type": {"displayName": "vsPlayer"},
+   "group": {"displayName": "hitting"},
+   "totalSplits": 3,
+   "splits": [
+    {"season": "2024", "stat": {"homeRuns": 0, "strikeOuts": 0, "hits": 3, "avg": ".600", "atBats": 5}},
+    {"season": "2025", "stat": {"homeRuns": 1, "strikeOuts": 0, "hits": 2, "avg": ".667", "atBats": 3}},
+    {"season": "2026", "stat": {"homeRuns": 0, "strikeOuts": 1, "hits": 0, "avg": ".000", "atBats": 3}}
+   ]
+  },
+  {
+   "type": {"displayName": "vsPlayerTotal"},
+   "group": {"displayName": "hitting"},
+   "totalSplits": 1,
+   "splits": [
+    {"stat": {"homeRuns": 1, "strikeOuts": 1, "hits": 5, "avg": ".455", "atBats": 11}}
+   ]
+  }
+ ]
+}
