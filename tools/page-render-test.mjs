@@ -29,8 +29,9 @@ function jsonResponse(payload, status = 200) {
   });
 }
 
-function feedFor(gamePk) {
+function feedFor(gamePk, patchFeed) {
   const copy = JSON.parse(JSON.stringify(feed));
+  if (patchFeed) patchFeed(copy);
   if (String(gamePk) !== String(feed.gamePk)) {
     copy.gameData.game.pk = Number(gamePk);
     copy.gamePk = Number(gamePk);
@@ -38,7 +39,7 @@ function feedFor(gamePk) {
   return copy;
 }
 
-function makeFetch(calls) {
+function makeFetch(calls, patchFeed) {
   return (url) => {
     const target = String(url);
     calls.push(target);
@@ -47,7 +48,7 @@ function makeFetch(calls) {
     if (target.includes('/eventTypes')) return jsonResponse([]);
     if (target.includes('/feed/live')) {
       const m = target.match(/\/game\/(\d+)\/feed\/live/);
-      return jsonResponse(feedFor(m ? m[1] : feed.gamePk));
+      return jsonResponse(feedFor(m ? m[1] : feed.gamePk, patchFeed));
     }
     if (target.includes('/playByPlay')) return jsonResponse({ allPlays: feed.liveData.plays.allPlays });
     if (target.includes('/people/') && target.includes('stats=')) {
@@ -87,7 +88,7 @@ function waitFor(fn, timeoutMs) {
   });
 }
 
-async function renderPage(pageFile, { query, until }) {
+async function renderPage(pageFile, { query, until, patchFeed }) {
   const htmlPath = path.join(REPO_ROOT, pageFile);
   const html = fs.readFileSync(htmlPath, 'utf8');
   const calls = [];
@@ -99,7 +100,7 @@ async function renderPage(pageFile, { query, until }) {
   });
   const win = dom.window;
   openWindows.push(win);
-  win.fetch = makeFetch(calls);
+  win.fetch = makeFetch(calls, patchFeed);
   win.addEventListener('error', (ev) => errors.push('window error: ' + (ev.message || ev.type)));
   const origError = win.console.error;
   win.console.error = (...args) => { errors.push('console.error: ' + args.map(String).join(' ')); };
@@ -260,6 +261,29 @@ await run('replay feed tab filters isolate ABS rows', async () => {
   absBtn.dispatchEvent(new page.win.Event('click', { bubbles: true }));
   assert.match(doc.getElementById('feed-list').textContent, /ABS Challenge/,
     'the ABS tab shows the ABS rows');
+  page.win.close();
+});
+
+await run('game page keeps polling after the first render', async () => {
+  // Regression guard: the page used to arm a setInterval that only ticked the
+  // countdown and never called loadGame, so a game page loaded once and then
+  // froze. One feed request on mount plus one more after the poll delay is the
+  // minimum proof that the loop is alive.
+  const page = await renderPage('game.html', {
+    query: '?gamePk=824027',
+    // A Live game is the case that matters: it must re-read the feed every
+    // LIVE_POLL_MS (README: 3 s), not sit on a stale first render.
+    patchFeed: (copy) => {
+      copy.gameData.status.abstractGameState = 'Live';
+      copy.gameData.status.detailedState = 'In Progress';
+    },
+    until: (win) => () => (win.document.getElementById('plays-wrap').textContent || '').includes('Siri'),
+  });
+  const feedCalls = () => page.calls.filter((c) => c.includes('/feed/live')).length;
+  const first = feedCalls();
+  assert.equal(first >= 1, true, 'the page fetched the feed once on mount');
+  await waitFor(() => feedCalls() > first, 10000);
+  assert.ok(feedCalls() > first, 'a second poll fired on its own (loop is alive)');
   page.win.close();
 });
 

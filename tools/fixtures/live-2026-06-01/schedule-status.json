@@ -1,0 +1,18 @@
+{
+ "_source": "https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&fields=dates,games,gamePk,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode,teams,away,home,team,id,abbreviation",
+ "dates": [
+  {
+   "games": [
+    {"gamePk": 822974, "status": {"abstractGameState": "Final", "codedGameState": "F", "detailedState": "Final", "statusCode": "F", "startTimeTBD": false, "abstractGameCode": "F"}, "teams": {"away": {"team": {"id": 116}}, "home": {"team": {"id": 139}}}},
+    {"gamePk": 822730, "status": {"abstractGameState": "Final", "codedGameState": "F", "detailedState": "Final", "statusCode": "F", "startTimeTBD": false, "abstractGameCode": "F"}, "teams": {"away": {"team": {"id": 146}}, "home": {"team": {"id": 120}}}},
+    {"gamePk": 824510, "status": {"abstractGameState": "Final", "codedGameState": "F", "detailedState": "Final", "statusCode": "F", "startTimeTBD": false, "abstractGameCode": "F"}, "teams": {"away": {"team": {"id": 118}}, "home": {"team": {"id": 113}}}},
+    {"gamePk": 823702, "status": {"abstractGameState": "Final", "codedGameState": "F", "detailedState": "Final", "statusCode": "F", "startTimeTBD": false, "abstractGameCode": "F"}, "teams": {"away": {"team": {"id": 145}}, "home": {"team": {"id": 142}}}},
+    {"gamePk": 823781, "status": {"abstractGameState": "Final", "codedGameState": "F", "detailedState": "Final", "statusCode": "F", "startTimeTBD": false, "abstractGameCode": "F"}, "teams": {"away": {"team": {"id": 137}}, "home": {"team": {"id": 158}}}},
+    {"gamePk": 823050, "status": {"abstractGameState": "Final", "codedGameState": "F", "detailedState": "Final", "statusCode": "F", "startTimeTBD": false, "abstractGameCode": "F"}, "teams": {"away": {"team": {"id": 140}}, "home": {"team": {"id": 138}}}},
+    {"gamePk": 824027, "status": {"abstractGameState": "Final", "codedGameState": "F", "detailedState": "Final", "statusCode": "F", "startTimeTBD": false, "abstractGameCode": "F"}, "teams": {"away": {"team": {"id": 115}}, "home": {"team": {"id": 108}}}},
+    {"gamePk": 825078, "status": {"abstractGameState": "Final", "codedGameState": "F", "detailedState": "Final", "statusCode": "F", "startTimeTBD": false, "abstractGameCode": "F"}, "teams": {"away": {"team": {"id": 119}}, "home": {"team": {"id": 109}}}},
+    {"gamePk": 823131, "status": {"abstractGameState": "Final", "codedGameState": "F", "detailedState": "Final", "statusCode": "F", "startTimeTBD": false, "abstractGameCode": "F"}, "teams": {"away": {"team": {"id": 121}}, "home": {"team": {"id": 136}}}}
+   ]
+  }
+ ]
+}

@@ -1,0 +1,252 @@
+{
+ "_source": "https://statsapi.mlb.com/api/v1/gameStatus",
+ "_note": "Review-relevant rows transcribed verbatim from the official registry fetched 2026-11-22. MX and NX genuinely have no `reason` key, which is why the client must tolerate its absence. Unrelated delay/postponement rows are omitted.",
+ "registry": [
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "I",
+   "detailedState": "Instant Replay",
+   "statusCode": "IH",
+   "abstractGameCode": "L",
+   "reason": "Review"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Close play at 1st",
+   "statusCode": "MF",
+   "abstractGameCode": "L",
+   "reason": "Close play at 1st"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Tag play",
+   "statusCode": "MA",
+   "abstractGameCode": "L",
+   "reason": "Tag play"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Tag-up play",
+   "statusCode": "MU",
+   "abstractGameCode": "L",
+   "reason": "Tag-up play"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Timing play",
+   "statusCode": "MM",
+   "abstractGameCode": "L",
+   "reason": "Timing play"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Force play",
+   "statusCode": "MC",
+   "abstractGameCode": "L",
+   "reason": "Force play"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Home-plate collision",
+   "statusCode": "MP",
+   "abstractGameCode": "L",
+   "reason": "Home-plate collision"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Slide interference",
+   "statusCode": "ME",
+   "abstractGameCode": "L",
+   "reason": "Slide interference"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Home run",
+   "statusCode": "MH",
+   "abstractGameCode": "L",
+   "reason": "Home run"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Fair/foul in outfield",
+   "statusCode": "MO",
+   "abstractGameCode": "L",
+   "reason": "Fair/foul in outfield"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Catch/drop in outfield",
+   "statusCode": "MD",
+   "abstractGameCode": "L",
+   "reason": "Catch/drop in outfield"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Trap play in outfield",
+   "statusCode": "MT",
+   "abstractGameCode": "L",
+   "reason": "Trap play in outfield"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Hit by pitch",
+   "statusCode": "MI",
+   "abstractGameCode": "L",
+   "reason": "Hit by pitch"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Touching a base",
+   "statusCode": "MB",
+   "abstractGameCode": "L",
+   "reason": "Touching a base"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Passing runners",
+   "statusCode": "MR",
+   "abstractGameCode": "L",
+   "reason": "Passing runners"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Fan interference",
+   "statusCode": "MN",
+   "abstractGameCode": "L",
+   "reason": "Fan interference"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Stadium boundary call",
+   "statusCode": "MS",
+   "abstractGameCode": "L",
+   "reason": "Stadium boundary call"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Grounds rule",
+   "statusCode": "MG",
+   "abstractGameCode": "L",
+   "reason": "Grounds rule"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Rules check",
+   "statusCode": "MQ",
+   "abstractGameCode": "L",
+   "reason": "Rules check"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Record keeping",
+   "statusCode": "MK",
+   "abstractGameCode": "L",
+   "reason": "Record keeping"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Multiple issues",
+   "statusCode": "ML",
+   "abstractGameCode": "L",
+   "reason": "Multiple issues"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge",
+   "statusCode": "MX",
+   "abstractGameCode": "L"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Manager challenge: Catchers Interference",
+   "statusCode": "MV",
+   "abstractGameCode": "L",
+   "reason": "Catchers Interference"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "M",
+   "detailedState": "Player challenge: Pitch Result",
+   "statusCode": "MJ",
+   "abstractGameCode": "L",
+   "reason": "Pitch Result"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "N",
+   "detailedState": "Umpire review: Close play at 1st",
+   "statusCode": "NF",
+   "abstractGameCode": "L",
+   "reason": "Close play at 1st"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "N",
+   "detailedState": "Umpire review: Tag play",
+   "statusCode": "NA",
+   "abstractGameCode": "L",
+   "reason": "Tag play"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "N",
+   "detailedState": "Umpire review: Home run",
+   "statusCode": "NH",
+   "abstractGameCode": "L",
+   "reason": "Home run"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "N",
+   "detailedState": "Umpire review: Stadium boundary call",
+   "statusCode": "NS",
+   "abstractGameCode": "L",
+   "reason": "Stadium boundary call"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "N",
+   "detailedState": "Umpire review: Fair/foul in outfield",
+   "statusCode": "NO",
+   "abstractGameCode": "L",
+   "reason": "Fair/foul in outfield"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "N",
+   "detailedState": "Umpire review",
+   "statusCode": "NX",
+   "abstractGameCode": "L"
+  },
+  {
+   "abstractGameState": "Live",
+   "codedGameState": "N",
+   "detailedState": "Umpire Challenge: Pitch Result",
+   "statusCode": "NJ",
+   "abstractGameCode": "L",
+   "reason": "Pitch Result"
+  }
+ ]
+}

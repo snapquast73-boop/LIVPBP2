@@ -486,14 +486,25 @@
     return (score.away === null ? '—' : score.away) + '–' + (score.home === null ? '—' : score.home);
   }
 
+  /**
+   * Does a row belong to the "All" tab?
+   *
+   * Excluded: ABS pitch challenges (they keep their own tab and their own
+   * counter — original README L60-66: "**All** (every category except ABS pitch
+   * challenges …)") and data-quality notes (those belong on "Flagged").
+   *
+   * Included: everything else the page documents as part of the All feed. The
+   * uploaded reviews.html says scoring changes are "tracked in the ✏️ Scoring
+   * Changes tab and in the All feed", so they must not be filtered out here.
+   * They used to be, which left the ✏️ stat box counting rows that no tab
+   * displayed.
+   */
+  function inAllTab(e) {
+    return !!e && e.category !== 'abs' && e.category !== 'irregularity';
+  }
+
   function matchesTab(e) {
-    if (currentTab === 'all') {
-      // Uploaded README, verbatim: "**All** (every category except ABS pitch
-      // challenges …)"; ABS has its own tab and its own counter. Session 9a7095ef
-      // flagged PR #27 for deviating from that text — the deviation was reverted,
-      // see COORDINATION.md. Data-quality notes stay on the "Flagged" tab.
-      return e.category !== 'abs' && e.category !== 'irregularity';
-    }
+    if (currentTab === 'all') return inAllTab(e);
     if (currentTab === 'active') return e.inProgress === true;
     if (currentTab === 'risk') return e.runsAtRisk > 0;
     if (currentTab === 'irregularity') return e.category === 'irregularity';
@@ -606,6 +617,9 @@
     today: today,
     pickDate: pickDate,
     chime: chime,
+    // Exposed for tools/live-slate-test.mjs so the tab rules are covered by a
+    // test instead of only by clicking around on the published page.
+    inAllTab: inAllTab,
   };
   document.addEventListener('DOMContentLoaded', init);
 })(window);

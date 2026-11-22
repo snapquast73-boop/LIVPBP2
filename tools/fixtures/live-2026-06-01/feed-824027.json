@@ -1,0 +1,71 @@
+{
+ "_source": "https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,about,atBatIndex,inning,halfInning,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,player,id,fullName,playEvents,index,details,description,pitchNumber,isPitch,result,event,eventType,awayScore,homeScore,runners,isScoringEvent,playIndex,matchup,batter,pitcher,count,balls,strikes,outs,gameData,game,pk,season,status,detailedState,abstractGameState,teams,away,home,abbreviation,review,used,remaining,absChallenges,usedSuccessful,usedFailed",
+ "_note": "VERBATIM sub-tree of the official response fetched 2026-11-22, not a synthetic payload. Two of game 824027's review records are kept: the pitch-level ABS challenge at atBatIndex 21 (playEvents index 5, reviewType MJ, challengeTeamId 115, isOverturned false) and the play-level manager challenge at atBatIndex 89 (reviewType MF, challengeTeamId 108, isOverturned false). Keys the fetched projection did not return for a play are absent rather than invented, which is exactly the condition the client has to survive.",
+ "gamePk": 824027,
+ "gameData": {
+  "game": {"pk": 824027, "season": "2026"},
+  "status": {"abstractGameState": "Final", "detailedState": "Final"},
+  "teams": {
+   "away": {"id": 115, "name": "Colorado Rockies", "abbreviation": "COL", "teamName": "Rockies", "clubName": "Rockies", "shortName": "Colorado"},
+   "home": {"id": 108, "name": "Los Angeles Angels", "abbreviation": "LAA", "teamName": "Angels", "clubName": "Angels", "shortName": "LA Angels"}
+  },
+  "review": {"away": {"used": 0, "remaining": 1}, "home": {"used": 1, "remaining": 0}},
+  "absChallenges": {"away": {"usedSuccessful": 2, "usedFailed": 2, "remaining": 0}, "home": {"usedSuccessful": 1, "usedFailed": 1, "remaining": 1}}
+ },
+ "liveData": {
+  "plays": {
+   "allPlays": [
+    {
+     "result": {
+      "event": "Forceout",
+      "eventType": "force_out",
+      "description": "Willi Castro grounds into a force out, second baseman Nick Madrigal to shortstop Oswald Peraza. Hunter Goodman to 3rd. Troy Johnston out at 2nd. Willi Castro to 1st.",
+      "awayScore": 2,
+      "homeScore": 0
+     },
+     "about": {"atBatIndex": 21, "halfInning": "top", "inning": 3},
+     "count": {"balls": 2, "strikes": 2, "outs": 2},
+     "matchup": {"batter": {"id": 650489, "fullName": "Willi Castro"}, "pitcher": {"id": 667755, "fullName": "Jos\u00e9 Soriano"}},
+     "runners": [
+      {"details": {"event": "Forceout", "eventType": "force_out", "movementReason": "r_force_out", "runner": {"id": 687859, "fullName": "Troy Johnston"}, "isScoringEvent": false, "rbi": false, "playIndex": 6}},
+      {"details": {"event": "Forceout", "eventType": "force_out", "movementReason": "r_adv_play", "runner": {"id": 696100, "fullName": "Hunter Goodman"}, "isScoringEvent": false, "rbi": false, "playIndex": 6}},
+      {"details": {"event": "Forceout", "eventType": "force_out", "movementReason": null, "runner": {"id": 650489, "fullName": "Willi Castro"}, "isScoringEvent": false, "rbi": false, "playIndex": 6}}
+     ],
+     "playEvents": [
+      {"details": {"description": "Mound Visit.", "event": "Mound Visit", "eventType": "mound_visit", "awayScore": 2, "homeScore": 0}, "count": {"balls": 0, "strikes": 0, "outs": 1}, "index": 0, "isPitch": false},
+      {"details": {"description": "Ball"}, "count": {"balls": 1, "strikes": 0, "outs": 1}, "index": 1, "pitchNumber": 1, "isPitch": true},
+      {"details": {"description": "Swinging Strike"}, "count": {"balls": 1, "strikes": 1, "outs": 1}, "index": 2, "pitchNumber": 2, "isPitch": true},
+      {"details": {"description": "Batter Timeout.", "event": "Batter Timeout", "eventType": "batter_timeout", "awayScore": 2, "homeScore": 0}, "count": {"balls": 1, "strikes": 1, "outs": 1}, "index": 3, "isPitch": false, "player": {"id": 650489}},
+      {"details": {"description": "Ball In Dirt"}, "count": {"balls": 2, "strikes": 1, "outs": 1}, "index": 4, "pitchNumber": 3, "isPitch": true},
+      {
+       "details": {"description": "Called Strike"},
+       "count": {"balls": 2, "strikes": 2, "outs": 1},
+       "index": 5,
+       "pitchNumber": 4,
+       "isPitch": true,
+       "reviewDetails": {
+        "isOverturned": false,
+        "inProgress": false,
+        "reviewType": "MJ",
+        "challengeTeamId": 115,
+        "player": {"id": 650489, "fullName": "Willi Castro", "link": "/api/v1/people/650489"}
+       }
+      },
+      {"details": {"description": "In play, out(s)"}, "count": {"balls": 2, "strikes": 2, "outs": 1}, "index": 6, "pitchNumber": 5, "isPitch": true}
+     ],
+     "atBatIndex": 21
+    },
+    {
+     "result": {
+      "event": "Grounded Into DP",
+      "eventType": "grounded_into_double_play",
+      "description": "Angels challenged (play at 1st), call on the field was upheld: Jose Siri grounds into a double play, shortstop Ezequiel Tovar to first baseman TJ Rumfield. Oswald Peraza out at 2nd. Jose Siri out at 1st."
+     },
+     "about": {"atBatIndex": 89, "halfInning": "bottom", "inning": 9},
+     "reviewDetails": {"isOverturned": false, "inProgress": false, "reviewType": "MF", "challengeTeamId": 108},
+     "atBatIndex": 89
+    }
+   ]
+  }
+ }
+}

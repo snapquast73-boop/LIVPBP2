@@ -18,7 +18,8 @@
   var FINAL_POLL_MS = 30000;
 
   var gamePk = null;
-  var timer = null;
+  var timer = null;      // pending poll (setTimeout)
+  var ticker = null;     // 1 s countdown display (setInterval)
   var countdown = 0;
   var lastSignature = '';
   var lastFeed = null;
@@ -77,19 +78,30 @@
   }
 
   function stopTimer() {
-    if (timer) { clearInterval(timer); timer = null; }
+    if (timer) { clearTimeout(timer); timer = null; }
+    if (ticker) { clearInterval(ticker); ticker = null; }
   }
 
+  /**
+   * Arm the next poll. The poll itself is what keeps the page live, so this
+   * schedules `loadGame` — it is not a decorative countdown. (It used to be a
+   * bare `setInterval` that only ticked the clock, which meant a game page
+   * loaded once and then never refreshed: no new pitches, plays, reviews or
+   * scoring changes, ever.) The countdown is a separate 1 s ticker so the
+   * displayed number and the actual fetch never drift apart.
+   */
   function startTimer(delayMs) {
     stopTimer();
-    countdown = Math.round(delayMs / 1000);
+    var ms = Math.max(1000, Number(delayMs) || IDLE_POLL_MS);
+    countdown = Math.ceil(ms / 1000);
     paintCountdown();
-    timer = setInterval(function () {
-      countdown -= 1;
+    timer = setTimeout(function () {
+      timer = null;
+      loadGame();
+    }, ms);
+    ticker = setInterval(function () {
+      countdown = Math.max(0, countdown - 1);
       paintCountdown();
-      if (countdown <= 0) {
-        countdown = Math.round(delayMs / 1000);
-      }
     }, 1000);
   }
 
