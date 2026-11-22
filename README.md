@@ -14,14 +14,22 @@
 >
 > - **Live site:** <https://snapquast73-boop.github.io/LIVPBP2/> (static GitHub Pages; `server.mjs` does not run there).
 > - **Present:** `docs/verification-report.md`, `docs/scoring-changes.md`, `docs/api-compliance.md`,
->   `docs/workflows/` (two optional templates) and five deterministic tools under `tools/` — each one runs
->   offline against the fixtures in `tools/fixtures/`.
+>   `docs/workflows/` (two optional templates) and the deterministic tools under `tools/` — each one runs
+>   offline against the fixtures in `tools/fixtures/`. `tools/live-slate-test.mjs` runs the parsers against
+>   verbatim StatsAPI responses kept in `tools/fixtures/live-2026-06-01/`, so a source URL travels with
+>   every value it checks.
 > - **Implemented:** the two-sided hit forecast (`assets/js/props.js`), review/ABS/challenge tracking,
 >   scoring-change detection by diffing consecutive polls, and browser-local replay-log persistence
 >   (`assets/js/feed-log.js`) with an optional `server.mjs` bridge.
 > - **Not claimed:** the original 500 ms / 125 ms / 250 ms watcher cadences are unrecoverable; the rebuilt
 >   client polls at the intervals documented in [`docs/api-compliance.md`](docs/api-compliance.md), and
 >   the `v1.0.0-stable-checkpoint` tag still does not exist in this repository.
+> - **Parity pass 2026-11-22:** every API read was re-checked against the live host. Six client defects were
+>   found and fixed — the game page never polled, the Replay Feed's All tab dropped scoring changes, the
+>   head-to-head line used one season instead of the career, xBA was never fetched, seven-inning games were
+>   estimated as nine, and the scoreboard read a `flags.inReview` flag the API does not send. Each fix has a
+>   check in `tools/`; the evidence is on [Flagged for Review](flagged.html) §8. What is still unverified is
+>   listed there too (original-source parity, cadences, `challengeTeamId` semantics).
 > - **Verified working:** scoreboard, game view and Replay Feed against the official
 >   [MLB StatsAPI](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags) —
 >   the per-item list lives on [Flagged for Review](https://snapquast73-boop.github.io/LIVPBP2/flagged.html).
@@ -186,7 +194,7 @@ This project does the same thing with its own front end. The API calls we make:
 | What we need | Endpoint | Source (official) | Verified? |
 | --- | --- | --- | --- |
 | Games for a date (scoreboard cards, probables, decisions, review counters) | `GET /api/v1/schedule?sportId=1&date=YYYY-MM-DD&hydrate=team,linescore,probablePitcher,decisions,review,flags` | [Same query, 2026-06-01](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags) | ✅ fetched and compared 2026-11-20 — 9 games, `teams.*.abbreviation`, inning linescore, `decisions`, `review.away/home.used/remaining`, `flags` all present (`tools/fixtures/schedule-2026-06-01.json`) |
-| **Review status for the whole slate** (scoreboard's 5 s review sweep) | `GET /api/v1/schedule?sportId=1&date=YYYY-MM-DD&fields=dates,games,gamePk,status,…,teams,away,home,team,id,abbreviation` | [Same `fields` projection, 2026-06-01](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&fields=dates,games,gamePk,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode,teams,away,home,team,id,abbreviation) | ◐ this exact projection was not fetched in this session; the unprojected schedule above was, and the `fields` narrowing was proven on the game feed (row 3). Link is the official host for manual review |
+| **Review status for the whole slate** (scoreboard's 5 s review sweep) | `GET /api/v1/schedule?sportId=1&date=YYYY-MM-DD&fields=dates,games,gamePk,status,…,teams,away,home,team,id,abbreviation` | [Same `fields` projection, 2026-06-01](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&fields=dates,games,gamePk,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode,teams,away,home,team,id,abbreviation) | ✅ fetched 2026-11-22 — returns the nine `gamePk`s with `status.statusCode`, `abstractGameState`, `detailedState` and `abstractGameCode` and nothing else (`tools/fixtures/live-2026-06-01/schedule-status.json`). Note `flags` is **not** in this projection and is never populated by the API, so review state comes from `statusCode` alone |
 | **Review status for one game** (lean per-game probe) | `GET /api/v1.1/game/{gamePk}/feed/live?fields=gameData,status,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,…` | [Game 822974 feed with `fields` projection](https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress,reason) | ✅ fetched 2026-11-20 — returns only the requested keys. **Gotcha:** the projection is leaf-name based, so `reviewDetails` alone comes back as `{}`; `reviewType,challengeTeamId,isOverturned,inProgress` must be named too (see [Flagged for Review](flagged.html) and `docs/verification-report.md` §5a) |
 | Official game-status registry (source of every review `statusCode` + `reason`) | `GET /api/v1/gameStatus` | [statsapi.mlb.com/api/v1/gameStatus](https://statsapi.mlb.com/api/v1/gameStatus) | ✅ fetched 2026-11-20 — the full registry lists the `M*` manager-challenge family (`MF` “Close play at 1st”, `MA` “Tag play”, `MH` “Home run”, `MI` “Hit by pitch”, …), the `N*` umpire-review family, `MJ` “Player challenge: Pitch Result”, `NJ` “Umpire Challenge: Pitch Result”, `IH` “Instant Replay”, plus `I` and `F`. `tools/fixtures/game-status.json` keeps the eight review-relevant entries; `docs/verification-report.md` §3 has the mapping |
 | Play event types (source of the official-scorer pending codes) | `GET /api/v1/eventTypes` | [eventTypes registry](https://statsapi.mlb.com/api/v1/eventTypes?fields=eventTypes,code,description) | ✅ fetched 2026-11-20 — `os_ruling_pending_primary` (plateAppearance) and `os_ruling_pending_prior` (baseRunningEvent) both carry description "Official Scorer Ruling Pending" |
@@ -195,8 +203,8 @@ This project does the same thing with its own front end. The API calls we make:
 | Fallback bundle (if the live feed fails) | `GET /api/v1/game/{gamePk}/playByPlay` + `/boxscore` + `/linescore` | [playByPlay](https://statsapi.mlb.com/api/v1/game/824027/playByPlay) · [boxscore](https://statsapi.mlb.com/api/v1/game/824027/boxscore) · [linescore](https://statsapi.mlb.com/api/v1/game/824027/linescore) | ✅ all three respond and agree with the feed on the score. **Irregularity:** for game 775296 the standalone `/linescore` (and `schedule?hydrate=linescore`) reports home `errors: 2`, while the feed and `/boxscore` report `3` — an upstream disagreement, published on [Flagged for Review](flagged.html) and not papered over |
 | Play-by-play only (per-game scan) | `GET /api/v1/game/{gamePk}/playByPlay` | [playByPlay with `fields`, game 822974](https://statsapi.mlb.com/api/v1/game/822974/playByPlay?fields=allPlays,atBatIndex,playEvents,details,playIndex,reviewDetails) | ✅ fetched 2026-11-20 — `playEvents[].details.playIndex` is what ties a review to the scoring pitch |
 | Batter / pitcher season + split inputs for the forecast | `GET /api/v1/people/{playerId}/stats?stats=statSplits&group=hitting&sitCodes=vl,vr&season=YYYY` (issued **alone**; the same for `group=pitching`) | [statSplits, player 660271, 2026](https://statsapi.mlb.com/api/v1/people/660271/stats?stats=statSplits&group=hitting&sitCodes=vl,vr&season=2026) | ✅ fetched 2026-11-20 — `split.code` / `split.description` present. Combining `stats=season,statSplits,gameLog` in one request **drops** `split`, so the client issues it separately |
-| Season / expected-statistics inputs | `GET /api/v1/people/{playerId}/stats?stats=season,expectedStatistics&group=hitting&season=YYYY` | [Same call, player 660271](https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,expectedStatistics&group=hitting&season=2026) | ◐ not fetched in this session; the client tolerates an empty result and renders the model inputs it does have. `statcast` is deliberately not requested (it answers HTTP 400 for `group=hitting`) |
-| Career head-to-head for the forecast | `GET /api/v1/people/{batterId}/stats?stats=vsPlayer&group=hitting&opposingPlayerId={pitcherId}` | [MLB StatsAPI root (official)](https://statsapi.mlb.com/api/v1/) | ◐ shape not sampled in this session — the client renders the row only when `splits[]` comes back non-empty, and flags it as unverified otherwise |
+| Season / expected-statistics inputs | `GET /api/v1/people/{playerId}/stats?stats=season,expectedStatistics&group=hitting&season=YYYY` | [Same call, player 660271](https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,expectedStatistics&group=hitting&season=2026) | ✅ fetched 2026-11-22 — the `expectedStatistics` block's `splits[0].stat` is `{avg, slg, woba, wobaCon}`; the expected batting average **is** `avg` inside that block (there is no `xBA` field) and the block carries no `atBats`. The client now fetches it, blends it with the season rate, and records a per-side note when a block is absent. `statcast` is deliberately not requested (it answers HTTP 400 for `group=hitting`) |
+| Career head-to-head for the forecast | `GET /api/v1/people/{batterId}/stats?stats=vsPlayer&group=hitting&opposingPlayerId={pitcherId}` | [vsPlayer, batter 660271 vs pitcher 622608](https://statsapi.mlb.com/api/v1/people/660271/stats?stats=vsPlayer&group=hitting&opposingPlayerId=622608) | ✅ fetched 2026-11-22 — two blocks: `vsPlayer` (one split per season: 2024 3-for-5, 2025 2-for-3, 2026 0-for-3) and `vsPlayerTotal` (career 5-for-11, .455). The client reads `vsPlayerTotal`; reading `splits[0]` of the first block used to report a single season as the career line. Sample in `tools/fixtures/live-2026-06-01/vs-player-660271-622608.json` |
 | Team logos | `https://www.mlbstatic.com/team-logos/{teamId}.svg` (then `-dark`, then a monogram) | [119.svg](https://www.mlbstatic.com/team-logos/119.svg) | ◐ the CDN answered HTTP 500 to non-browser clients from this sandbox; the markup keeps a three-step `onerror` chain so a missing logo degrades to a monogram instead of a broken image |
 | Player headshots | `https://img.mlbstatic.com/mlb-photos/image/upload/…/v1/people/{playerId}/headshot/67/current` (then `/silo/75x75/`, then initials) | [img.mlbstatic.com](https://img.mlbstatic.com/) | ◐ same as above: HTTP 500 to non-browser clients here, `onerror` chain in `assets/js/ui.js` |
 **Verification note (2026-11-20).** ✅ rows were fetched from the official host by this session and
@@ -304,7 +312,10 @@ for archived games the request is scoped to the feed's game season.
 │   ├── reviews-feed-test.mjs  # feed-log persistence + merge
 │   ├── page-render-test.mjs   # end-to-end page render (jsdom)
 │   ├── link-check.mjs         # static link/asset check
-│   └── fixtures/              # synthetic payloads shaped from the verified API
+│   ├── live-slate-test.mjs    # parsers vs verbatim StatsAPI responses
+│   ├── fetch-live-fixtures.mjs# re-download those responses (needs network)
+│   └── fixtures/              # synthetic payloads shaped from the verified API,
+│                              # plus fixtures/live-2026-06-01/ = real responses
 ├── assets/
 │   ├── css/style.css          # Dark Gameday-style theme (responsive)
 │   └── js/
@@ -343,6 +354,7 @@ node tools/hit-model-test.mjs         # two-sided hit forecast model (log5, clam
 node tools/reviews-feed-test.mjs      # Replay Feed persistence: merge, idempotency, row cap, round-trip
 node tools/page-render-test.mjs       # end-to-end render of all three pages in jsdom (needs `npm i jsdom`)
 node tools/link-check.mjs             # every internal href/src resolves; no dead docs or assets
+node tools/live-slate-test.mjs        # parsers/models vs verbatim 2026-06-01 StatsAPI responses
 ```
 
 Every entry tracked (challenges, reviews, scoring-pending rulings, scoring

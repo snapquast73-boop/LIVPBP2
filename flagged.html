@@ -438,6 +438,154 @@
       </ul>
     </section>
 
+    <section class="panel" id="parity-6455b5eb">
+      <h2>8 · Parity pass 2026-11-22 (session 6455b5eb)</h2>
+      <p class="muted">
+        This pass re-read every payload the client depends on and compared it with the code line by
+        line. Each item below names the exact official URL the finding came from. Anything fixed is
+        marked fixed and covered by a check in
+        <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/tools/live-slate-test.mjs"><code>tools/live-slate-test.mjs</code></a>,
+        which runs the parsers against verbatim API responses stored under
+        <code>tools/fixtures/live-2026-06-01/</code>.
+      </p>
+
+      <div class="panel-title">8a · Defects found and fixed</div>
+      <div class="scroll-x">
+        <table class="boxscore-table">
+          <thead>
+            <tr><th>What was wrong</th><th>Evidence (official source)</th><th>Fix</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>The game page never refreshed.</strong> <code>game.js</code> armed a
+                <code>setInterval</code> that only decremented the on-screen countdown and never called
+                <code>loadGame()</code>, so a game page loaded once and then froze: no new pitches, plays,
+                reviews or scoring changes until a manual reload.</td>
+              <td>The README specifies a live re-read every 3 s; the code path that should have done it
+                (<code>startTimer</code>) contained no fetch. Behaviour is a property of the code, not of a
+                remote document — the check below is the evidence.</td>
+              <td><strong>Fixed.</strong> The next poll is armed with <code>setTimeout</code> and the countdown
+                runs on a separate 1 s ticker. Guarded by the new
+                “game page keeps polling after the first render” check in <code>tools/page-render-test.mjs</code>,
+                which fails on the previous code and passes now.</td>
+            </tr>
+            <tr>
+              <td><strong>The Replay Feed “All” tab silently dropped official scoring changes</strong>,
+                even though the page text and the uploaded README both say scoring changes are tracked
+                “in the All feed”. The ✏️ Scoring Changes stat box counted rows that no tab displayed.</td>
+              <td><a href="https://github.com/snapquast73-boop/LIVPBP2/blob/2ee9ca7e5cdba0712bfbc19322b5fa271203bca3/reviews.html#L88">Uploaded <code>reviews.html</code>, line 88</a>
+                (“are tracked in the ✏️ Scoring Changes tab and in the All feed”);
+                <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/2ee9ca7e5cdba0712bfbc19322b5fa271203bca3/README.md#L61-L66">uploaded README, lines 61–66</a>
+                (All excludes ABS only).</td>
+              <td><strong>Fixed.</strong> <code>matchesTab</code> filters through an exported
+                <code>inAllTab()</code>; ABS and data-quality notes stay out, everything else stays in.
+                Covered by the “All tab keeps the categories its own README lists” check.</td>
+            </tr>
+            <tr>
+              <td><strong>The hit forecast's head-to-head used one season as the career line.</strong>
+                <code>stats=vsPlayer</code> returns two blocks; the code read <code>splits[0]</code> of the
+                first one, so a 5-for-11 career displayed as 3-for-5.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=vsPlayer&amp;group=hitting&amp;opposingPlayerId=622608">people/660271 vsPlayer</a>
+                — block 1 <code>vsPlayer</code> has one split per season (2024: 3-for-5, 2025: 2-for-3,
+                2026: 0-for-3), block 2 <code>vsPlayerTotal</code> has the career row (5-for-11, .455).</td>
+              <td><strong>Fixed.</strong> Reads the explicit <code>vsPlayerTotal</code> block; when it is absent
+                the per-season rows are summed and labelled <code>summed-seasons</code>. Never zero-filled.</td>
+            </tr>
+            <tr>
+              <td><strong>xBA was never fetched</strong>, although the documented season signal is “xBA/AVG”.
+                The forecast ran on AVG alone and nothing said so.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,expectedStatistics&amp;group=hitting&amp;season=2026">season + expectedStatistics, player 660271</a>
+                — the <code>expectedStatistics</code> block's <code>splits[0].stat</code> is
+                <code>{avg: ".285", slg: ".549", woba: ".393", wobaCon: ".495"}</code>. There is
+                <em>no</em> field named <code>xBA</code>, and the block carries no <code>atBats</code>.</td>
+              <td><strong>Fixed.</strong> A second parallel request reads the block; xBA is blended with the
+                counting-stat rate 50/50 and the at-bat sample stays the season one. With no block the rate is
+                used unchanged and a per-side note records the fallback.</td>
+            </tr>
+            <tr>
+              <td><strong>“Remaining plate appearances” ignored seven-inning games.</strong>
+                <code>props.js</code> read <code>gameData.game.scheduledInnings</code>, a path the feed never
+                returns, so a 7-inning doubleheader game was estimated as 9 innings.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,game,pk,season,scheduledInnings">feed with that projection</a>
+                returns only <code>{"game":{"pk":824027,"season":"2026"}}</code>; the real field is
+                <code>liveData.linescore.scheduledInnings</code>
+                (<a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,scheduledInnings">projection</a>).</td>
+              <td><strong>Fixed</strong>, with a check that a 5th-inning game in a 7-inning doubleheader
+                estimates fewer remaining PAs than the same inning of a 9-inning game.</td>
+            </tr>
+            <tr>
+              <td><strong>The scoreboard read a review flag the API does not send.</strong>
+                <code>g.flags.inReview === true</code> could only ever be false — <code>flags</code> comes back
+                as an empty object — which implied a second review source that does not exist.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2025-06-01&amp;hydrate=team,review,flags&amp;fields=dates,games,gamePk,flags,inReview,review">schedule with <code>fields=flags,inReview</code></a>
+                returns <code>"flags":{}</code> for every one of the 15 games; the 2026-06-01 slate behaves the
+                same.</td>
+              <td><strong>Fixed.</strong> Review state comes only from the official
+                <code>status.statusCode</code> registry
+                (<a href="https://statsapi.mlb.com/api/v1/gameStatus">GET /api/v1/gameStatus</a>).
+                This matches what section 2 of this page already recorded as unverified.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel-title">8b · Confirmed against the official host, not changed</div>
+      <ul>
+        <li>The <code>fields</code> projection the Replay Feed sends (64 distinct leaf names) returns real
+          review records, including a pitch-level <code>MJ</code> ABS challenge on
+          <code>playEvents[5]</code> and a play-level <code>MF</code> manager challenge —
+          <a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,about,atBatIndex,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,player,id,playEvents,index,details">sample</a>.</li>
+        <li>Game 824027's review counters are read as-is and are not zero-filled:
+          <code>review.home = {used:1, remaining:0}</code>,
+          <code>absChallenges.away = {usedSuccessful:2, usedFailed:2, remaining:0}</code>.</li>
+        <li>Combining <code>stats=season,statSplits,gameLog</code> with <code>sitCodes=vl,vr</code> does
+          <em>not</em> drop the platoon <code>split</code> object in the current API —
+          <a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,statSplits,gameLog&amp;group=hitting&amp;sitCodes=vl,vr&amp;season=2026">verified</a>
+          (<code>split.code</code> = <code>vl</code>/<code>vr</code> present), so the client's separate
+          request is belt-and-braces, not a workaround.</li>
+        <li>The official-scorer pending codes the Replay Feed keys on exist and are spelled exactly
+          <code>os_ruling_pending_primary</code> and <code>os_ruling_pending_prior</code>, both described
+          “Official Scorer Ruling Pending” —
+          <a href="https://statsapi.mlb.com/api/v1/eventTypes?fields=eventTypes,code,description">GET /api/v1/eventTypes</a>.</li>
+        <li>The review status registry really does contain <code>reason</code>-less rows
+          (<code>MX</code> “Manager challenge”, <code>NX</code> “Umpire review”), so the client must tolerate
+          a missing reason — it does, falling back to the play text.</li>
+      </ul>
+
+      <div class="panel-title">8c · Still unverified or not recoverable</div>
+      <ul>
+        <li><strong>Exact parity with the original site is still unprovable.</strong> The original upload
+          contained eight root files and no <code>assets/</code> directory at all
+          (<a href="https://api.github.com/repos/snapquast73-boop/LIVPBP2/git/trees/2ee9ca7e5cdba0712bfbc19322b5fa271203bca3?recursive=1">upload tree</a>),
+          and the repository the README names returns 404
+          (<a href="https://api.github.com/repos/buffedlizard55-lab/MLB-Live-PBP">lookup</a>). The client
+          on this site is a reconstruction that matches the documented behaviour, not a copy of the
+          original source.</li>
+        <li><strong>Refresh cadences cannot be restored.</strong> The upload documents 500 ms / 250 ms / 125 ms
+          watchers. This build polls far slower on purpose (3 s live game page, 20 s scoreboard and Replay
+          Feed, 5 s status sweep) to stay inside a defensible request budget. The behaviour is the same family
+          — poll, pause when hidden, back off on HTTP 429 — but the latency is not the original latency.
+          Restoring the original rates is a deliberate choice left to the site owner.</li>
+        <li><strong>Meanings of <code>reviewDetails.challengeTeamId</code> remains undocumented.</strong> In
+          the sampled records it holds a team id (115 = COL, 108 = LAA), but the API does not say whether it
+          is the challenging club or the club whose call was challenged. Rows prefer the official play text
+          (“Angels challenged…”) and fall back to the id; the id-based attribution is flagged rather than
+          presented as certain.</li>
+        <li><strong>“Call stands” vs “call confirmed”</strong> is still not exposed: the payload only gives
+          <code>isOverturned: true/false</code>, so rows read “Call Stands / Confirmed”.</li>
+        <li><strong>Tool files the upload names were never present</strong> and are not recreated with the same
+          contents: <code>model-calibration-report.mjs</code>, <code>count-model-derivation.mjs</code>,
+          <code>run-risk-preview.html</code>, <code>review-probe-test.mjs</code>,
+          <code>review-watcher-test.mjs</code>, <code>cross-browser-persistence-test.mjs</code>. The checks that
+          do exist are listed in the README.</li>
+        <li><strong>Team logos and headshots remain unverified from a command-line client</strong>
+          (<a href="https://www.mlbstatic.com/team-logos/team-cap-on-dark/116.svg">logo</a>,
+          <a href="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_120,q_auto:best/v1/people/660271/headshot/67/current">headshot</a>)
+          — they render in a browser, which is where they matter. A missing image degrades to a monogram or is
+          hidden; no layout depends on it.</li>
+      </ul>
+    </section>
+
     <footer class="site-footer">
       <p>
         Unofficial fan project. Not affiliated with MLB or MLB Advanced Media.
