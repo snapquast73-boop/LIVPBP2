@@ -14,7 +14,7 @@
 >
 > - **Live site:** <https://snapquast73-boop.github.io/LIVPBP2/> (static GitHub Pages; `server.mjs` does not run there).
 > - **Present:** `docs/verification-report.md`, `docs/scoring-changes.md`, `docs/api-compliance.md`,
->   `docs/workflows/` (two optional templates) and five deterministic tools under `tools/` — each one runs
+>   `docs/workflows/` (two optional templates) and seven network-free checks under `tools/` — each one runs
 >   offline against the fixtures in `tools/fixtures/`.
 > - **Implemented:** the two-sided hit forecast (`assets/js/props.js`), review/ABS/challenge tracking,
 >   scoring-change detection by diffing consecutive polls, and browser-local replay-log persistence
@@ -35,10 +35,12 @@ mlb.com uses, re-implemented from scratch in vanilla HTML/CSS/JS.
 > reads was re-checked against the live `statsapi.mlb.com` on 2026-11-20; the request
 > URLs, the values they returned and every item that could **not** be confirmed are
 > written down in [`docs/verification-report.md`](docs/verification-report.md) and on the
-> [Flagged for Review](flagged.html) page. Five network-free test tools back the claim:
-> `node tools/review-test.mjs`, `tools/hit-model-test.mjs`, `tools/reviews-feed-test.mjs`,
-> `tools/page-render-test.mjs` (renders all three pages in jsdom) and
-> `tools/link-check.mjs` (no dead internal links).
+> [Flagged for Review](flagged.html) page. Seven network-free checks back the claim:
+> `node tools/review-test.mjs` (parser, counters, diffs, projection), `tools/hit-model-test.mjs`
+> (hit forecast), `tools/reviews-feed-test.mjs` (feed-log persistence), `tools/feed-fields-test.mjs`
+> (`FEED_FIELDS` reviewDetails projection), `tools/page-render-test.mjs` (renders all three pages
+> in jsdom), `tools/link-check.mjs` (no dead internal links) and `tools/check-local-links.py`
+> (local href/src must resolve; used by CI).
 
 - **Scoreboard** (like [MLB.com](https://www.mlb.com/scoreboard)) — every game for any
   date, with live scores, inning, count, probable pitchers, and W/L/S decisions.
@@ -95,7 +97,8 @@ mlb.com uses, re-implemented from scratch in vanilla HTML/CSS/JS.
     their own tab, their own **ABS Challenges** stat and their place in the
     challenges-remaining counters), **ABS**,
     **Challenges**, **Reviews**, **Boundary Calls**, **Under Review**,
-    **⚠️ Runs at Risk** —,
+    **⚠️ Runs at Risk**, **✏️ Scoring Changes** and **Flagged** (payload-edit and
+    vanish irregularities, never corrected) —,
     summary stats for the whole day, and an optional **sound alert** — a gentle
     synthesized raindrop chime (three soft drops blooming into a warm two-note
     chime, ~1.2s, pure sine tones with a light echo) when a new challenge, review,
@@ -304,8 +307,10 @@ for archived games the request is scoped to the feed's game season.
 │   ├── review-test.mjs        # parser / counters / diffs
 │   ├── hit-model-test.mjs     # hit-forecast model
 │   ├── reviews-feed-test.mjs  # feed-log persistence + merge
+│   ├── feed-fields-test.mjs   # FEED_FIELDS reviewDetails projection regression check
 │   ├── page-render-test.mjs   # end-to-end page render (jsdom)
 │   ├── link-check.mjs         # static link/asset check
+│   ├── check-local-links.py   # local href/src CI check (python3, no dependencies)
 │   └── fixtures/              # synthetic payloads shaped from the verified API
 ├── assets/
 │   ├── css/style.css          # Dark Gameday-style theme (responsive)
@@ -343,8 +348,10 @@ To run the deterministic, network-free checks:
 node tools/review-test.mjs            # challenge/review parser, counters, scoring changes, irregularities
 node tools/hit-model-test.mjs         # two-sided hit forecast model (log5, clamps, count, form, splits)
 node tools/reviews-feed-test.mjs      # Replay Feed persistence: merge, idempotency, row cap, round-trip
+node tools/feed-fields-test.mjs       # `fields` projection keeps reviewDetails leaves + playEvents index binding
 node tools/page-render-test.mjs       # end-to-end render of all three pages in jsdom (needs `npm i jsdom`)
 node tools/link-check.mjs             # every internal href/src resolves; no dead docs or assets
+python3 tools/check-local-links.py    # CI check: every local href/src in the HTML pages must resolve
 ```
 
 Every entry tracked (challenges, reviews, scoring-pending rulings, scoring
