@@ -479,7 +479,7 @@
         <li>
           <strong>CI now runs the deterministic test suite.</strong> Previously
           <code>.github/workflows/verify-site.yml</code> ran only <code>node --check</code> and the
-          local-link check, so the five fixture-based test tools (49 checks) never ran in CI and
+          local-link check, so the fixture-based test tools never ran in CI and
           <code>tools/page-render-test.mjs</code> could not even start (missing <code>jsdom</code>).
           A minimal <code>package.json</code> (jsdom devDependency only — the site itself has no
           build step) and two workflow steps (<code>npm install</code>, <code>npm test</code>) were
@@ -516,7 +516,8 @@
         <li>
           <strong>Re-verified this pass (no changes needed):</strong> <code>node --check</code> on all
           9 scripts; <code>tools/check-local-links.py</code>; <code>tools/link-check.mjs</code>
-          (79 internal references, no broken links); all 49 fixture-based checks; every
+          (79 internal references, no broken links); all 49 fixture-based checks across the six
+          <code>tools/*.mjs</code> suites; every
           <code>getElementById</code> target exists in the HTML; <code>server.mjs</code> health,
           static pages, 404 fallback and feed-log GET/POST round-trip; Pages source is
           <code>main</code> <code>/</code> with HTTPS enforced and a custom 404
@@ -546,7 +547,7 @@
           <tr><td>Game 824027 challenge counters — LAA 0 manager left (1 used); COL 1 MGR · 0 ABS — LAA 0 MGR · 1 ABS</td><td>same lines on Replay Feed row</td><td><code>review: away {used 0, remaining 1}, home {used 1, remaining 0}; absChallenges: away {2 succ, 2 fail, 0 rem}, home {1 succ, 1 fail, 1 rem}</code></td><td>✅</td><td><a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,review,absChallenges,away,home,used,remaining,usedSuccessful,usedFailed" target="_blank" rel="noopener">gameData counters</a></td></tr>
           <tr><td>Review status registry — MF/MA/MJ/NH/NS/NJ/IH codes and reasons</td><td>code reads MF, ABS MJ, boundary NH/NS, IH Instant Replay</td><td>MF “Manager challenge: Close play at 1st”, MJ “Player challenge: Pitch Result”, NJ “Umpire Challenge: Pitch Result”, NH “Umpire review: Home run”, NS “Umpire review: Stadium boundary call”, IH “Instant Replay” (reason Review)</td><td>✅</td><td><a href="https://statsapi.mlb.com/api/v1/gameStatus" target="_blank" rel="noopener">GET /api/v1/gameStatus</a></td></tr>
           <tr><td>Official-scorer pending codes — <code>os_ruling_pending_primary</code> / <code>os_ruling_pending_prior</code></td><td>both map to “Official Scorer Ruling Pending”</td><td><code>os_ruling_pending_prior</code> (plateAppearance false, baseRunningEvent true), <code>os_ruling_pending_primary</code> (true, false), both “Official Scorer Ruling Pending”</td><td>✅</td><td><a href="https://statsapi.mlb.com/api/v1/eventTypes?fields=eventTypes,code,description" target="_blank" rel="noopener">GET /api/v1/eventTypes</a></td></tr>
-          <tr><td>Local checks — JS syntax, local links, internal links, deterministic tests</td><td><code>node --check</code> 9/9 OK; <code>check-local-links.py</code> pass; <code>link-check.mjs</code> 79 refs, 0 broken; review 14, hit-model 12, reviews-feed 6, feed-fields 9, page-render 7 — all pass</td><td>—</td><td>✅</td><td><a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/.github/workflows/verify-site.yml" target="_blank" rel="noopener">verify-site.yml</a></td></tr>
+          <tr><td>Local checks — JS syntax, local links, internal links, deterministic tests</td><td><code>node --check</code> 9/9 OK; <code>check-local-links.py</code> pass; <code>link-check.mjs</code> 79 refs, 0 broken; review 14, hit-model 13, reviews-feed 6, feed-fields 9, page-render 8 — all pass</td><td>—</td><td>✅</td><td><a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/.github/workflows/verify-site.yml" target="_blank" rel="noopener">verify-site.yml</a></td></tr>
           <tr><td>Stale PR #19 (pre-rebuild client, CONFLICTING)</td><td>closed 2026-11-22 without merging (superseded by PR #11 rebuild)</td><td>—</td><td>⚠ closed, not merged — merging would have reverted PRs #11/#24/#25/#27/#31</td><td><a href="https://github.com/snapquast73-boop/LIVPBP2/pull/19" target="_blank" rel="noopener">PR #19</a></td></tr>
           <tr><td>Repository homepage field (empty)</td><td></td><td>—</td><td>⚠ unverified — API returns 403 for the integration token, so it cannot be set programmatically. Set manually: GitHub → repo → Settings → General → Website → <code>https://snapquast73-boop.github.io/LIVPBP2/</code></td><td><a href="https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-your-repository" target="_blank" rel="noopener">GitHub docs: about your repository</a></td></tr>
           <tr><td>Hit-forecast coefficients; meaning of <code>challengeTeamId</code>; team-logo/headshot CDN (HTTP 500 to non-browser clients)</td><td>Forecast remains labelled as an estimate; at this 2026-11-22 check the challenger used the official description when available; logos/headshots hide on error</td><td></td><td>⚠ forecast coefficients and ID semantics remain unverified. Challenger-ID handling was changed afterward: see §10 for current behavior. An official description naming “Angels” is independently verified in the <a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,teams,away,home,teamName,clubName,shortName,name,abbreviation,liveData,plays,allPlays,about,atBatIndex,result,description,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress">game 824027 payload</a>.</td><td><a href="https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress" target="_blank" rel="noopener">feed/live sample</a></td></tr>
@@ -578,6 +579,66 @@
         whose official description does not name a team. The original project code is unavailable, so
         full visual and behavioral parity with that deleted source cannot be claimed.
       </p>
+    </section>
+
+    <section class="panel" id="integration-0fe4f4b5">
+      <div class="panel-title">11 · Final integration record (session 0fe4f4b5, 2026-11-22)</div>
+      <p class="muted">
+        This pass closes out the stale claim (formerly 5d3e49e1, claimed 2026-11-20 ~23:10 UTC,
+        60+ minutes stale with no commits). Verified locally; no live-page fetch from this sandbox
+        (egress restricted). PR link and Pages deploy result are recorded on the
+        <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/COORDINATION.md">coordination board</a>
+        after the merge.
+      </p>
+      <ul>
+        <li>
+          <strong>Fixed: hit-forecast form window could include the modeled game itself.</strong>
+          <code>assets/js/props.js</code> compared the game-log date ("2026-06-01") with the season
+          cutoff as raw strings; the feed reports <code>gameDate</code> as an ISO timestamp
+          ("2026-06-01T23:40:00Z"), which is lexicographically greater than the bare date it starts
+          with, so the modeled game leaked into the last-8-games form rate. Both sides are now
+          compared by date part; the regression is covered by
+          <code>tools/hit-model-test.mjs</code> (“game-log form ignores the modeled game even from
+          an ISO gameDate”) — <code>13/13 checks pass</code>.
+          Sources: <a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,statSplits,gameLog&amp;group=hitting&amp;sitCodes=vl,vr&amp;season=2026">official game-log stats</a> + <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/tools/hit-model-test.mjs">regression test</a>.
+        </li>
+        <li>
+          <strong>All seven network-free checks re-run on this tree, all green:</strong>
+          <code>review-test</code> 16/16 · <code>hit-model-test</code> 13/13 ·
+          <code>reviews-feed-test</code> 6/6 · <code>feed-fields-test</code> 9/9 ·
+          <code>page-render-test</code> 8 renders / 0 failed · <code>link-check.mjs</code> (internal refs, no dead links) ·
+          <code>check-local-links.py</code>. <code>node --check</code> on all 9 scripts is clean.
+          Sources: <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/.github/workflows/verify-site.yml">verify-site.yml</a> · <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/package.json">package.json</a>.
+        </li>
+        <li>
+          <strong>Documentation accuracy (no behavior change):</strong> <code>README.md</code> and
+          <code>docs/verification-report.md</code> now name the seven network-free checks (six
+          <code>tools/*.mjs</code> suites + <code>check-local-links.py</code>) instead of five tools;
+          <code>docs/workflows/smoke.yml</code> and <code>docs/workflows/pages.yml</code> now include the
+          missing <code>feed-fields-test.mjs</code> and <code>check-local-links.py</code> steps;
+          <code>verification-report.md</code> §2–§7 tables carry a per-row <strong>Source</strong> link
+          (official host, exact request URL); <code>README.md</code>’s Replay Feed tab list now
+          documents the ✏️ Scoring Changes and Flagged tabs it omits.
+          Sources: <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/README.md">README.md</a> · <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/docs/verification-report.md">verification-report.md</a>.
+        </li>
+        <li>
+          <strong>PR #19 (pre-rebuild client, CONFLICTING):</strong> already <strong>closed, not merged</strong>
+          (2026-11-22, by session 60c618e8). No open work depends on it; merging would have reverted
+          PRs #11, #24, #25, #27, #31. Non-blocking.
+          Source: <a href="https://github.com/snapquast73-boop/LIVPBP2/pull/19">PR #19</a>.
+        </li>
+        <li>
+          <strong>Carried forward — unverified, unchanged:</strong> hit-forecast coefficients
+          (log5/anchors are estimates, labelled as such); meaning of <code>challengeTeamId</code>
+          (undocumented — the UI no longer attributes challengers from it; see section 10); team-logo/headshot CDN
+          (HTTP 500 to non-browser clients — assets hide on error); repository homepage field
+          (403 for the automation token — must be set manually: Settings → General → Website);
+          the README “combined request drops splits” sentence vs the fetched §6 evidence
+          (contradiction left to a human).
+          Sources: <a href="https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress">feed/live sample</a> · <a href="https://api.github.com/repos/snapquast73-boop/LIVPBP2">repository metadata</a>.
+        </li>
+      </ul>
+
     </section>
 
     <footer class="site-footer">

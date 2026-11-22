@@ -41,36 +41,36 @@ GET https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01
 
 Evidence: <https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags&fields=dates,games,gamePk,status,detailedState,abstractGameState,teams,away,home,team,id,name,abbreviation,score,leagueRecord,wins,losses,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,review,used,remaining,flags,inReview,probablePitcher,fullName,decisions,winner,loser,save>
 
-| Field the UI reads | Verified value in that response | Status |
-| --- | --- | --- |
-| `dates[].games[].gamePk` | `822974`, `824027`, … (9 games) | verified |
-| `status.abstractGameState` | `"Final"` / `"Live"` / `"Preview"` | verified |
-| `status.statusCode` | `"F"`, `"MA"`, `"S"` (review codes, see §3) | verified |
-| `teams.away.team.abbreviation` (with `hydrate=team`) | `"DET"`, `"TB"` | verified |
-| `teams.away.leagueRecord.wins/losses` | `23` / `38` | verified |
-| `teams.*.probablePitcher.fullName` | `"Ty Madden"`, `"Griffin Jax"` | verified |
-| `teams.*.score` | `10` / `9` | verified |
-| `linescore.currentInning`, `currentInningOrdinal`, `inningState`, `inningHalf`, `isTopInning`, `outs` | `9`, `"9th"`, `"Bottom"`, `"Bottom"`, `false`, `3` | verified |
-| `decisions.winner` / `loser` / `save` (with `hydrate=decisions`) | `Tyler Holton` / `Griffin Jax` / `Will Vest` | verified |
-| `review.away.used/remaining`, `review.home.used/remaining` (with `hydrate=review`) | `0/1`, `1/0` | verified |
-| `flags` (with `hydrate=flags`) | `{}` on a game that is not under review | verified (empty object) |
-| `flags.inReview` | **not present** in any sampled response | UNVERIFIED → review detection therefore uses `status.statusCode` (§3) instead |
+| Field the UI reads | Verified value in that response | Status | Source |
+| --- | --- | --- | --- |
+| `dates[].games[].gamePk` | `822974`, `824027`, … (9 games) | verified | [official schedule](<https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags&fields=dates,games,gamePk,status,detailedState,abstractGameState,teams,away,home,team,id,name,abbreviation,score,leagueRecord,wins,losses,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,review,used,remaining,flags,inReview,probablePitcher,fullName,decisions,winner,loser,save>) |
+| `status.abstractGameState` | `"Final"` / `"Live"` / `"Preview"` | verified | [official schedule](<https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags&fields=dates,games,gamePk,status,detailedState,abstractGameState,teams,away,home,team,id,name,abbreviation,score,leagueRecord,wins,losses,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,review,used,remaining,flags,inReview,probablePitcher,fullName,decisions,winner,loser,save>) |
+| `status.statusCode` | `"F"`, `"MA"`, `"S"` (review codes, see §3) | verified | [official schedule](<https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags&fields=dates,games,gamePk,status,detailedState,abstractGameState,teams,away,home,team,id,name,abbreviation,score,leagueRecord,wins,losses,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,review,used,remaining,flags,inReview,probablePitcher,fullName,decisions,winner,loser,save>) |
+| `teams.away.team.abbreviation` (with `hydrate=team`) | `"DET"`, `"TB"` | verified | [official schedule](<https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags&fields=dates,games,gamePk,status,detailedState,abstractGameState,teams,away,home,team,id,name,abbreviation,score,leagueRecord,wins,losses,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,review,used,remaining,flags,inReview,probablePitcher,fullName,decisions,winner,loser,save>) |
+| `teams.away.leagueRecord.wins/losses` | `23` / `38` | verified | [official schedule](<https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags&fields=dates,games,gamePk,status,detailedState,abstractGameState,teams,away,home,team,id,name,abbreviation,score,leagueRecord,wins,losses,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,review,used,remaining,flags,inReview,probablePitcher,fullName,decisions,winner,loser,save>) |
+| `teams.*.probablePitcher.fullName` | `"Ty Madden"`, `"Griffin Jax"` | verified | [official schedule](<https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags&fields=dates,games,gamePk,status,detailedState,abstractGameState,teams,away,home,team,id,name,abbreviation,score,leagueRecord,wins,losses,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,review,used,remaining,flags,inReview,probablePitcher,fullName,decisions,winner,loser,save>) |
+| `teams.*.score` | `10` / `9` | verified | [official schedule](<https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags&fields=dates,games,gamePk,status,detailedState,abstractGameState,teams,away,home,team,id,name,abbreviation,score,leagueRecord,wins,losses,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,review,used,remaining,flags,inReview,probablePitcher,fullName,decisions,winner,loser,save>) |
+| `linescore.currentInning`, `currentInningOrdinal`, `inningState`, `inningHalf`, `isTopInning`, `outs` | `9`, `"9th"`, `"Bottom"`, `"Bottom"`, `false`, `3` | verified | [official schedule](<https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags&fields=dates,games,gamePk,status,detailedState,abstractGameState,teams,away,home,team,id,name,abbreviation,score,leagueRecord,wins,losses,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,review,used,remaining,flags,inReview,probablePitcher,fullName,decisions,winner,loser,save>) |
+| `decisions.winner` / `loser` / `save` (with `hydrate=decisions`) | `Tyler Holton` / `Griffin Jax` / `Will Vest` | verified | [official schedule](<https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags&fields=dates,games,gamePk,status,detailedState,abstractGameState,teams,away,home,team,id,name,abbreviation,score,leagueRecord,wins,losses,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,review,used,remaining,flags,inReview,probablePitcher,fullName,decisions,winner,loser,save>) |
+| `review.away.used/remaining`, `review.home.used/remaining` (with `hydrate=review`) | `0/1`, `1/0` | verified | [official schedule](<https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags&fields=dates,games,gamePk,status,detailedState,abstractGameState,teams,away,home,team,id,name,abbreviation,score,leagueRecord,wins,losses,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,review,used,remaining,flags,inReview,probablePitcher,fullName,decisions,winner,loser,save>) |
+| `flags` (with `hydrate=flags`) | `{}` on a game that is not under review | verified (empty object) | [official schedule](<https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags&fields=dates,games,gamePk,status,detailedState,abstractGameState,teams,away,home,team,id,name,abbreviation,score,leagueRecord,wins,losses,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,review,used,remaining,flags,inReview,probablePitcher,fullName,decisions,winner,loser,save>) |
+| `flags.inReview` | **not present** in any sampled response | UNVERIFIED → review detection therefore uses `status.statusCode` (§3) instead | [official schedule](<https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01&hydrate=team,linescore,probablePitcher,decisions,review,flags&fields=dates,games,gamePk,status,detailedState,abstractGameState,teams,away,home,team,id,name,abbreviation,score,leagueRecord,wins,losses,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,review,used,remaining,flags,inReview,probablePitcher,fullName,decisions,winner,loser,save>) |
 
 ## 3. Review detection — the official gameStatus registry
 
 Evidence: <https://statsapi.mlb.com/api/v1/gameStatus> (full registry, fetched 2026-11-20)
 
-| Code | `detailedState` | `reason` | Used for |
-| --- | --- | --- | --- |
-| `MA` | Manager challenge: Tag play | Tag play | Manager challenge |
-| `MH` | Manager challenge: Home run | Home run | Manager challenge |
-| `MJ` | Player challenge: Pitch Result | Pitch Result | ABS pitch challenge |
-| `NH` | Umpire review: Home run | Home run | Boundary call |
-| `NS` | Umpire review: Stadium boundary call | Stadium boundary call | Boundary call |
-| `NJ` | Umpire Challenge: Pitch Result | Pitch Result | ABS pitch challenge |
-| `IH` | Instant Replay | Review | Crew-chief / umpire review |
-| `I` | In Progress | — | *not* a review (control case) |
-| `F` | Final | — | *not* a review (control case) |
+| Code | `detailedState` | `reason` | Used for | Source |
+| --- | --- | --- | --- | --- |
+| `MA` | Manager challenge: Tag play | Tag play | Manager challenge | [official gameStatus registry](<https://statsapi.mlb.com/api/v1/gameStatus>) |
+| `MH` | Manager challenge: Home run | Home run | Manager challenge | [official gameStatus registry](<https://statsapi.mlb.com/api/v1/gameStatus>) |
+| `MJ` | Player challenge: Pitch Result | Pitch Result | ABS pitch challenge | [official gameStatus registry](<https://statsapi.mlb.com/api/v1/gameStatus>) |
+| `NH` | Umpire review: Home run | Home run | Boundary call | [official gameStatus registry](<https://statsapi.mlb.com/api/v1/gameStatus>) |
+| `NS` | Umpire review: Stadium boundary call | Stadium boundary call | Boundary call | [official gameStatus registry](<https://statsapi.mlb.com/api/v1/gameStatus>) |
+| `NJ` | Umpire Challenge: Pitch Result | Pitch Result | ABS pitch challenge | [official gameStatus registry](<https://statsapi.mlb.com/api/v1/gameStatus>) |
+| `IH` | Instant Replay | Review | Crew-chief / umpire review | [official gameStatus registry](<https://statsapi.mlb.com/api/v1/gameStatus>) |
+| `I` | In Progress | — | *not* a review (control case) | [official gameStatus registry](<https://statsapi.mlb.com/api/v1/gameStatus>) |
+| `F` | Final | — | *not* a review (control case) | [official gameStatus registry](<https://statsapi.mlb.com/api/v1/gameStatus>) |
 
 The parser (`assets/js/reviews.js`) tests the code against this registry
 (`/^M[A-Z0-9]$/`, `/^N[A-Z0-9]$/`, `MJ`, `NJ`, `IH`) instead of matching the
@@ -83,22 +83,22 @@ Request: `GET https://statsapi.mlb.com/api/v1.1/game/{gamePk}/feed/live`
 
 Evidence (projected so the response is small): <https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes,teams,away,home,runs,hits,errors,leftOnBase,innings,num>
 
-| Field the UI reads | Verified value | Status |
-| --- | --- | --- |
-| `liveData.linescore.teams.away/home.{runs,hits,errors,leftOnBase}` | `9/10/4/12`, `8/10/1/7` | verified |
-| `liveData.linescore.innings[].{num,home.runs,away.runs,…}` | `1…9` with per-inning runs/hits/errors/leftOnBase | verified |
-| `liveData.linescore.offense.{batter,onDeck,inHole,pitcher}.fullName` | `Jose Siri`, `Adam Frazier`, `Logan O'Hoppe`, `Kirby Yates` | verified |
-| `liveData.linescore.{balls,strikes,outs}` | `0`, `2`, `3` | verified |
-| `gameData.players["ID<id>"].person.fullName`, `.batSide.code`, `.pitchHand.code` | `Adam Frazier`, `L`/`R`, `S` for switch hitters | verified (§6 evidence) |
-| `gameData.weather.{condition,temp,wind}`, `gameData.datetime.dateTime`, `gameData.venue.name` | `Clear`, `70`, `8 mph, Out To LF`, `2026-06-02T01:38:00Z`, `Angel Stadium` | verified |
-| `gameData.teams.*.record.{wins,losses}`, `.abbreviation` | `23/38`, `COL`/`LAA` | verified |
-| `liveData.decisions.{winner,loser,save}` | `Antonio Senzatela`, `Kirby Yates` | verified |
-| `liveData.boxscore.teams.*.players["ID<id>"].stats.batting.{atBats,runs,hits,rbi,baseOnBalls,strikeOuts}` | e.g. `atBats 4, hits 0, rbi 0` | verified |
-| `.stats.pitching.{inningsPitched,hits,runs,earnedRuns,baseOnBalls,strikeOuts}` | e.g. `1.0`, `2`, `1`, `1`, `0`, `0` | verified |
-| `.position.abbreviation`, `.battingOrder`, `teams.*.batters[]`, `teams.*.pitchers[]` | `C`/`P`, `"800"`, arrays of player ids | verified |
-| `liveData.plays.allPlays[].result.{event,eventType,description,awayScore,homeScore,isOut,rbi}` | e.g. `Double`, `double`, `…Riley Greene doubles (16)…`, `2`, `0` | verified |
-| `…about.{atBatIndex,inning,halfInning,startTime,endTime}` | `3`, `1`, `"top"`, ISO timestamps | verified |
-| `…playEvents[].{isPitch,pitchNumber,count.{balls,strikes,outs}}` | `true`, `5`, `2-2` | verified |
+| Field the UI reads | Verified value | Status | Source |
+| --- | --- | --- | --- |
+| `liveData.linescore.teams.away/home.{runs,hits,errors,leftOnBase}` | `9/10/4/12`, `8/10/1/7` | verified | [official feed](<https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes,teams,away,home,runs,hits,errors,leftOnBase,innings,num>) |
+| `liveData.linescore.innings[].{num,home.runs,away.runs,…}` | `1…9` with per-inning runs/hits/errors/leftOnBase | verified | [official feed](<https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes,teams,away,home,runs,hits,errors,leftOnBase,innings,num>) |
+| `liveData.linescore.offense.{batter,onDeck,inHole,pitcher}.fullName` | `Jose Siri`, `Adam Frazier`, `Logan O'Hoppe`, `Kirby Yates` | verified | [official feed](<https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes,teams,away,home,runs,hits,errors,leftOnBase,innings,num>) |
+| `liveData.linescore.{balls,strikes,outs}` | `0`, `2`, `3` | verified | [official feed](<https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes,teams,away,home,runs,hits,errors,leftOnBase,innings,num>) |
+| `gameData.players["ID<id>"].person.fullName`, `.batSide.code`, `.pitchHand.code` | `Adam Frazier`, `L`/`R`, `S` for switch hitters | verified (§6 evidence) | [official feed](<https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes,teams,away,home,runs,hits,errors,leftOnBase,innings,num>) |
+| `gameData.weather.{condition,temp,wind}`, `gameData.datetime.dateTime`, `gameData.venue.name` | `Clear`, `70`, `8 mph, Out To LF`, `2026-06-02T01:38:00Z`, `Angel Stadium` | verified | [official feed](<https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes,teams,away,home,runs,hits,errors,leftOnBase,innings,num>) |
+| `gameData.teams.*.record.{wins,losses}`, `.abbreviation` | `23/38`, `COL`/`LAA` | verified | [official feed](<https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes,teams,away,home,runs,hits,errors,leftOnBase,innings,num>) |
+| `liveData.decisions.{winner,loser,save}` | `Antonio Senzatela`, `Kirby Yates` | verified | [official feed](<https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes,teams,away,home,runs,hits,errors,leftOnBase,innings,num>) |
+| `liveData.boxscore.teams.*.players["ID<id>"].stats.batting.{atBats,runs,hits,rbi,baseOnBalls,strikeOuts}` | e.g. `atBats 4, hits 0, rbi 0` | verified | [official feed](<https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes,teams,away,home,runs,hits,errors,leftOnBase,innings,num>) |
+| `.stats.pitching.{inningsPitched,hits,runs,earnedRuns,baseOnBalls,strikeOuts}` | e.g. `1.0`, `2`, `1`, `1`, `0`, `0` | verified | [official feed](<https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes,teams,away,home,runs,hits,errors,leftOnBase,innings,num>) |
+| `.position.abbreviation`, `.battingOrder`, `teams.*.batters[]`, `teams.*.pitchers[]` | `C`/`P`, `"800"`, arrays of player ids | verified | [official feed](<https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes,teams,away,home,runs,hits,errors,leftOnBase,innings,num>) |
+| `liveData.plays.allPlays[].result.{event,eventType,description,awayScore,homeScore,isOut,rbi}` | e.g. `Double`, `double`, `…Riley Greene doubles (16)…`, `2`, `0` | verified | [official feed](<https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes,teams,away,home,runs,hits,errors,leftOnBase,innings,num>) |
+| `…about.{atBatIndex,inning,halfInning,startTime,endTime}` | `3`, `1`, `"top"`, ISO timestamps | verified | [official feed](<https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes,teams,away,home,runs,hits,errors,leftOnBase,innings,num>) |
+| `…playEvents[].{isPitch,pitchNumber,count.{balls,strikes,outs}}` | `true`, `5`, `2-2` | verified | [official feed](<https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,linescore,currentInning,currentInningOrdinal,inningHalf,inningState,isTopInning,outs,balls,strikes,teams,away,home,runs,hits,errors,leftOnBase,innings,num>) |
 
 ## 5. Review, ABS and counter payloads — where they really live
 
@@ -108,32 +108,33 @@ Evidence A (play-by-play, unprojected):
 Evidence B (feed, projection that isolates reviewDetails):
 <https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress,reason>
 
-| Finding | Verified evidence | Status |
-| --- | --- | --- |
-| ABS review data sits at **`playEvents[i].reviewDetails`** (a sibling of `playEvents[i].details`, *not* inside `details`) | Evidence B, `atBatIndex 22`, first pitch: `"reviewDetails":{"isOverturned":true,"inProgress":false,"reviewType":"MJ","challengeTeamId":116}` | verified |
-| `reviewDetails` carries `reviewType`, `challengeTeamId`, `isOverturned`, `inProgress` — and **no `reason` field** | same object; requesting `reason` inside it returns nothing | verified |
-| Official reason text for a review therefore comes from the `gameStatus` registry, keyed by `reviewType` (`MJ` → "Pitch Result") | §3 | verified |
-| `runners[].details.{isScoringEvent,playIndex,rbi}` describe scoring movements and which play event they belong to | Evidence A: runner entries with `"isScoringEvent":true,"playIndex":4` | verified |
-| `playEvents[].details.{playIndex,description,event,eventType}` exist | Evidence A | verified |
-| Per-team manager-challenge counters: `gameData.review.{away,home}.{used,remaining}` | <https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,review,absChallenges,away,home,used,remaining,usedSuccessful,usedFailed> → `away {used 0, remaining 1}`, `home {used 1, remaining 0}` | verified |
-| Per-team ABS counters: `gameData.absChallenges.{away,home}.{usedSuccessful,usedFailed,remaining}` | same URL → `away {2,2,0}`, `home {1,1,1}` | verified |
-| A whole-play review may be published at `play.reviewDetails` **as well as** on the pitch event | `https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,playEvents` → the last play (Bottom 9, the challenged double play) carries `"reviewDetails":{"isOverturned":false,"inProgress":false,"reviewType":"MF","challengeTeamId":108}` on the **play**, while its pitch events carry only `{}` | verified — the parser reads the play, the pitch event and `playEvents[i].details`, and collapses duplicates, so either location works |
-| Meaning of `challengeTeamId` | The field is present in official feed responses (for example `116` on an ABS pitch review); its semantics are not defined by the sampled API payload. See [official feed 822974](https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress) and [game 824027](https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,about,atBatIndex,reviewDetails,isOverturned,inProgress,reviewType,challengeTeamId,player,id) | UNVERIFIED semantics — the UI does not use this field to attribute a challenger. A team name is shown only when the official play description explicitly names that team; otherwise attribution is blank. See `flagged.html` |
-| Difference between "call stands" and "call confirmed" | The payload exposes only `isOverturned: true/false` | UNVERIFIED — the UI prints "Call Stands / Confirmed" rather than inventing a distinction |
-| `os_ruling_pending_primary` / `os_ruling_pending_prior` event types ("Official Scorer Ruling Pending") | <https://statsapi.mlb.com/api/v1/eventTypes?fields=eventTypes,code,description> → `os_ruling_pending_prior` (`plateAppearance:false`, `baseRunningEvent:true`) and `os_ruling_pending_primary` (`plateAppearance:true`, `baseRunningEvent:false`), both described "Official Scorer Ruling Pending" | verified — the parser still matches only those two exact codes, so nothing is shown when they are absent |
-| Official scoring changes exist and are made by the Official Scorer, the Elias Sports Bureau, or after a player/club review | MLB's own published log: <https://www.mlb.com/official-information/scoring-changes> ("Changes can be made by the Official Scorer, Elias Sports Bureau, or following a review initiated by a player or club.") | verified |
-| The terms attached to the data: "Only individual, non-commercial, non-bulk use of the Materials is permitted" | <http://gdx.mlb.com/components/copyright.txt> (the link the API's own copyright line points to), plus MLB.com Terms of Use §1 at <https://www.mlb.com/official-information/terms-of-use> | verified |
-| The StatsAPI payload contains **no** scoring-change marker, so a change is only observable by diffing consecutive polls | Evidence A/B contain no such field; the published log is a separate web page, not an API endpoint | verified (absence) → the tracker is built on consecutive observations and says so |
+| Finding | Verified evidence | Status | Source |
+| --- | --- | --- | --- |
+| ABS review data sits at **`playEvents[i].reviewDetails`** (a sibling of `playEvents[i].details`, *not* inside `details`) | Evidence B, `atBatIndex 22`, first pitch: `"reviewDetails":{"isOverturned":true,"inProgress":false,"reviewType":"MJ","challengeTeamId":116}` | verified | [official playByPlay](https://statsapi.mlb.com/api/v1/game/822974/playByPlay?fields=allPlays,about,atBatIndex,inning,halfInning,result,event,eventType,description,awayScore,homeScore,playEvents,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,reason,details,isPitch,pitchNumber,count,balls,strikes,runners,isScoringEvent,playIndex,matchup,batter,pitcher,fullName,id) and [official feed](https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress,reason) |
+| `reviewDetails` carries `reviewType`, `challengeTeamId`, `isOverturned`, `inProgress` — and **no `reason` field** | same object; requesting `reason` inside it returns nothing | verified | [official feed](https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress,reason) |
+| Official reason text for a review therefore comes from the `gameStatus` registry, keyed by `reviewType` (`MJ` → "Pitch Result") | §3 | verified | [official gameStatus registry](https://statsapi.mlb.com/api/v1/gameStatus) |
+| `runners[].details.{isScoringEvent,playIndex,rbi}` describe scoring movements and which play event they belong to | Evidence A: runner entries with `"isScoringEvent":true,"playIndex":4` | verified | [official playByPlay](https://statsapi.mlb.com/api/v1/game/822974/playByPlay?fields=allPlays,about,atBatIndex,inning,halfInning,result,event,eventType,description,awayScore,homeScore,playEvents,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,reason,details,isPitch,pitchNumber,count,balls,strikes,runners,isScoringEvent,playIndex,matchup,batter,pitcher,fullName,id) |
+| `playEvents[].details.{playIndex,description,event,eventType}` exist | Evidence A | verified | [official playByPlay](https://statsapi.mlb.com/api/v1/game/822974/playByPlay?fields=allPlays,about,atBatIndex,inning,halfInning,result,event,eventType,description,awayScore,homeScore,playEvents,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,reason,details,isPitch,pitchNumber,count,balls,strikes,runners,isScoringEvent,playIndex,matchup,batter,pitcher,fullName,id) |
+| Per-team manager-challenge counters: `gameData.review.{away,home}.{used,remaining}` | <https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,review,absChallenges,away,home,used,remaining,usedSuccessful,usedFailed> → `away {used 0, remaining 1}`, `home {used 1, remaining 0}` | verified | [official feed](https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,review,absChallenges,away,home,used,remaining,usedSuccessful,usedFailed) |
+| Per-team ABS counters: `gameData.absChallenges.{away,home}.{usedSuccessful,usedFailed,remaining}` | same URL → `away {2,2,0}`, `home {1,1,1}` | verified | [official feed](https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,review,absChallenges,away,home,used,remaining,usedSuccessful,usedFailed) |
+| A whole-play review may be published at `play.reviewDetails` **as well as** on the pitch event | `https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,playEvents` → the last play (Bottom 9, the challenged double play) carries `"reviewDetails":{"isOverturned":false,"inProgress":false,"reviewType":"MF","challengeTeamId":108}` on the **play**, while its pitch events carry only `{}` | verified — the parser reads the play, the pitch event and `playEvents[i].details`, and collapses duplicates, so either location works | [official feed](https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,playEvents) |
+| Meaning of `challengeTeamId` | The field is present in official feed responses (for example `116` on an ABS pitch review); its semantics are not defined by the sampled API payload. See [official feed 822974](https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress) and [game 824027](https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,about,atBatIndex,reviewDetails,isOverturned,inProgress,reviewType,challengeTeamId,player,id) | UNVERIFIED semantics — the UI does not use this field to attribute a challenger. A team name is shown only when the official play description explicitly names that team; otherwise attribution is blank. See `flagged.html` | [official feed 822974](https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress) and [official feed 824027](https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,about,atBatIndex,reviewDetails,isOverturned,inProgress,reviewType,challengeTeamId,player,id) |
+| Difference between "call stands" and "call confirmed" | The payload exposes only `isOverturned: true/false` | UNVERIFIED — the UI prints "Call Stands / Confirmed" rather than inventing a distinction | [official feed](https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress,reason) |
+| `os_ruling_pending_primary` / `os_ruling_pending_prior` event types ("Official Scorer Ruling Pending") | <https://statsapi.mlb.com/api/v1/eventTypes?fields=eventTypes,code,description> → `os_ruling_pending_prior` (`plateAppearance:false`, `baseRunningEvent:true`) and `os_ruling_pending_primary` (`plateAppearance:true`, `baseRunningEvent:false`), both described "Official Scorer Ruling Pending" | verified — the parser still matches only those two exact codes, so nothing is shown when they are absent | [official eventTypes](https://statsapi.mlb.com/api/v1/eventTypes?fields=eventTypes,code,description) |
+| Official scoring changes exist and are made by the Official Scorer, the Elias Sports Bureau, or after a player/club review | MLB's own published log: <https://www.mlb.com/official-information/scoring-changes> ("Changes can be made by the Official Scorer, Elias Sports Bureau, or following a review initiated by a player or club.") | verified | [MLB scoring-changes log](https://www.mlb.com/official-information/scoring-changes) |
+| The terms attached to the data: "Only individual, non-commercial, non-bulk use of the Materials is permitted" | <http://gdx.mlb.com/components/copyright.txt> (the link the API's own copyright line points to), plus MLB.com Terms of Use §1 at <https://www.mlb.com/official-information/terms-of-use> | verified | [MLB copyright notice](http://gdx.mlb.com/components/copyright.txt) |
+| The StatsAPI payload contains **no** scoring-change marker, so a change is only observable by diffing consecutive polls | Evidence A/B contain no such field; the published log is a separate web page, not an API endpoint | verified (absence) → the tracker is built on consecutive observations and says so | [official playByPlay](https://statsapi.mlb.com/api/v1/game/822974/playByPlay?fields=allPlays,about,atBatIndex,inning,halfInning,result,event,eventType,description,awayScore,homeScore,playEvents,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,reason,details,isPitch,pitchNumber,count,balls,strikes,runners,isScoringEvent,playIndex,matchup,batter,pitcher,fullName,id) and [MLB scoring-changes log](https://www.mlb.com/official-information/scoring-changes) |
+
 
 ### 5a. Gotcha found on the live site after deployment: `fields` is leaf-name based
 
 The Replay Feed asks for a narrow projection. Naming the parent object is **not** enough — the
 API keeps only the leaf names it is told about, so `reviewDetails` came back as `{}`:
 
-| Request | `reviewDetails` in the response |
-| --- | --- |
-| `…/feed/live?fields=liveData,plays,allPlays,playEvents,reviewDetails` | `{}` for every review — every row then rendered as “Replay Review / Unknown” |
-| `…/feed/live?fields=liveData,plays,allPlays,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,playEvents` | `{"isOverturned":true,"inProgress":false,"reviewType":"MJ","challengeTeamId":115}` |
+| Request | `reviewDetails` in the response | Source |
+| --- | --- | --- |
+| `…/feed/live?fields=liveData,plays,allPlays,playEvents,reviewDetails` | `{}` for every review — every row then rendered as “Replay Review / Unknown” | [official playByPlay](<https://statsapi.mlb.com/api/v1/game/822974/playByPlay?fields=allPlays,about,atBatIndex,inning,halfInning,result,event,eventType,description,awayScore,homeScore,playEvents,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,reason,details,isPitch,pitchNumber,count,balls,strikes,runners,isScoringEvent,playIndex,matchup,batter,pitcher,fullName,id>) |
+| `…/feed/live?fields=liveData,plays,allPlays,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,playEvents` | `{"isOverturned":true,"inProgress":false,"reviewType":"MJ","challengeTeamId":115}` | [official playByPlay](<https://statsapi.mlb.com/api/v1/game/822974/playByPlay?fields=allPlays,about,atBatIndex,inning,halfInning,result,event,eventType,description,awayScore,homeScore,playEvents,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress,reason,details,isPitch,pitchNumber,count,balls,strikes,runners,isScoringEvent,playIndex,matchup,batter,pitcher,fullName,id>) |
 
 Both URLs were fetched on 2026-11-20. The fix is the four leaf names in
 `assets/js/reviews-feed.js` `FEED_FIELDS`, and `tools/review-test.mjs` now asserts that they stay in
@@ -146,24 +147,24 @@ Evidence:
 and
 <https://statsapi.mlb.com/api/v1/people/660271/stats?stats=statSplits&group=hitting&sitCodes=vl,vr&season=2026&fields=stats,type,displayName,splits,season,split,code,description,stat,avg,atBats,hits>
 
-| Field the model reads | Verified value | Status |
-| --- | --- | --- |
-| `stats[].type.displayName` | `season`, `statSplits`, `gameLog` | verified |
-| `season` split `stat.{hits,atBats,avg,obp,slg,ops}` | `144`, `523`, `.275`, `.377`, `.512`, `.889` | verified |
-| `statSplits` `split.{code,description}` | `vl` / "vs Left", `vr` / "vs Right" | verified |
-| `statSplits` `stat.{hits,atBats}` | `49/179` (vs L), `95/344` (vs R) | verified |
-| `gameLog` `splits[].{date,isHome,stat.{hits,atBats}}` | dated games from `2026-03-26` | verified |
-| `stats=vsPlayer&opposingPlayerId=…` (head-to-head) | Used by the page; not sampled this session | UNVERIFIED (non-blocking: the model simply omits the head-to-head driver when the response is empty) |
+| Field the model reads | Verified value | Status | Source |
+| --- | --- | --- | --- |
+| `stats[].type.displayName` | `season`, `statSplits`, `gameLog` | verified | [official stats](<https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,statSplits,gameLog&group=hitting&sitCodes=vl,vr&season=2026&fields=stats,type,displayName,group,season,stat,splits,avg,obp,slg,ops,atBats,hits,homeRuns,rbi,baseOnBalls,strikeOuts,plateAppearances,game,date,isHome>) |
+| `season` split `stat.{hits,atBats,avg,obp,slg,ops}` | `144`, `523`, `.275`, `.377`, `.512`, `.889` | verified | [official stats](<https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,statSplits,gameLog&group=hitting&sitCodes=vl,vr&season=2026&fields=stats,type,displayName,group,season,stat,splits,avg,obp,slg,ops,atBats,hits,homeRuns,rbi,baseOnBalls,strikeOuts,plateAppearances,game,date,isHome>) |
+| `statSplits` `split.{code,description}` | `vl` / "vs Left", `vr` / "vs Right" | verified | [official stats](<https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,statSplits,gameLog&group=hitting&sitCodes=vl,vr&season=2026&fields=stats,type,displayName,group,season,stat,splits,avg,obp,slg,ops,atBats,hits,homeRuns,rbi,baseOnBalls,strikeOuts,plateAppearances,game,date,isHome>) |
+| `statSplits` `stat.{hits,atBats}` | `49/179` (vs L), `95/344` (vs R) | verified | [official stats](<https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,statSplits,gameLog&group=hitting&sitCodes=vl,vr&season=2026&fields=stats,type,displayName,group,season,stat,splits,avg,obp,slg,ops,atBats,hits,homeRuns,rbi,baseOnBalls,strikeOuts,plateAppearances,game,date,isHome>) |
+| `gameLog` `splits[].{date,isHome,stat.{hits,atBats}}` | dated games from `2026-03-26` | verified | [official stats](<https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,statSplits,gameLog&group=hitting&sitCodes=vl,vr&season=2026&fields=stats,type,displayName,group,season,stat,splits,avg,obp,slg,ops,atBats,hits,homeRuns,rbi,baseOnBalls,strikeOuts,plateAppearances,game,date,isHome>) |
+| `stats=vsPlayer&opposingPlayerId=…` (head-to-head) | Used by the page; not sampled this session | UNVERIFIED (non-blocking: the model simply omits the head-to-head driver when the response is empty) | [MLB StatsAPI (official)](<https://statsapi.mlb.com/api/v1/>) |
 
 ## 7. Assets and third-party hosts
 
-| Item | Attempt | Result | Treatment |
-| --- | --- | --- | --- |
-| Team logo `https://www.mlbstatic.com/team-logos/team-cap-on-dark/{id}.svg` | HTTP fetch | `HTTP 500` to a non-browser client | UNVERIFIED — tried first, then the un-suffixed path, then the `<img>` is hidden |
-| Team logo `https://www.mlbstatic.com/team-logos/{id}.svg` | HTTP fetch | `HTTP 500` to a non-browser client | UNVERIFIED — fallback |
-| Player headshot `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_120,q_auto:best/v1/people/{id}/headshot/67/current` | HTTP fetch | `HTTP 500` to a non-browser client | UNVERIFIED — image is hidden on error so layout never breaks |
-| StatsAPI CORS from the Pages origin | Rendered page `https://snapquast73-boop.github.io/LIVPBP2/` displayed live data it could only have obtained cross-origin | verified indirectly | browser-side `fetch` works |
-| `server.mjs` persistence + SSE | Cannot run on GitHub Pages (static hosting) | — | the site works without it: `localStorage` is the primary store, and the server bridge fails open |
+| Item | Attempt | Result | Treatment | Source |
+| --- || --- || --- || --- || --- |
+| Team logo `https://www.mlbstatic.com/team-logos/team-cap-on-dark/{id}.svg` | HTTP fetch | `HTTP 500` to a non-browser client | UNVERIFIED — tried first, then the un-suffixed path, then the `<img>` is hidden | [official assets](<https://www.mlbstatic.com/team-logos/team-cap-on-dark/{id}.svg>) |
+| Team logo `https://www.mlbstatic.com/team-logos/{id}.svg` | HTTP fetch | `HTTP 500` to a non-browser client | UNVERIFIED — fallback | [official assets](<https://www.mlbstatic.com/team-logos/{id}.svg>) |
+| Player headshot `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_120,q_auto:best/v1/people/{id}/headshot/67/current` | HTTP fetch | `HTTP 500` to a non-browser client | UNVERIFIED — image is hidden on error so layout never breaks | [official assets](<https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_120,q_auto:best/v1/people/{id}/headshot/67/current>) |
+| StatsAPI CORS from the Pages origin | Rendered page `https://snapquast73-boop.github.io/LIVPBP2/` displayed live data it could only have obtained cross-origin | verified indirectly | browser-side `fetch` works | [official StatsAPI](<https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-06-01>) |
+| `server.mjs` persistence + SSE | Cannot run on GitHub Pages (static hosting) | — | the site works without it: `localStorage` is the primary store, and the server bridge fails open | [project repository](https://github.com/snapquast73-boop/LIVPBP2) |
 
 ## 8. What the deterministic tests assert
 
@@ -172,10 +173,10 @@ All tests are network-free and run in CI or locally:
 ```
 node tools/review-test.mjs          # 14 checks — parser, counters, diffs, irregularities,
                                     #             and the Replay Feed's `fields` projection
-node tools/hit-model-test.mjs       # 12 checks — log5, clamps, count, form, splits
+node tools/hit-model-test.mjs       # 13 checks — log5, clamps, count, form, splits + form-window ISO-date regression
 node tools/reviews-feed-test.mjs    #  6 checks — persistence/merge/idempotency
 node tools/feed-fields-test.mjs     #  9 checks — FEED_FIELDS projection keeps the reviewDetails leaves
-node tools/page-render-test.mjs     #  7 end-to-end page renders in jsdom (no page errors)
+node tools/page-render-test.mjs     #  8 end-to-end page renders in jsdom (no page errors)
 node tools/link-check.mjs           # every internal href/src resolves; no dead docs
 python3 tools/check-local-links.py  # every local href/src in the HTML pages resolves (CI)
 ```
@@ -209,6 +210,6 @@ successful rebuild (`2019ead`, `f986e43`); the following build of each pair repo
 survive to the published site.
 
 Local checks re-run on the merged tree before publishing: `node --check` clean on every
-module, `tools/review-test.mjs` 14/14, `tools/hit-model-test.mjs` 12/12,
-`tools/reviews-feed-test.mjs` 6/6, `tools/page-render-test.mjs` 7 pages / 0 failed,
+module, `tools/review-test.mjs` 14/14, `tools/hit-model-test.mjs` 13/13,
+`tools/reviews-feed-test.mjs` 6/6, `tools/page-render-test.mjs` 8 pages / 0 failed,
 `tools/link-check.mjs` clean, `tools/check-local-links.py` clean.
