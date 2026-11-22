@@ -46,7 +46,6 @@
   var currentDate = UI.todayStr();
   var currentTab = 'all';
   var log = null;
-  var snapshot = {};
   var scanTimer = null;
   var ticker = null;
   var countdown = 0;
