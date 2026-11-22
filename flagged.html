@@ -438,6 +438,93 @@
       </ul>
     </section>
 
+    <section class="panel" id="session-1731ad28">
+      <h2>8 · Final verification pass (session 1731ad28, 2026-11-22)</h2>
+      <p class="muted">
+        A line-by-line re-check of the live site against the official sources. The site was already
+        deployed and working (Pages build <code>built</code> for <code>4a00031</code>, deployment
+        <code>ACTIVE</code> — <a href="https://github.com/snapquast73-boop/LIVPBP2/deployments/github-pages">deployments</a>);
+        this pass found and fixed two defects, wired the test suite into CI, and closed one stale PR.
+        Every item below links its official source; anything that could not be confirmed from an
+        official source is marked <strong>unverified</strong> and was left as-is.
+      </p>
+      <ul>
+        <li>
+          <strong>Fixed: the game page never refreshed after first load.</strong>
+          <code>assets/js/game.js</code> <code>startTimer</code> only painted the countdown — nothing
+          re-invoked <code>loadGame()</code>, so a “live” game stayed frozen until a manual Refresh
+          click or tab switch. The countdown reaching zero now triggers the next fetch (and the
+          loading spinner is shown only on the first load, not on every background poll).
+          Regression test added: <code>tools/page-render-test.mjs</code> “game page auto-refreshes on
+          its poll clock” — it fails (timeout) on the pre-fix code and passes with the fix.
+          Source: the page polls <a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live">the official live feed</a>;
+          the fix changes only the client’s timer, no data values.
+        </li>
+        <li>
+          <strong>Fixed: the scoreboard’s 5-second review sweep could not see
+          <code>flags.inReview</code>.</strong> <code>assets/js/scoreboard.js</code> reads
+          <code>g.flags.inReview</code> from the sweep, but the sweep’s <code>fields</code> projection
+          in <code>assets/js/api.js</code> did not name <code>flags</code>/<code>inReview</code>, and
+          the StatsAPI keeps only the leaf names it is told about — so the check was dead code
+          (review detection still worked via <code>statusCode</code>). The two leaf names were added
+          to the projection and the README endpoint table was synced to match.
+          Source: <a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2026-06-01&amp;hydrate=team,linescore,probablePitcher,decisions,review,flags">the official schedule with <code>flags</code> hydrated</a>.
+          Whether <code>flags.inReview</code> is populated for every game remains
+          <strong>unverified</strong> (the sandbox cannot reach <code>statsapi.mlb.com</code>);
+          the code tolerates its absence.
+        </li>
+        <li>
+          <strong>CI now runs the deterministic test suite.</strong> Previously
+          <code>.github/workflows/verify-site.yml</code> ran only <code>node --check</code> and the
+          local-link check, so the five fixture-based test tools (49 checks) never ran in CI and
+          <code>tools/page-render-test.mjs</code> could not even start (missing <code>jsdom</code>).
+          A minimal <code>package.json</code> (jsdom devDependency only — the site itself has no
+          build step) and two workflow steps (<code>npm install</code>, <code>npm test</code>) were
+          added. All tests are offline and fixture-based; no network is used.
+          Source: <a href="https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs-or-python">GitHub Actions Node.js testing docs</a>.
+        </li>
+        <li>
+          <strong>Stale PR #19 closed (no work lost).</strong> It was based on the pre-rebuild client
+          (merge-base <code>f986e43</code>, before PR #11 merged <code>868029e</code>) and GitHub
+          reported it <code>CONFLICTING</code>/<code>dirty</code>; merging would have reverted PRs
+          #11, #24, #25, #27, #31. Closed with an explanatory comment; the branch remains on the
+          remote. Source: <a href="https://github.com/snapquast73-boop/LIVPBP2/pull/19">PR #19</a>.
+        </li>
+        <li>
+          <strong>Unverified (left as-is, needs a human check): forecast stats request shape.</strong>
+          The README endpoint table says combining <code>stats=season,statSplits,gameLog</code> in
+          one request “drops <code>split</code>, so the client issues it separately”, but
+          <code>assets/js/props.js</code> <code>loadContext</code> issues exactly that combined
+          request. <code>docs/verification-report.md</code> §6 fetched both shapes and recorded
+          <code>split.code</code>/<code>split.description</code> as verified, which contradicts the
+          README sentence. The sandbox cannot reach <code>statsapi.mlb.com</code> to settle it, so
+          neither side was changed: if the combined request does drop splits, the forecast simply
+          omits the platoon driver and says so in its notes (no crash, no invented number).
+          Sources: <a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,statSplits,gameLog&amp;group=hitting&amp;sitCodes=vl,vr&amp;season=2026">combined request</a> ·
+          <a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=statSplits&amp;group=hitting&amp;sitCodes=vl,vr&amp;season=2026">statSplits alone</a>.
+        </li>
+        <li>
+          <strong>Unverified (needs the repo owner): repository homepage field is empty.</strong>
+          Setting it to <code>https://snapquast73-boop.github.io/LIVPBP2/</code> returns
+          <code>HTTP 403: Resource not accessible by integration</code> for the automation token, so
+          it must be set manually under the repo’s Settings → General → Website. The site itself
+          does not depend on it. Source: <a href="https://api.github.com/repos/snapquast73-boop/LIVPBP2">repository metadata (homepage: null)</a>.
+        </li>
+        <li>
+          <strong>Re-verified this pass (no changes needed):</strong> <code>node --check</code> on all
+          9 scripts; <code>tools/check-local-links.py</code>; <code>tools/link-check.mjs</code>
+          (79 internal references, no broken links); all 49 fixture-based checks; every
+          <code>getElementById</code> target exists in the HTML; <code>server.mjs</code> health,
+          static pages, 404 fallback and feed-log GET/POST round-trip; Pages source is
+          <code>main</code> <code>/</code> with HTTPS enforced and a custom 404
+          (<a href="https://api.github.com/repos/snapquast73-boop/LIVPBP2/pages">Pages metadata</a>).
+          The sandbox egress cannot reach <code>github.io</code> or <code>statsapi.mlb.com</code>,
+          so live rendering was confirmed via the Pages builds/deployments API and the jsdom
+          render tests, not by fetching the live pages from here.
+        </li>
+      </ul>
+    </section>
+
     <footer class="site-footer">
       <p>
         Unofficial fan project. Not affiliated with MLB or MLB Advanced Media.
