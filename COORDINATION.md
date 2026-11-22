@@ -421,3 +421,52 @@ Session `e799e65b` had written on the Flagged page that `MJ`/`NJ`/`NH` were "not
 - Post-deploy sample check: the live [Replay Feed for 2026-06-01](https://snapquast73-boop.github.io/LIVPBP2/reviews.html?date=2026-06-01) still shows the official “Angels challenged (play at 1st)” description as LAA, supported by the [official game 824027 feed](https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,teams,away,home,teamName,clubName,shortName,name,abbreviation,liveData,plays,allPlays,about,atBatIndex,result,description,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress). The deployed [Flagged for Review §10](https://snapquast73-boop.github.io/LIVPBP2/flagged.html?rev=ec6c62b) contains the source-backed limitation and test links. This is a sample/live smoke check, not exhaustive proof of original-site parity.
 - GitHub Actions reported a Node.js 20 deprecation warning for its generated Pages upload action; deployment still succeeded. See [GitHub's runner notice](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/).
 - Remaining irregularities are non-blocking and published on [Flagged for Review](https://snapquast73-boop.github.io/LIVPBP2/flagged.html): `challengeTeamId` semantics remain undocumented, and the original code is unavailable, so exact behavior parity cannot be established.
+
+## Session 3615863d — record (2026-11-22)
+
+| Task | Status | Session ID | Branch | File Scope | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Functional re-audit: every page/table/control driven in a headless DOM; fix confirmed defects; publish sources and open items | done (PR open, see below) | 3615863d | arena/3615863d-livpbp2 | `assets/js/props.js`, `assets/js/scoreboard.js`, `assets/js/reviews-feed.js`, `assets/js/game.js` (rebase only), `tools/**`, `package.json`, `flagged.html` (new §12), `README.md`, `COORDINATION.md` | See the rebase log below. No other session's work discarded. |
+
+**What this pass changed (all 2026-11-22, all against official `statsapi.mlb.com`):**
+
+- **Hit forecast read a partial season for any player who changed clubs.** `/people/{id}/stats` returns one
+  `splits[]` row *per team*, plus the API's own league total row for `stats=season`; `splits[0]` was used.
+  Evidence: pitcher 622608 → season rows `73/280` (total), `51/199` (COL), `22/81` (MIL), and vs-Left rows
+  `10/31` (MIL), `23/100` (COL), `33/131` (total). The client used 51/199 and 10/31. Now the total row is used
+  when present, otherwise club rows are summed. Fixtures: `tools/fixtures/stats-622608-*.json`.
+- **Head-to-head used one season, not the career line.** `stats=vsPlayer` returns one row per season plus a
+  `vsPlayerTotal` row; the client showed the first season (`1/2` instead of the career `2/6`). Fixture:
+  `tools/fixtures/stats-660271-vsplayer.json`.
+- **Off-days read like failures.** An empty slate said “No games found for this date/filter.” /
+  “No matching review events…”. There are no MLB games on the real calendar date this ran
+  ([official empty schedule](https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=2026-11-22)), so the
+  default view on a freshly opened site looked broken. Now: “No games scheduled for <date>.” plus an
+  explicit off-day line on the feed; filter misses keep their own wording.
+- **New deterministic suite** `tools/empty-state-test.mjs` (3 checks), 9 new `hit-model-test` checks (22 total),
+  and `package.json` `npm test` now also runs the empty-state check, so CI covers all seven network-free
+  suites.
+- **Rows re-verified and moved from ◐ to ✅ in the README endpoint table:** the scoreboard status projection
+  (with `flags,inReview` appended, `flags` returns `{}` for the sampled slate — so `flags.inReview` itself
+  stays unverified), `stats=season,expectedStatistics`, and `stats=vsPlayer`. The `gameData.review` counters and
+  the full `gameStatus` registry (`MA–MV,MX`, `NA–NX`, `MJ`, `NJ`, `IH`) were re-fetched and match the code.
+  Game 775296 still shows the upstream `/linescore` `errors: 2` vs feed disagreement — not corrected.
+
+**Not claimed:** exact parity with the original site (upstream repo *and* user both 404 on the GitHub API);
+CORS headers (this sandbox cannot open a socket to `statsapi.mlb.com`, payloads were read through a
+text-fetching proxy that exposes no headers); logo/headshot URLs (still HTTP 500 to non-browser clients);
+`challengeTeamId` semantics; “call stands” vs “call confirmed”; the reconstructed forecast coefficients and the
+unrecovered original polling cadences; public-deployment permissions. All published with source links on
+`flagged.html` §12.
+
+**Conflict log — 3615863d rebase onto `564da5c` (PR #38):** main had moved 20 commits while this session was
+working. Resolutions, none discarding another session's work: `assets/js/game.js` — PR #35 (1731ad28) had
+already fixed the same frozen-page defect from the countdown side; kept the rebased `setTimeout` scheduling and
+dropped the duplicate countdown trigger (behaviour identical; PR #35's first-load spinner change preserved).
+`tools/page-render-test.mjs` — kept main's `game page auto-refreshes on its poll clock` test, dropped this
+session's duplicate. `.github/workflows/verify-site.yml` — kept main's `npm install` + `npm test` steps (this
+session's direct-`node` variant dropped; `empty-state-test` added to `npm test` instead). `flagged.html` — kept
+main's §8/§9/§10/§11, renumbered this session's section to §12. `README.md` — kept main's endpoint rows and
+folded in the 2026-11-22 verification note; kept main's tool list and added the new tool.
+`assets/js/props.js` — auto-merged with main's independent `statSplits`/`gameLog` fixes; both are present and the
+full suite passes.
