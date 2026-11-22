@@ -115,7 +115,10 @@
       '&date=' + encodeURIComponent(dateStr) +
       '&fields=' + encodeURIComponent(
         'dates,games,gamePk,status,abstractGameState,codedGameState,detailedState,' +
-        'statusCode,reason,startTimeTBD,abstractGameCode,teams,away,home,team,id,abbreviation'
+        'statusCode,reason,startTimeTBD,abstractGameCode,teams,away,home,team,id,abbreviation,' +
+        // scoreboard.js reads g.flags.inReview from this sweep; without these
+        // leaf names the projection strips `flags` and that check is dead.
+        'flags,inReview'
       ), { retries: 0, timeout: 10000 });
   }
 

@@ -19,6 +19,9 @@ const feed = readFixture('feed-824027.json');
 let passed = 0;
 const failures = [];
 const openWindows = [];
+// Tests that need a different game state (e.g. a Live feed, whose poll delay
+// is 3 s instead of the Final fixture's 30 s) set this before rendering.
+let feedOverride = null;
 
 function jsonResponse(payload, status = 200) {
   return Promise.resolve({
@@ -30,7 +33,7 @@ function jsonResponse(payload, status = 200) {
 }
 
 function feedFor(gamePk) {
-  const copy = JSON.parse(JSON.stringify(feed));
+  const copy = JSON.parse(JSON.stringify(feedOverride || feed));
   if (String(gamePk) !== String(feed.gamePk)) {
     copy.gameData.game.pk = Number(gamePk);
     copy.gamePk = Number(gamePk);
@@ -260,6 +263,33 @@ await run('replay feed tab filters isolate ABS rows', async () => {
   absBtn.dispatchEvent(new page.win.Event('click', { bubbles: true }));
   assert.match(doc.getElementById('feed-list').textContent, /ABS Challenge/,
     'the ABS tab shows the ABS rows');
+  page.win.close();
+});
+
+await run('game page auto-refreshes on its poll clock', async () => {
+  // Regression test (session 1731ad28): startTimer used to only paint the
+  // countdown — nothing ever called loadGame() again, so the "live" game
+  // page loaded once and never updated. A Live feed polls every 3 s; the
+  // second fetch must arrive without any user interaction.
+  const liveFeed = JSON.parse(JSON.stringify(feed));
+  liveFeed.gameData.status = {
+    abstractGameState: 'Live', codedGameState: 'L', detailedState: 'In Progress',
+    statusCode: 'IR', abstractGameCode: 'L',
+  };
+  feedOverride = liveFeed;
+  const page = await renderPage('game.html', {
+    query: '?gamePk=824027',
+    until: (win) => () => (win.document.getElementById('header-center').textContent || '').includes('9'),
+  });
+  feedOverride = null;
+  const feedCalls = () => page.calls.filter((c) => c.includes('/feed/live')).length;
+  // Note: this harness dispatches DOMContentLoaded on top of jsdom's own
+  // event, so init may run twice and the first render can fetch more than
+  // once. What matters is that the count keeps growing on its own.
+  const afterFirstRender = feedCalls();
+  assert.ok(afterFirstRender >= 1, 'the first load fetches the feed');
+  await waitFor(() => feedCalls() > afterFirstRender, 10000);
+  assert.deepEqual(page.errors, [], 'page must not log errors while polling');
   page.win.close();
 });
 

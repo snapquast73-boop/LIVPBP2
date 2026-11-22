@@ -26,3 +26,9 @@ jobs:
 
       - name: Check local HTML links and assets
         run: python3 tools/check-local-links.py
+
+      - name: Install test dependencies
+        run: npm install --no-package-lock --no-audit --no-fund
+
+      - name: Run deterministic test suite (offline, fixture-based)
+        run: npm test

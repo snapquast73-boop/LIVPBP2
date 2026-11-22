@@ -88,7 +88,12 @@
       countdown -= 1;
       paintCountdown();
       if (countdown <= 0) {
-        countdown = Math.round(delayMs / 1000);
+        // The countdown is the poll clock: reaching zero triggers the next
+        // fetch. loadGame() restarts this timer when it completes (success
+        // and error paths both call startTimer), so the interval is stopped
+        // here first to avoid overlapping polls while one is in flight.
+        stopTimer();
+        loadGame();
       }
     }, 1000);
   }
@@ -124,7 +129,9 @@
   function loadGame() {
     var loading = document.getElementById('loading');
     var request = (latestRequest += 1);
-    if (loading) loading.classList.add('show');
+    // The spinner is only for the first load; background polls update the
+    // page in place without flashing it every few seconds.
+    if (loading && !started) loading.classList.add('show');
     return registryReady.then(function () { return MLBAPI.getGameLive(gamePk); })
       .then(function (feed) {
         if (request !== latestRequest) return null; // a newer poll already won
