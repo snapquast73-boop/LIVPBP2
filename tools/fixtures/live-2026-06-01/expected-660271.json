@@ -1,0 +1,10 @@
+{
+ "_source": "https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,expectedStatistics&group=hitting&season=2026&fields=stats,type,displayName,group,splits,season,stat,split,code,description,avg,atBats,hits,homeRuns,rbi,baseOnBalls,strikeOuts,plateAppearances,obp,slg,ops,gamesPlayed,date,isHome,hitsPerNine,inningsPitched,era,game",
+ "_note": "VERBATIM response fetched 2026-11-22 with the exact URL and projection assets/js/api.js builds. The expectedStatistics block's stat is {avg, slg} — the expected batting average is `avg` inside that block, not a field named xBA, and the block carries no atBats.",
+ "stats": [
+  {"type": {"displayName": "season"}, "group": {"displayName": "hitting"},
+   "splits": [{"season": "2026", "stat": {"gamesPlayed": 139, "homeRuns": 30, "strikeOuts": 152, "baseOnBalls": 81, "hits": 144, "avg": ".275", "atBats": 523, "obp": ".377", "slg": ".512", "ops": ".889", "plateAppearances": 618, "rbi": 81}}]},
+  {"type": {"displayName": "expectedStatistics"}, "group": {"displayName": "hitting"},
+   "splits": [{"season": "2026", "stat": {"avg": ".285", "slg": ".549"}}]}
+ ]
+}

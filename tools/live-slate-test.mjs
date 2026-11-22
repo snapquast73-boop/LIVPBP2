@@ -32,6 +32,7 @@ const gameStatusDoc = read('game-status.json');
 const gameStatus = Array.isArray(gameStatusDoc) ? gameStatusDoc : gameStatusDoc.registry;
 const feed = read('feed-824027.json');
 const vsPlayer = read('vs-player-660271-622608.json');
+const expected = read('expected-660271.json');
 
 let passed = 0;
 const failures = [];
@@ -159,6 +160,41 @@ run('remaining plate appearances respect a 7-inning game', () => {
     'inning 5 of 9 leaves 5 innings -> round(5 * 0.45) = 2');
   assert.equal(s.Props.estimateRemainingPAs({ gameData: { status: { abstractGameState: 'Final' } } }), 0,
     'a final game has no plate appearances left');
+});
+
+run('xBA is read from the expectedStatistics block, not the season AVG', () => {
+  const s = ctx(true);
+  const xba = s.Props.expectedFromSplits(expected);
+  assert.ok(xba, 'the expected block is found');
+  // The season row says .275; the expectedStatistics row says .285. Reading the
+  // wrong block would silently substitute AVG for xBA.
+  assert.equal(xba.xba, 0.285, 'xBA comes from the expectedStatistics block');
+  assert.equal(xba.atBats, 0, 'the block carries no at-bats, so none are claimed');
+  assert.equal(s.Props.expectedFromSplits({ stats: [expected.stats[0]] }), null,
+    'a payload with no expected block yields null rather than a guess');
+});
+
+run('a present xBA block moves the forecast, an absent one is noted', () => {
+  const s = ctx(true);
+  const base = {
+    batter: { rate: 0.275, atBats: 523 },
+    pitcher: { rate: 0.22, atBats: 500 },
+    remainingPAs: 3,
+  };
+  const withoutXba = s.Props.compute(base);
+  const withXba = s.Props.compute({
+    batter: { rate: 0.275, atBats: 523, xba: s.Props.expectedFromSplits(expected) },
+    pitcher: { rate: 0.22, atBats: 500 },
+    remainingPAs: 3,
+  });
+  assert.ok(withoutXba.notes.some((n) => /xBA.*batter/.test(n)),
+    'the missing batter-xBA fallback is stated in the notes, not silent');
+  assert.ok(withXba.perPA > withoutXba.perPA,
+    'a .285 xBA against a .275 AVG lifts the estimate');
+  assert.equal(withXba.notes.some((n) => /xBA.*batter/.test(n)), false,
+    'no batter fallback note when the batter block is present');
+  assert.ok(withXba.notes.some((n) => /xBA.*pitcher/.test(n)),
+    'the pitcher side still reports its own missing block — the sides are independent');
 });
 
 run('head-to-head survives a payload with no total block', () => {

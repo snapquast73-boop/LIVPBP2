@@ -105,6 +105,39 @@
     return { rate: null, atBats: 0 };
   }
 
+  /**
+   * Expected-statistics block (`stats=season,expectedStatistics`) → xBA.
+   *
+   * Verified shape, 2026-11-22:
+   * https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,expectedStatistics&group=hitting&season=2026
+   * returns a `type.displayName: "expectedStatistics"` block whose
+   * `splits[0].stat` is `{ avg, slg, woba, wobaCon }`. There is no field called
+   * `xBA` and no `atBats` in that block: the expected batting average IS `avg`
+   * inside the expectedStatistics block (which is why the season block's own
+   * `avg` must not be confused with it). `atBats` comes back as 0 so the caller
+   * regresses against the season block's sample size instead of pretending the
+   * expected block carries one.
+   */
+  function expectedFromSplits(statsPayload) {
+    var stats = (statsPayload && statsPayload.stats) || [];
+    for (var i = 0; i < stats.length; i += 1) {
+      var type = (stats[i].type && stats[i].type.displayName) || '';
+      if (type !== 'expectedStatistics') continue;
+      var split = (stats[i].splits || [])[0];
+      var st = (split && split.stat) || {};
+      var value = Number(st.avg);
+      if (!Number.isFinite(value)) return null;
+      return {
+        xba: value,
+        slg: Number.isFinite(Number(st.slg)) ? Number(st.slg) : null,
+        woba: Number.isFinite(Number(st.woba)) ? Number(st.woba) : null,
+        atBats: 0,
+        sourceField: 'expectedStatistics.splits[0].stat.avg',
+      };
+    }
+    return null;
+  }
+
   function platoonFromSplits(statsPayload, code) {
     var stats = (statsPayload && statsPayload.stats) || [];
     for (var i = 0; i < stats.length; i += 1) {
@@ -160,8 +193,29 @@
     if (batterRate === null) notes.push('Batter season input missing — league baseline used for that side.');
     if (pitcherRate === null) notes.push('Pitcher season input missing — league baseline used for that side.');
 
-    var bAdj = regress(batterRate === null ? LEAGUE : batterRate, batter.atBats || 0, REGRESS_BATTER);
-    var pAdj = regress(pitcherRate === null ? LEAGUE : pitcherRate, pitcher.atBats || 0, REGRESS_PITCHER);
+    // The documented season signal is "xBA/AVG" per side, so a present expected
+    // block (xBA) is averaged with the counting-stat rate before regression. The
+    // sample size stays the season at-bat count — the expected block carries no
+    // sample of its own (verified 2026-11-22, see expectedFromSplits). With no
+    // expected block the rate is used unchanged and a note records the fallback.
+    var XBA_WEIGHT = 0.5;
+    var batterSeasonRate = batterRate;
+    if (batterRate !== null && batter.xba && Number.isFinite(batter.xba.xba)) {
+      batterSeasonRate = batterRate * (1 - XBA_WEIGHT) + batter.xba.xba * XBA_WEIGHT;
+    } else if (batterRate !== null) {
+      notes.push('No expected-statistics (xBA) block for the batter — AVG used alone.');
+    }
+    var pitcherSeasonRate = pitcherRate;
+    if (pitcherRate !== null && pitcher.xba && Number.isFinite(pitcher.xba.xba)) {
+      pitcherSeasonRate = pitcherRate * (1 - XBA_WEIGHT) + pitcher.xba.xba * XBA_WEIGHT;
+    } else if (pitcherRate !== null) {
+      notes.push('No expected-statistics (xBA) block for the pitcher — opponent AVG used alone.');
+    }
+
+    var bAdj = regress(batterSeasonRate === null ? LEAGUE : batterSeasonRate,
+      batter.atBats || 0, REGRESS_BATTER);
+    var pAdj = regress(pitcherSeasonRate === null ? LEAGUE : pitcherSeasonRate,
+      pitcher.atBats || 0, REGRESS_PITCHER);
 
     var base = log5(bAdj, pAdj);
     var logitPrior = logit(LEAGUE);
@@ -318,10 +372,22 @@
   function loadContext(playerId, group, season, dateStr) {
     var key = playerId + ':' + group + ':' + season;
     if (ctxCache.has(key)) return ctxCache.get(key);
-    var promise = MLBAPI.getPlayerStats(playerId, group, season, 'season,statSplits,gameLog', 'vl,vr')
-      .then(function (payload) {
+    // Two requests, issued in parallel and cached separately:
+    //   1. season + statSplits + gameLog (rates, platoon, form)
+    //   2. season + expectedStatistics (xBA)
+    // They are separate because combining them makes the `stats=` list long and
+    // couples the model to a block the endpoint may omit; either failing degrades
+    // to a labelled fallback instead of losing the whole forecast.
+    var main = MLBAPI.getPlayerStats(playerId, group, season, 'season,statSplits,gameLog', 'vl,vr');
+    var expected = MLBAPI.getPlayerStats(playerId, group, season, 'season,expectedStatistics', null)
+      .catch(function () { return null; });
+    var promise = Promise.all([main, expected])
+      .then(function (both) {
+        var payload = both[0];
+        var xba = expectedFromSplits(both[1]);
         var seasonRate = seasonRateFromSplits(payload, group);
         return {
+          xba: xba,
           payload: payload,
           season: seasonRate,
           platoonVsLeft: platoonFromSplits(payload, 'vl'),
@@ -529,6 +595,7 @@
     platoonFromSplits: platoonFromSplits,
     formFromGameLog: formFromGameLog,
     headToHeadFrom: headToHeadFrom,
+    expectedFromSplits: expectedFromSplits,
     buildForecast: buildForecast,
     estimateRemainingPAs: estimateRemainingPAs,
     render: render,
