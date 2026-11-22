@@ -84,8 +84,11 @@ check('unverified challengeTeamId is not presented as challenger identity', () =
 check('challenger attribution is retained only when the official description names a team', () => {
   const f = JSON.parse(JSON.stringify(feed));
   const play = f.liveData.plays.allPlays.find((p) => p.reviewDetails);
+  // Official game 824027 payload: teamName is "Angels" and the play text starts
+  // "Angels challenged (play at 1st)"; only that explicit text supports a label.
+  // https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,teams,away,home,teamName,clubName,shortName,name,abbreviation,liveData,plays,allPlays,about,atBatIndex,result,description,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress
   f.gameData.teams.home.teamName = 'Angels';
-  play.result.description = 'Angels challenged (tag play)';
+  play.result.description = 'Angels challenged (play at 1st), call on the field was upheld: Jose Siri grounds into a double play, shortstop Ezequiel Tovar to first baseman TJ Rumfield. Oswald Peraza out at 2nd. Jose Siri out at 1st.';
   const entry = Reviews.extractGameReviews(f).find((item) => item.category === 'challenge');
   assert.equal(entry.challengerSide, 'home');
   assert.equal(entry.challengerAbbr, 'LAA');
