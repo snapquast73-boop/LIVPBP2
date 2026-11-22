@@ -470,3 +470,24 @@ main's §8/§9/§10/§11, renumbered this session's section to §12. `README.md`
 folded in the 2026-11-22 verification note; kept main's tool list and added the new tool.
 `assets/js/props.js` — auto-merged with main's independent `statSplits`/`gameLog` fixes; both are present and the
 full suite passes.
+
+## Correction and merge record — 3615863d
+
+- **Merged:** [PR #41](https://github.com/snapquast73-boop/LIVPBP2/pull/41) → `main` as
+  `abde5b5ffe228d5413e1ce51ede010186f278a71` (2026-11-22 02:07:05Z). PR check
+  [verify](https://github.com/snapquast73-boop/LIVPBP2/actions/runs/44974538123) passed (15 s, `npm test`).
+  Main [Verify static site](https://github.com/snapquast73-boop/LIVPBP2/actions/runs/44974571618) and
+  [Pages build and deployment](https://github.com/snapquast73-boop/LIVPBP2/actions/runs/44974570865) both
+  succeeded; the `github-pages` deployment for `abde5b5ff` reports `success` (02:07:50Z) and
+  [Pages metadata](https://api.github.com/repos/snapquast73-boop/LIVPBP2/pages) says `built` / `main` `/`.
+  Deployed pages fetched post-deploy: [scoreboard 2026-06-01](https://snapquast73-boop.github.io/LIVPBP2/?date=2026-06-01&rev=abde5b5)
+  (9 games, scores and decisions unchanged) and [Flagged for Review](https://snapquast73-boop.github.io/LIVPBP2/flagged.html)
+  §12 (renders, sources intact).
+- **Correction published:** `flagged.html` §12d said “Six network-free suites … `hit-model-test` 21”. After the
+  rebase the merged suite reports **22** `hit-model-test` checks (the `main` `game-log`/ISO-`gameDate` check is
+  counted alongside the 9 added here). The page now states 22 and names the correction; §12a also credits
+  session 1731ad28 for fixing the frozen game page independently, since PR #35 merged first.
+- **Still open / non-blocking:** everything in `flagged.html` §12c — original-site parity unprovable
+  (upstream 404), CORS headers unverifiable from this sandbox, logo/headshot HTTP 500 to non-browser clients,
+  “call stands” vs “call confirmed”, `challengeTeamId` semantics, reconstructed forecast coefficients and the
+  unrecovered original cadences, and public-deployment permissions.
