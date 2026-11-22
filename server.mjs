@@ -97,13 +97,18 @@ function mergeFeedLogPayloads(existing, incoming, dateStr) {
     };
   }
 
-  // Merge entries by key: gamePk:review.id
+  // Merge entries by key: supports both flat client entries ({ id, ... })
+  // from assets/js/feed-log.js and legacy nested entries ({ gamePk, review: { id } }).
   const entryMap = new Map();
   const orderList = [];
 
   function makeKey(entry) {
-    if (!entry || !entry.review) return null;
-    return `${entry.gamePk}:${entry.review.id || entry.review.atBatIndex || ''}`;
+    if (!entry || typeof entry !== 'object') return null;
+    if (typeof entry.id === 'string' && entry.id) return entry.id;
+    if (entry.review && typeof entry.review === 'object') {
+      return `${entry.gamePk}:${entry.review.id || entry.review.atBatIndex || ''}`;
+    }
+    return null;
   }
 
   (Array.isArray(existing.entries) ? existing.entries : []).forEach((e) => {
@@ -120,45 +125,70 @@ function mergeFeedLogPayloads(existing, incoming, dateStr) {
     if (!prev) {
       entryMap.set(k, e);
       if (!orderList.includes(k)) orderList.push(k);
+    } else if (typeof e.id === 'string' && !e.review && !prev.review) {
+      // Flat FeedLog entry shape: newest timestamp wins, preserving earlier fields as fallback.
+      const prevTs = String(prev.timestamp || '');
+      const nextTs = String(e.timestamp || '');
+      const mergedFlat = nextTs >= prevTs ? { ...prev, ...e } : { ...e, ...prev };
+      entryMap.set(k, mergedFlat);
     } else {
-      // Merge: prefer most complete / latest seen
+      // Legacy nested { gamePk, review } shape: prefer most complete / latest seen
       const mergedEntry = {
         gamePk: e.gamePk || prev.gamePk,
-        review: { ...prev.review, ...e.review },
+        review: { ...(prev.review || {}), ...(e.review || {}) },
         firstSeen: Math.min(prev.firstSeen || e.firstSeen || now, e.firstSeen || prev.firstSeen || now),
         lastSeen: Math.max(prev.lastSeen || 0, e.lastSeen || 0, now),
         matchupLabel: e.matchupLabel || prev.matchupLabel || null,
       };
       // For scoring change: preserve longer history if present
-      if (prev.review && prev.review.history && (!e.review.history || e.review.history.length < prev.review.history.length)) {
+      if (prev.review && prev.review.history && (!e.review || !e.review.history || e.review.history.length < prev.review.history.length)) {
         mergedEntry.review.history = prev.review.history;
       }
       entryMap.set(k, mergedEntry);
     }
   });
 
-  // Merge snapshots (per gamePk -> atBatIndex)
+  // Merge snapshots (per gamePk -> snapshot object; merge nested plays map if present)
   const mergedSnapshots = { ...(existing.snapshots || {}) };
   if (incoming.snapshots && typeof incoming.snapshots === 'object') {
     Object.keys(incoming.snapshots).forEach((gamePk) => {
-      mergedSnapshots[gamePk] = {
-        ...(mergedSnapshots[gamePk] || {}),
-        ...(incoming.snapshots[gamePk] || {}),
-      };
+      const prevSnap = mergedSnapshots[gamePk];
+      const nextSnap = incoming.snapshots[gamePk];
+      if (prevSnap && typeof prevSnap === 'object' && nextSnap && typeof nextSnap === 'object') {
+        const mergedPlays = (prevSnap.plays || nextSnap.plays)
+          ? { ...(prevSnap.plays || {}), ...(nextSnap.plays || {}) }
+          : undefined;
+        mergedSnapshots[gamePk] = {
+          ...prevSnap,
+          ...nextSnap,
+          ...(mergedPlays !== undefined ? { plays: mergedPlays } : {}),
+        };
+      } else {
+        mergedSnapshots[gamePk] = nextSnap;
+      }
     });
   }
 
-  // Merge irregularities (per gamePk -> notes array)
+  // Merge irregularities: supports both keyed irregularity objects from feed-log.js
+  // ({ [id]: { id, category: 'irregularity', ... } }) and legacy per-gamePk string arrays.
   const mergedIrregularities = { ...(existing.irregularities || {}) };
   if (incoming.irregularities && typeof incoming.irregularities === 'object') {
-    Object.keys(incoming.irregularities).forEach((gamePk) => {
-      const prevNotes = mergedIrregularities[gamePk] || [];
-      const newNotes = incoming.irregularities[gamePk] || [];
-      const combined = [...prevNotes];
-      newNotes.forEach((n) => {
-        if (typeof n === 'string' && !combined.includes(n)) combined.push(n);
-      });
-      mergedIrregularities[gamePk] = combined.slice(-30);
+    Object.keys(incoming.irregularities).forEach((key) => {
+      const prevVal = mergedIrregularities[key];
+      const nextVal = incoming.irregularities[key];
+      if (Array.isArray(prevVal) || Array.isArray(nextVal)) {
+        const prevNotes = Array.isArray(prevVal) ? prevVal : [];
+        const newNotes = Array.isArray(nextVal) ? nextVal : [];
+        const combined = [...prevNotes];
+        newNotes.forEach((n) => {
+          if (typeof n === 'string' && !combined.includes(n)) combined.push(n);
+        });
+        mergedIrregularities[key] = combined.slice(-30);
+      } else if (nextVal && typeof nextVal === 'object') {
+        mergedIrregularities[key] = (prevVal && typeof prevVal === 'object')
+          ? { ...prevVal, ...nextVal }
+          : nextVal;
+      }
     });
   }
 
@@ -393,15 +423,23 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  let safePath = path.normalize(decodeURIComponent(pathname)).replace(/^(\.\.[\/\\])+/, '');
+  let decodedPathname;
+  try {
+    decodedPathname = decodeURIComponent(pathname);
+  } catch (_) {
+    sendError(res, 400, 'Bad Request: malformed URL encoding');
+    return;
+  }
+
+  let safePath = path.normalize(decodedPathname).replace(/^(\.\.[\/\\])+/, '');
   if (safePath === '/' || safePath === '') safePath = '/index.html';
   if (safePath === '/reviews') safePath = '/reviews.html';
   if (safePath === '/game') safePath = '/game.html';
 
-  const filePath = path.join(REPO_DIR, safePath);
+  const filePath = path.resolve(REPO_DIR, '.' + (safePath.startsWith('/') || safePath.startsWith('\\') ? safePath : '/' + safePath));
 
-  // Security check: ensure path is within REPO_DIR
-  if (!filePath.startsWith(REPO_DIR)) {
+  // Security check: ensure path is strictly within REPO_DIR (prevent sibling-prefix bypass)
+  if (filePath !== REPO_DIR && !filePath.startsWith(REPO_DIR + path.sep)) {
     sendError(res, 403, 'Forbidden');
     return;
   }

@@ -804,6 +804,65 @@
       </ul>
     </section>
 
+    <section class="panel" id="verification-d7b326b4">
+      <div class="panel-title">13 · Local server feed-log contract fix &amp; live StatsAPI endpoint verification (session d7b326b4, 2026-11-22)</div>
+      <p class="muted">
+        Line-by-line review of <code>server.mjs</code> against <code>assets/js/feed-log.js</code> and live
+        fetches of previously unsampled official MLB StatsAPI endpoints (all table rows below link
+        official sources for manual review):
+      </p>
+      <div class="scroll-x">
+        <table class="boxscore-table">
+          <thead>
+            <tr>
+              <th>Item / Endpoint</th>
+              <th>Status</th>
+              <th>Finding</th>
+              <th>Official source</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>server.mjs</code> <code>POST /api/feed-log</code> merge with client <code>FeedLog.normalize()</code></td>
+              <td><span class="chip chip-up">Fixed</span></td>
+              <td><code>assets/js/feed-log.js</code> sends flat <code>entries[]</code> (<code>{ id, gamePk, category, ... }</code>) and keyed <code>irregularities</code> objects (<code>{ [id]: { id, category: "irregularity", ... } }</code>), whereas <code>server.mjs</code> required nested <code>e.review</code> (dropping flat client entries) and treated <code>irregularities[key]</code> as string arrays (throwing <code>TypeError: prevNotes is not iterable</code> → HTTP 500 on the second <code>POST /api/feed-log</code>). Also guarded <code>decodeURIComponent()</code> against malformed <code>%</code> URLs (400 instead of unhandled <code>URIError</code>) and hardened <code>REPO_DIR + path.sep</code> prefix checks. Covered by <code>tools/server-test.mjs</code> (5/5 deterministic checks).</td>
+              <td><a href="https://nodejs.org/api/http.html">Node.js HTTP docs</a> · <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/server.mjs">server.mjs</a></td>
+            </tr>
+            <tr>
+              <td><code>people/{id}/stats?stats=season,statSplits,gameLog&amp;group=hitting&amp;sitCodes=vl,vr</code></td>
+              <td><span class="chip chip-up">Verified live</span></td>
+              <td>Fetched live on 2026-11-22 for player <code>660271</code> (2026): returns three stat blocks (<code>season</code>, <code>statSplits</code>, <code>gameLog</code>) and <strong>preserves</strong> <code>split: { "code": "vl", "description": "vs Left" }</code> and <code>"vr"</code> on <code>statSplits.splits[]</code>, confirming <code>assets/js/props.js</code> reads platoon splits accurately from the combined call (whereas the README note claiming combined requests drop <code>split</code> is stale).</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,statSplits,gameLog&amp;group=hitting&amp;sitCodes=vl,vr&amp;season=2026">statsapi.mlb.com combined stats</a></td>
+            </tr>
+            <tr>
+              <td><code>people/{id}/stats?stats=season,expectedStatistics&amp;group=hitting</code></td>
+              <td><span class="chip chip-up">Verified live</span></td>
+              <td>Fetched live on 2026-11-22 for player <code>660271</code> (2026): returns <code>expectedStatistics</code> (<code>stat.avg: ".285"</code>, <code>slg: ".593"</code>, <code>woba: ".399"</code>) alongside <code>season</code> (<code>stat.avg: ".275"</code>), matching <code>props.js</code> xBA input lookup.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season,expectedStatistics&amp;group=hitting&amp;season=2026">statsapi.mlb.com expectedStatistics</a></td>
+            </tr>
+            <tr>
+              <td><code>people/{batterId}/stats?stats=vsPlayer&amp;group=hitting&amp;opposingPlayerId={pitcherId}</code></td>
+              <td><span class="chip chip-up">Verified live</span></td>
+              <td>Fetched live on 2026-11-22 for batter <code>660271</code> vs pitcher <code>608566</code>: returns both <code>vsPlayerTotal</code> (career aggregate) and per-season <code>vsPlayer</code> splits (<code>hits</code>, <code>atBats</code>, <code>avg</code>); session <code>3615863d</code> updated <code>props.js</code> to prefer <code>vsPlayerTotal</code>.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/people/660271/stats?stats=vsPlayer&amp;group=hitting&amp;opposingPlayerId=608566&amp;season=2024">statsapi.mlb.com vsPlayer</a></td>
+            </tr>
+            <tr>
+              <td><code>schedule?sportId=1&amp;date=YYYY-MM-DD&amp;fields=…,flags,inReview</code> (without <code>hydrate=flags</code>)</td>
+              <td><span class="chip">Flagged (upstream behavior)</span></td>
+              <td>Fetched live on 2026-11-22 for <code>2026-06-01</code>: without <code>hydrate=flags</code>, MLB's schedule endpoint omits <code>flags</code> on Final games even when <code>flags,inReview</code> are listed in <code>fields=</code>; <code>scoreboard.js</code> safely guards <code>g.flags &amp;&amp; g.flags.inReview</code> and primarily detects active reviews from official <code>status.statusCode</code> / <code>reason</code> + full hydrated schedule polls.</td>
+              <td><a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2026-06-01&amp;fields=dates,games,gamePk,status,abstractGameState,codedGameState,detailedState,statusCode,reason,startTimeTBD,abstractGameCode,teams,away,home,team,id,abbreviation,flags,inReview">statsapi.mlb.com projected schedule</a></td>
+            </tr>
+            <tr>
+              <td>Sister reference comparison: <code>POSTSSNALRT/reviews.html</code> vs <code>LIVPBP2/reviews.html</code></td>
+              <td><span class="chip">Flagged (design difference)</span></td>
+              <td>Both live deployments render <code>2026-06-01</code> official MLB replay/ABS events cleanly; <code>POSTSSNALRT/reviews.html</code> splits summary counters into 8 boxes (<code>Events</code>, <code>Challenges</code>, <code>Reviews</code>, <code>Boundary</code>, <code>ABS</code>, <code>Runs at Risk</code>, <code>Pending</code>, <code>Scoring</code>) whereas <code>LIVPBP2/reviews.html</code> groups them into its documented 6 summary counters + 7 filter tabs (adding the <code>Flagged</code> tab). Kept <code>LIVPBP2</code>'s layout unchanged per project instructions.</td>
+              <td><a href="https://snapquast73-boop.github.io/LIVPBP2/reviews.html?date=2026-06-01">LIVPBP2 Replay Feed</a> · <a href="https://snapquast73-boop.github.io/POSTSSNALRT/reviews.html?date=2026-06-01">POSTSSNALRT Replay Feed</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <footer class="site-footer">
       <p>
         Unofficial fan project. Not affiliated with MLB or MLB Advanced Media.
