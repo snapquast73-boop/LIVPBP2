@@ -32,8 +32,10 @@ jobs:
           node tools/review-test.mjs
           node tools/hit-model-test.mjs
           node tools/reviews-feed-test.mjs
+          node tools/feed-fields-test.mjs
           node tools/page-render-test.mjs
           node tools/link-check.mjs
+          python3 tools/check-local-links.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

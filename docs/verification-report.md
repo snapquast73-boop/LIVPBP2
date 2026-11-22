@@ -21,7 +21,7 @@ repository was filled in from memory or inferred from another site.
 | Pages deploy method | Branch publishing ("Deploy from a branch"), exactly what GitHub documents | https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site |
 | The original demo repository named in `README.md` (`buffedlizard55-lab/MLB-Live-PBP`) | **Not found** (`404`) — the original site could not be diffed against | `GET https://api.github.com/repos/buffedlizard55-lab/MLB-Live-PBP` → `{"message":"Not Found"}` |
 | `assets/` (CSS + all JS) in the initial upload | **Missing**; reconstructed by session `26bf496d`, verified and rewritten in this session | commit history of `main`; `COORDINATION.md` |
-| Files the README references but that were absent: `docs/verification-report.md`, `docs/scoring-changes.md`, `docs/api-compliance.md`, `docs/workflows/`, `tools/*.mjs` | Missing; the three documents, the workflow templates and five deterministic test tools are now present. The remaining `tools/*.mjs` files named in the original README were **not recovered** — see §7 | `node tools/link-check.mjs` before/after |
+| Files the README references but that were absent: `docs/verification-report.md`, `docs/scoring-changes.md`, `docs/api-compliance.md`, `docs/workflows/`, `tools/*.mjs` | Missing; the three documents, the workflow templates and seven deterministic checks are now present. The remaining tool files named in the original README were **not recovered** — see §7 | `node tools/link-check.mjs` before/after |
 
 Because the upstream demo repository returns 404, "identical to the original"
 cannot be proven for anything. What *can* be proven is that every screen is
@@ -174,8 +174,10 @@ node tools/review-test.mjs          # 14 checks — parser, counters, diffs, irr
                                     #             and the Replay Feed's `fields` projection
 node tools/hit-model-test.mjs       # 12 checks — log5, clamps, count, form, splits
 node tools/reviews-feed-test.mjs    #  6 checks — persistence/merge/idempotency
+node tools/feed-fields-test.mjs     #  9 checks — FEED_FIELDS projection keeps the reviewDetails leaves
 node tools/page-render-test.mjs     #  7 end-to-end page renders in jsdom (no page errors)
 node tools/link-check.mjs           # every internal href/src resolves; no dead docs
+python3 tools/check-local-links.py  # every local href/src in the HTML pages resolves (CI)
 ```
 
 Fixtures in `tools/fixtures/` are **synthetic**: every key and nesting level was
