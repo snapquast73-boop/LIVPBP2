@@ -18,7 +18,9 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REPO_DIR = __dirname;
-const DATA_DIR = path.join(REPO_DIR, 'data');
+// Overridable so tests (tools/server-log-test.mjs) write to a scratch directory
+// instead of the repository's ignored data/ folder.
+const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(REPO_DIR, 'data');
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
 const HOST = '0.0.0.0';
 
@@ -97,13 +99,23 @@ function mergeFeedLogPayloads(existing, incoming, dateStr) {
     };
   }
 
-  // Merge entries by key: gamePk:review.id
+  // Merge entries by key. The Replay Feed writes FLAT rows keyed by `id`
+  // (assets/js/feed-log.js dedupes on `row.id`), so that is the primary key. An
+  // older nested `{ gamePk, review: { id } }` shape is still accepted so a log
+  // written by an earlier build keeps merging instead of being discarded.
+  //
+  // This used to require `entry.review`, which no current entry has: every
+  // accepted row was dropped and the endpoint answered `entriesCount: 0`.
   const entryMap = new Map();
   const orderList = [];
 
   function makeKey(entry) {
-    if (!entry || !entry.review) return null;
-    return `${entry.gamePk}:${entry.review.id || entry.review.atBatIndex || ''}`;
+    if (!entry || typeof entry !== 'object') return null;
+    if (typeof entry.id === 'string' && entry.id) return entry.id;
+    if (entry.review) {
+      return `${entry.gamePk}:${entry.review.id || entry.review.atBatIndex || ''}`;
+    }
+    return null;
   }
 
   (Array.isArray(existing.entries) ? existing.entries : []).forEach((e) => {
@@ -121,17 +133,16 @@ function mergeFeedLogPayloads(existing, incoming, dateStr) {
       entryMap.set(k, e);
       if (!orderList.includes(k)) orderList.push(k);
     } else {
-      // Merge: prefer most complete / latest seen
-      const mergedEntry = {
-        gamePk: e.gamePk || prev.gamePk,
-        review: { ...prev.review, ...e.review },
-        firstSeen: Math.min(prev.firstSeen || e.firstSeen || now, e.firstSeen || prev.firstSeen || now),
-        lastSeen: Math.max(prev.lastSeen || 0, e.lastSeen || 0, now),
-        matchupLabel: e.matchupLabel || prev.matchupLabel || null,
-      };
-      // For scoring change: preserve longer history if present
-      if (prev.review && prev.review.history && (!e.review.history || e.review.history.length < prev.review.history.length)) {
-        mergedEntry.review.history = prev.review.history;
+      // Same row seen again: keep the newest observation, but never let a sparse
+      // repeat blank out fields the earlier record already carried.
+      const mergedEntry = { ...prev, ...e };
+      if (prev.review || e.review) {
+        mergedEntry.review = { ...(prev.review || {}), ...(e.review || {}) };
+        const prevHistory = prev.review && prev.review.history;
+        const nextHistory = e.review && e.review.history;
+        if (prevHistory && (!nextHistory || nextHistory.length < prevHistory.length)) {
+          mergedEntry.review.history = prevHistory;
+        }
       }
       entryMap.set(k, mergedEntry);
     }

@@ -39,6 +39,7 @@ jobs:
           node tools/reviews-feed-test.mjs
           node tools/feed-fields-test.mjs
           node tools/live-slate-test.mjs
+          node tools/server-log-test.mjs
           node tools/link-check.mjs
 
       - name: Render the three pages in jsdom
