@@ -140,6 +140,59 @@ try {
     assert.ok(merged.snapshots['824027'].plays['1'], 'later play snapshot merged');
   });
 
+  await check('retired envelopes (nested { gamePk, review } entries + note-array irregularities) still merge without losing flat rows', async () => {
+    const LEGACY_DATE = '2099-11-23'; // its own date: must not disturb TEST_DATE used by the SSE check
+    const legacyLog = path.join(DATA_DIR, 'feed-log-' + LEGACY_DATE + '.json');
+    try { fs.unlinkSync(legacyLog); } catch (_) { /* ignore */ }
+    // 1) retired client shape: nested review entries, per-gamePk note-array irregularities
+    const legacyEnvelope = {
+      v: 1,
+      date: LEGACY_DATE,
+      entries: [{
+        gamePk: 824027,
+        review: { id: 1, gamePk: 824027, category: 'review', eventType: 'Home run', title: 'Kikuchi solo HR', timestamp: '2099-11-22T01:00:00Z' },
+        matchupLabel: 'SEA @ LAA',
+      }],
+      irregularities: { 824027: ['Play disappeared', 'homeScore=-1'] },
+    };
+    const resLegacy = await fetch(BASE + '/api/feed-log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(legacyEnvelope),
+    });
+    assert.equal(resLegacy.status, 200, 'retired-shape POST must not 500');
+    const bodyLegacy = await resLegacy.json();
+    assert.equal(bodyLegacy.ok, true);
+    assert.equal(bodyLegacy.entriesCount, 1, 'retired nested entry must be stored');
+
+    // 2) a flat client envelope posted afterwards must keep the retired row (no wipe).
+    //    Hand-written in the exact shape FeedLog.normalize() emits (the normalizer itself is
+    //    covered by tools/reviews-feed-test.mjs).
+    const flatEnvelope = {
+      v: 1,
+      date: LEGACY_DATE,
+      entries: [{ id: '824027:99', gamePk: 824027, category: 'review', eventType: 'Single', title: 'late entry', timestamp: '2099-11-22T02:00:00Z' }],
+      irregularities: { '824027:99:edit': { id: '824027:99:edit', gamePk: 824027, category: 'irregularity', label: 'Edit' } },
+    };
+    const resFlat = await fetch(BASE + '/api/feed-log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(flatEnvelope),
+    });
+    assert.equal(resFlat.status, 200);
+    assert.equal((await resFlat.json()).entriesCount, 2, 'retired row must survive the flat POST');
+
+    // 3) GET: both shapes present; both irregularity shapes preserved
+    const merged = await (await fetch(BASE + '/api/feed-log?date=' + LEGACY_DATE)).json();
+    const legacyRow = merged.entries.find((e) => e.gamePk === 824027 && e.review && e.review.id === 1);
+    assert.ok(legacyRow, 'retired nested entry preserved');
+    assert.equal(legacyRow.review.eventType, 'Home run');
+    assert.ok(merged.entries.find((e) => e.id === '824027:99'), 'flat entry preserved');
+    assert.ok(Array.isArray(merged.irregularities['824027']) && merged.irregularities['824027'].includes('Play disappeared'),
+      'retired note-array irregularities preserved');
+    assert.ok(merged.irregularities['824027:99:edit'], 'flat id-keyed irregularity preserved');
+  });
+
   await check('SSE stream /api/feed-log/stream emits connected and initial snapshot', async () => {
     const controller = new AbortController();
     const res = await fetch(BASE + '/api/feed-log/stream?date=' + TEST_DATE, {

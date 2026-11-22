@@ -246,4 +246,16 @@ check('head-to-head returns nothing when the payload has no rows', () => {
   assert.equal(Props.careerVsPitcher({ stats: [] }), null);
 });
 
+check('head-to-head selection is independent of the type order in the payload', () => {
+  // Sampled 2026-11-22 (statsapi.mlb.com/api/v1/people/592450/stats?stats=vsPlayer
+  // &group=hitting&opposingPlayerId=621111&season=2024): the API listed
+  // vsPlayerTotal first; the earlier reader took whichever type came last, so
+  // a response-order change would have silently swapped career for season.
+  const payload = readFixture('stats-660271-vsplayer.json');
+  const a = Props.careerVsPitcher(payload);
+  const flipped = { stats: payload.stats.slice().reverse() };
+  const b = Props.careerVsPitcher(flipped);
+  assert.deepEqual(a, b);
+});
+
 console.log('\nhit-model-test: ' + passed + ' checks passed');
