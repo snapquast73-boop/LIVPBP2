@@ -1,0 +1,77 @@
+{
+  "_note": "Trimmed verbatim copy of https://statsapi.mlb.com/api/v1/people/622608/stats?stats=season&group=pitching&season=2026 fetched 2026-11-22. Two-club pitcher: the API returns one row per club PLUS a league-wide total row (no team) for stats=season. Row order preserved.",
+  "stats": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "hits": 73,
+            "atBats": 280,
+            "era": "4.05",
+            "inningsPitched": "73.1"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League"
+          },
+          "sport": {
+            "id": 1,
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        },
+        {
+          "season": "2026",
+          "stat": {
+            "hits": 51,
+            "atBats": 199,
+            "era": "3.61",
+            "inningsPitched": "52.1"
+          },
+          "team": {
+            "id": 115,
+            "name": "Colorado Rockies"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League"
+          },
+          "sport": {
+            "id": 1,
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        },
+        {
+          "season": "2026",
+          "stat": {
+            "hits": 22,
+            "atBats": 81,
+            "era": "5.14",
+            "inningsPitched": "21.0"
+          },
+          "team": {
+            "id": 158,
+            "name": "Milwaukee Brewers"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League"
+          },
+          "sport": {
+            "id": 1,
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

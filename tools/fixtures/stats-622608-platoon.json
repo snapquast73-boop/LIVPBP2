@@ -1,0 +1,103 @@
+{
+  "_note": "Trimmed verbatim copy of https://statsapi.mlb.com/api/v1/people/622608/stats?stats=statSplits&group=pitching&season=2026&sitCodes=vl,vr fetched 2026-11-22. Two club rows per split code plus one total row per code (no team).",
+  "stats": [
+    {
+      "type": {
+        "displayName": "statSplits"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "hits": 10,
+            "atBats": 31
+          },
+          "team": {
+            "id": 158,
+            "name": "Milwaukee Brewers"
+          },
+          "gameType": "R",
+          "split": {
+            "code": "vl",
+            "description": "vs Left"
+          }
+        },
+        {
+          "season": "2026",
+          "stat": {
+            "hits": 23,
+            "atBats": 100
+          },
+          "team": {
+            "id": 115,
+            "name": "Colorado Rockies"
+          },
+          "gameType": "R",
+          "split": {
+            "code": "vl",
+            "description": "vs Left"
+          }
+        },
+        {
+          "season": "2026",
+          "stat": {
+            "hits": 33,
+            "atBats": 131
+          },
+          "gameType": "R",
+          "split": {
+            "code": "vl",
+            "description": "vs Left"
+          }
+        },
+        {
+          "season": "2026",
+          "stat": {
+            "hits": 12,
+            "atBats": 50
+          },
+          "team": {
+            "id": 158,
+            "name": "Milwaukee Brewers"
+          },
+          "gameType": "R",
+          "split": {
+            "code": "vr",
+            "description": "vs Right"
+          }
+        },
+        {
+          "season": "2026",
+          "stat": {
+            "hits": 28,
+            "atBats": 99
+          },
+          "team": {
+            "id": 115,
+            "name": "Colorado Rockies"
+          },
+          "gameType": "R",
+          "split": {
+            "code": "vr",
+            "description": "vs Right"
+          }
+        },
+        {
+          "season": "2026",
+          "stat": {
+            "hits": 40,
+            "atBats": 149
+          },
+          "gameType": "R",
+          "split": {
+            "code": "vr",
+            "description": "vs Right"
+          }
+        }
+      ]
+    }
+  ]
+}
