@@ -166,4 +166,84 @@ check('remaining-PA estimate is zero for a Final game', () => {
   assert.equal(Props.estimateRemainingPAs(feed), 0);
 });
 
+/* --------------------------------------------------------------------------
+ * Multi-club / multi-season rows. The StatsAPI returns one splits[] row PER
+ * TEAM once a player has appeared for more than one club, and — for
+ * stats=season — one league-wide total row with no `team`. `stats=vsPlayer`
+ * returns one row per season plus a `vsPlayerTotal` career row. Reading
+ * splits[0] therefore used a partial-season (or single-season) line.
+ * Fixtures are trimmed verbatim copies of the official responses
+ * (statsapi.mlb.com, fetched 2026-11-22).
+ * ------------------------------------------------------------------------ */
+
+check('season rate uses the official total row for a two-club pitcher', () => {
+  const payload = readFixture('stats-622608-season.json');
+  const season = Props.seasonRateFromSplits(payload, 'pitching');
+  assert.equal(season.hits, 73, 'official MLB total hits (not the 51-hit Colorado row)');
+  assert.equal(season.atBats, 280, 'official MLB total at-bats (not the 199-AB Colorado row)');
+  assert.ok(Math.abs(season.rate - 73 / 280) < 1e-12);
+  assert.equal(season.splitsUsed, 1, 'the API total row needs no summing');
+});
+
+check('season rate sums club rows when the total row is absent', () => {
+  const payload = readFixture('stats-622608-season.json');
+  payload.stats[0].splits = payload.stats[0].splits.filter((s) => s.team);
+  const season = Props.seasonRateFromSplits(payload, 'pitching');
+  assert.equal(season.hits, 51 + 22);
+  assert.equal(season.atBats, 199 + 81);
+  assert.equal(season.splitsUsed, 2);
+});
+
+check('season rate for a single-club player is unchanged', () => {
+  const season = Props.seasonRateFromSplits(readFixture('stats-660271-season.json'), 'hitting');
+  assert.equal(season.hits, 144);
+  assert.equal(season.atBats, 523);
+  assert.ok(Math.abs(season.rate - 144 / 523) < 1e-12);
+});
+
+check('platoon split uses the official total row per split code', () => {
+  const payload = readFixture('stats-622608-platoon.json');
+  const vl = Props.platoonFromSplits(payload, 'vl');
+  const vr = Props.platoonFromSplits(payload, 'vr');
+  assert.equal(vl.atBats, 131, 'vs Left total (not the 31-AB Milwaukee row)');
+  assert.equal(vl.rate, 33 / 131);
+  assert.equal(vr.atBats, 149, 'vs Right total (not the 50-AB Milwaukee row)');
+  assert.equal(vr.rate, 40 / 149);
+});
+
+check('platoon split sums club rows when no total row exists', () => {
+  const payload = readFixture('stats-622608-platoon.json');
+  payload.stats[0].splits = payload.stats[0].splits.filter((s) => s.team);
+  const vl = Props.platoonFromSplits(payload, 'vl');
+  assert.equal(vl.atBats, 31 + 100);
+  assert.equal(vl.rate, 33 / 131);
+  assert.equal(vl.splitsUsed, 2);
+});
+
+check('platoon split never mixes the two split codes', () => {
+  const payload = readFixture('stats-622608-platoon.json');
+  const onlyLeft = { stats: [{ type: { displayName: 'statSplits' }, splits: payload.stats[0].splits.filter((s) => s.split.code === 'vl') }] };
+  assert.equal(Props.platoonFromSplits(onlyLeft, 'vr'), null, 'no vs-Right rows means no vs-Right rate');
+});
+
+check('head-to-head uses the career vsPlayerTotal row, not one season', () => {
+  const h2h = Props.careerVsPitcher(readFixture('stats-660271-vsplayer.json'));
+  assert.equal(h2h.atBats, 6, 'career at-bats, not the 2-AB 2018 row');
+  assert.ok(Math.abs(h2h.rate - 2 / 6) < 1e-12);
+});
+
+check('head-to-head sums season rows when vsPlayerTotal is absent', () => {
+  const payload = readFixture('stats-660271-vsplayer.json');
+  payload.stats = payload.stats.filter((b) => b.type.displayName !== 'vsPlayerTotal');
+  const h2h = Props.careerVsPitcher(payload);
+  assert.equal(h2h.atBats, 2 + 1 + 1 + 2);
+  assert.equal(h2h.seasons, 4);
+  assert.ok(Math.abs(h2h.rate - 2 / 6) < 1e-12);
+});
+
+check('head-to-head returns nothing when the payload has no rows', () => {
+  assert.equal(Props.careerVsPitcher(null), null);
+  assert.equal(Props.careerVsPitcher({ stats: [] }), null);
+});
+
 console.log('\nhit-model-test: ' + passed + ' checks passed');

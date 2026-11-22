@@ -1,0 +1,37 @@
+{
+  "_note": "Trimmed verbatim copy of https://statsapi.mlb.com/api/v1/people/660271/stats?stats=season&group=hitting&season=2026 fetched 2026-11-22 (single club: exactly one row, no total row).",
+  "stats": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "hitting"
+      },
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "hits": 144,
+            "atBats": 523,
+            "avg": ".275",
+            "ops": ".889"
+          },
+          "team": {
+            "id": 119,
+            "name": "Los Angeles Dodgers"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League"
+          },
+          "sport": {
+            "id": 1,
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

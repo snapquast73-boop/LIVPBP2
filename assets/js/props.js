@@ -79,45 +79,126 @@
     return COUNT_FACTORS[key] ? key : null;
   }
 
+  /* ------------------------------------------------------- official total rows
+   *
+   * `GET /api/v1/people/{id}/stats` returns one `splits[]` row PER TEAM once a
+   * player has appeared for more than one club in the season, and — for
+   * `stats=season` — additionally one league-wide total row that carries no
+   * `team`. Verified 2026-11-22 on the official host:
+   *
+   *   season, 622608 (two clubs):
+   *     73/280 (no team = MLB total) · 51/199 (COL) · 22/81 (MIL)
+   *   statSplits sitCodes=vl,vr, 622608:
+   *     10/31 (MIL) 23/100 (COL) 33/131 (no team = total)   [vl]
+   *     12/50 (MIL) 28/99  (COL) 40/149 (no team = total)   [vr]
+   *
+   * Reading `splits[0]` alone therefore returned a PARTIAL-SEASON row for any
+   * player who changed teams (Senzatela above: 51/199 for Colorado only,
+   * 0.2563 allowed vs the official 0.2607). The helpers below use the API's own
+   * total row when it is present and otherwise sum the team rows, so the rate
+   * always covers the whole season. Nothing is extrapolated: when no row exists
+   * at all the result is still null.
+   */
+
+  function splitTeamId(split) {
+    if (!split || typeof split !== 'object') return null;
+    var t = split.team;
+    if (!t || typeof t !== 'object') return null;
+    return typeof t.id === 'number' ? t.id : null;
+  }
+
+  /** The API's own league-wide total row (present on `stats=season`). */
+  function totalSplit(splits) {
+    for (var i = 0; i < splits.length; i += 1) {
+      if (splitTeamId(splits[i]) === null && splits[i] && splits[i].stat) return splits[i];
+    }
+    return null;
+  }
+
+  /** Rows for one team (used to sum a multi-team player's season). */
+  function teamRows(splits) {
+    return (splits || []).filter(function (s) {
+      return s && s.stat && splitTeamId(s) !== null;
+    });
+  }
+
+  function sumStats(rows, keys) {
+    var out = { rows: rows.length };
+    keys.forEach(function (k) {
+      var total = 0;
+      var seen = false;
+      rows.forEach(function (r) {
+        var v = Number(r.stat[k]);
+        if (Number.isFinite(v)) { total += v; seen = true; }
+      });
+      if (seen) out[k] = total;
+    });
+    return out;
+  }
+
   function seasonRateFromSplits(statsPayload, group) {
     var stats = (statsPayload && statsPayload.stats) || [];
     for (var i = 0; i < stats.length; i += 1) {
       var type = (stats[i].type && stats[i].type.displayName) || '';
       if (type !== 'season') continue;
-      var split = (stats[i].splits || [])[0];
-      var st = (split && split.stat) || {};
-      if (group === 'pitching') {
-        return {
-          rate: toRate(Number(st.hits), Number(st.atBats)),
-          atBats: Number(st.atBats) || 0,
-          era: st.era,
-          raw: st,
-        };
+      var splits = stats[i].splits || [];
+      var picked = totalSplit(splits);
+      var st = (picked && picked.stat) || null;
+      var combined = stats[i].combined || null;
+      if (!st) {
+        var rows = teamRows(splits);
+        if (!rows.length) return { rate: null, atBats: 0 };
+        st = sumStats(rows, ['hits', 'atBats', 'runs', 'earnedRuns', 'strikeOuts',
+          'baseOnBalls', 'homeRuns', 'gamesPlayed', 'inningsPitched']);
+        combined = rows.length;
       }
-      return {
+      var out = {
         rate: toRate(Number(st.hits), Number(st.atBats)),
         atBats: Number(st.atBats) || 0,
-        avg: st.avg,
-        ops: st.ops,
+        hits: Number(st.hits),
         raw: st,
       };
+      // How many per-team rows had to be combined (1 = a single club, no maths).
+      out.splitsUsed = combined || 1;
+      if (group === 'pitching') out.era = st.era;
+      else { out.avg = st.avg; out.ops = st.ops; }
+      return out;
     }
     return { rate: null, atBats: 0 };
   }
 
+  /**
+   * Platoon rate for one split code (`vl` / `vr`). A multi-team player returns
+   * one row per club for the same code plus the API's total row; the total is
+   * used when present, otherwise the club rows are summed.
+   */
   function platoonFromSplits(statsPayload, code) {
     var stats = (statsPayload && statsPayload.stats) || [];
     for (var i = 0; i < stats.length; i += 1) {
       var type = (stats[i].type && stats[i].type.displayName) || '';
       if (type !== 'statSplits') continue;
-      var splits = stats[i].splits || [];
-      for (var j = 0; j < splits.length; j += 1) {
-        var split = splits[j];
-        var sc = (split.split && split.split.code) || '';
-        if (code && sc !== code) continue;
-        var st = split.stat || {};
-        return { rate: toRate(Number(st.hits), Number(st.atBats)), atBats: Number(st.atBats) || 0 };
+      var matching = (stats[i].splits || []).filter(function (split) {
+        var sc = (split && split.split && split.split.code) || '';
+        return !code || sc === code;
+      });
+      if (!matching.length) continue;
+      var total = totalSplit(matching);
+      if (total) {
+        var tst = total.stat || {};
+        return {
+          rate: toRate(Number(tst.hits), Number(tst.atBats)),
+          atBats: Number(tst.atBats) || 0,
+          splitsUsed: 1,
+        };
       }
+      var rows = teamRows(matching);
+      if (!rows.length) return null;
+      var summed = sumStats(rows, ['hits', 'atBats']);
+      return {
+        rate: toRate(Number(summed.hits), Number(summed.atBats)),
+        atBats: Number(summed.atBats) || 0,
+        splitsUsed: rows.length,
+      };
     }
     return null;
   }
@@ -324,17 +405,7 @@
     ]).then(function (results) {
       var batterCtx = results[0];
       var pitcherCtx = results[1];
-      var h2h = null;
-      var vsStats = (results[2] && results[2].stats) || [];
-      vsStats.forEach(function (s) {
-        var split = (s.splits || [])[0];
-        if (split && split.stat) {
-          h2h = {
-            rate: toRate(Number(split.stat.hits), Number(split.stat.atBats)),
-            atBats: Number(split.stat.atBats) || 0,
-          };
-        }
-      });
+      var h2h = careerVsPitcher(results[2]);
 
       // Split codes are from the batter's point of view ("vs Left" = against a
       // left-handed pitcher), which is also correct for switch hitters.
@@ -377,6 +448,51 @@
       forecast.season = season;
       return forecast;
     });
+  }
+
+  /**
+   * Career head-to-head line for a batter/pitcher pair.
+   *
+   * `stats=vsPlayer` returns TWO blocks (verified 2026-11-22 against the
+   * official host, player 660271 vs pitcher 605483):
+   *   [{type:'vsPlayer',      splits: one row PER SEASON   },
+   *    {type:'vsPlayerTotal', splits: one career-total row }]
+   * The old code read `splits[0]` of the *first* block, i.e. the batter's
+   * 2018 season line only — not the career line the README describes. The
+   * `vsPlayerTotal` row is used when present, otherwise the season rows are
+   * summed; with no rows at all the result is null (the model then leaves the
+   * head-to-head driver out instead of guessing).
+   */
+  function careerVsPitcher(payload) {
+    var blocks = (payload && payload.stats) || [];
+    if (!blocks.length) return null;
+    var total = null;
+    blocks.forEach(function (b) {
+      var type = (b.type && b.type.displayName) || '';
+      if (type !== 'vsPlayerTotal') return;
+      var split = (b.splits || [])[0];
+      if (split && split.stat) total = split.stat;
+    });
+    if (total) {
+      return {
+        rate: toRate(Number(total.hits), Number(total.atBats)),
+        atBats: Number(total.atBats) || 0,
+        seasons: null,
+      };
+    }
+    var rows = [];
+    blocks.forEach(function (b) {
+      var type = (b.type && b.type.displayName) || '';
+      if (type !== 'vsPlayer') return;
+      rows = rows.concat((b.splits || []).filter(function (s) { return s && s.stat; }));
+    });
+    if (!rows.length) return null;
+    var summed = sumStats(rows, ['hits', 'atBats']);
+    return {
+      rate: toRate(Number(summed.hits), Number(summed.atBats)),
+      atBats: Number(summed.atBats) || 0,
+      seasons: rows.length,
+    };
   }
 
   function countPriorLooks(plays, batterId, pitcherId) {
@@ -489,6 +605,7 @@
     platoonFromSplits: platoonFromSplits,
     formFromGameLog: formFromGameLog,
     buildForecast: buildForecast,
+    careerVsPitcher: careerVsPitcher,
     estimateRemainingPAs: estimateRemainingPAs,
     render: render,
     forecastCard: forecastCard,
