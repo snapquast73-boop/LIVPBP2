@@ -23,12 +23,11 @@
 
   // NOTE: the `fields` projection is leaf-name based. Naming `reviewDetails` alone
   // returns `"reviewDetails": {}` — the object arrives empty and every row collapses
-  // to "Replay Review / Unknown". The four leaf names below must stay in the list;
-  // tools/review-test.mjs asserts it, and docs/verification-report.md records the
-  // before/after payloads.
+  // to "Replay Review / Unknown". Request only the review children the UI uses;
+  // challengeTeamId is intentionally omitted because its semantics are unverified.
   var FEED_FIELDS = [
     'liveData', 'plays', 'allPlays', 'reviewDetails', 'reviewType',
-    'challengeTeamId', 'isOverturned', 'inProgress', 'about', 'atBatIndex', 'inning',
+    'isOverturned', 'inProgress', 'about', 'atBatIndex', 'inning',
     'halfInning', 'startTime', 'endTime', 'result', 'event', 'eventType', 'description',
     'awayScore', 'homeScore', 'isOut', 'rbi', 'runners', 'details', 'isScoringEvent',
     'playIndex',
@@ -38,12 +37,10 @@
     'abstractGameState', 'teams', 'away', 'home', 'abbreviation', 'review', 'used',
     'remaining', 'absChallenges', 'usedSuccessful', 'usedFailed', 'linescore',
     // StatsAPI `fields` keeps only the keys it is given, at every depth:
-    // `reviewDetails` alone comes back as `{}`. Its children, the pitch-event
-    // position (`playEvents[].index`) and the team names used by the challenger
-    // fallback must be listed explicitly. Verified 2026-11-20:
+    // `reviewDetails` alone comes back as `{}`. Its used children and the
+    // pitch-event position (`playEvents[].index`) must be listed explicitly.
     // https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,about,atBatIndex,reviewDetails
-    'isOverturned', 'inProgress', 'reviewType', 'challengeTeamId', 'index',
-    'teamName', 'clubName', 'shortName', 'name',
+    'index', 'teamName', 'clubName', 'shortName', 'name',
   ].join(',');
 
   var currentDate = UI.todayStr();

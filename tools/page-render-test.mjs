@@ -205,7 +205,7 @@ await run('game page box-score tab lists batting and pitching lines', async () =
   page.win.close();
 });
 
-await run('game page Challenges & Reviews tab shows tracker and counters', async () => {
+await run('game page keeps counters unassigned when challenger identity is unverified', async () => {
   const page = await renderPage('game.html', {
     query: '?gamePk=824027',
     until: (win) => () => (win.document.getElementById('reviews-wrap').textContent || '').includes('Manager Challenge'),
@@ -215,7 +215,8 @@ await run('game page Challenges & Reviews tab shows tracker and counters', async
   assert.match(reviews, /Before review/);
   assert.match(reviews, /Possible after/);
   assert.match(reviews, /Actual after/);
-  assert.match(reviews, /ABS challenge left now/);
+  assert.doesNotMatch(reviews, /challenge(?:s)? left now/,
+    'do not attach official counters to a side using undocumented challengeTeamId');
   assert.match(reviews, /Overturn rate/);
   page.win.close();
 });

@@ -44,10 +44,12 @@ check('FEED_FIELDS is found in reviews-feed.js', () => {
   assert.ok(FEED_FIELDS.size > 0, 'FEED_FIELDS array not found');
 });
 
-check('FEED_FIELDS lists every reviewDetails child the parser reads', () => {
-  for (const key of ['reviewDetails', 'isOverturned', 'inProgress', 'reviewType', 'challengeTeamId']) {
+check('FEED_FIELDS lists every reviewDetails child the parser reads, but not unverified attribution', () => {
+  for (const key of ['reviewDetails', 'isOverturned', 'inProgress', 'reviewType']) {
     assert.ok(FEED_FIELDS.has(key), 'missing ' + key);
   }
+  assert.equal(FEED_FIELDS.has('challengeTeamId'), false,
+    'undocumented challengeTeamId semantics must not be requested for display');
 });
 
 check('FEED_FIELDS lists the play-event position and runner link', () => {
@@ -139,8 +141,11 @@ check('pitch-level rows are bound to their playEvents index and pitch number', (
   assert.deepEqual(ev, [3, 4]);
 });
 
-check('challenger resolves to the challenging team via challengeTeamId', () => {
-  for (const it of items) assert.equal(it.challengerAbbr, 'LAD');
+check('challenger remains blank when only undocumented challengeTeamId identifies a side', () => {
+  for (const it of items) {
+    assert.equal(it.challengerAbbr, '', 'do not convert challengeTeamId into a challenger label');
+    assert.equal(it.challengerSide, null);
+  }
 });
 
 console.log('\nfeed-fields-test: ' + passed + ' checks passed');

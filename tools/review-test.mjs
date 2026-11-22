@@ -73,6 +73,27 @@ check('review parser finds play-level and event-level reviews exactly once', () 
   assert.equal(mgr.outcome, 'Under Review');
 });
 
+check('unverified challengeTeamId is not presented as challenger identity', () => {
+  const items = Reviews.extractGameReviews(feed);
+  for (const entry of items) {
+    assert.equal(entry.challengerSide, null);
+    assert.equal(entry.challengerAbbr, '');
+  }
+});
+
+check('challenger attribution is retained only when the official description names a team', () => {
+  const f = JSON.parse(JSON.stringify(feed));
+  const play = f.liveData.plays.allPlays.find((p) => p.reviewDetails);
+  // Official game 824027 payload: teamName is "Angels" and the play text starts
+  // "Angels challenged (play at 1st)"; only that explicit text supports a label.
+  // https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,teams,away,home,teamName,clubName,shortName,name,abbreviation,liveData,plays,allPlays,about,atBatIndex,result,description,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress
+  f.gameData.teams.home.teamName = 'Angels';
+  play.result.description = 'Angels challenged (play at 1st), call on the field was upheld: Jose Siri grounds into a double play, shortstop Ezequiel Tovar to first baseman TJ Rumfield. Oswald Peraza out at 2nd. Jose Siri out at 1st.';
+  const entry = Reviews.extractGameReviews(f).find((item) => item.category === 'challenge');
+  assert.equal(entry.challengerSide, 'home');
+  assert.equal(entry.challengerAbbr, 'LAA');
+});
+
 check('runs-at-risk uses only scoring movements tied to the reviewed event', () => {
   const mgr = Reviews.extractGameReviews(feed).find((i) => i.category === 'challenge');
   assert.equal(mgr.runsAtRisk, 1);
@@ -193,19 +214,21 @@ check('a used counter moving backwards is an irregularity', () => {
  * leaf-name based: naming `reviewDetails` alone answers `"reviewDetails": {}`
  * (verified 2026-11-20 —
  * https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,playEvents,reviewDetails
- * returned empty objects, while adding the four leaf names returned
- * {"isOverturned":false,"inProgress":false,"reviewType":"MF","challengeTeamId":108}).
- * Without them every row on the live page degraded to "Replay Review / Unknown",
- * so the leaves are asserted here.
+ * returned empty objects, while adding reviewType, isOverturned, and inProgress
+ * returned populated review records (the response also exposed challengeTeamId,
+ * which this client deliberately does not request or use for attribution).
+ * Without the used leaves every row degrades to "Replay Review / Unknown".
  */
-check('the Replay Feed projection names the reviewDetails leaves', () => {
+check('the Replay Feed requests used reviewDetails leaves but omits unverified attribution', () => {
   const src = readFileSync(new URL('../assets/js/reviews-feed.js', import.meta.url), 'utf8');
   const start = src.indexOf('var FEED_FIELDS = [');
   const list = src.slice(start, src.indexOf('].join', start));
-  for (const leaf of ['reviewDetails', 'reviewType', 'challengeTeamId', 'isOverturned', 'inProgress']) {
+  for (const leaf of ['reviewDetails', 'reviewType', 'isOverturned', 'inProgress']) {
     assert.ok(list.includes("'" + leaf + "'"),
       leaf + ' missing from FEED_FIELDS — the API would return reviewDetails as {}');
   }
+  assert.equal(list.includes("'challengeTeamId'"), false,
+    'unverified attribution must be omitted from the Replay Feed projection');
 });
 
 console.log('\nreview-test: ' + passed + ' checks passed');

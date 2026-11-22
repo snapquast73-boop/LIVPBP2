@@ -108,10 +108,11 @@
             </tr>
             <tr>
               <td>Meaning of <code>reviewDetails.challengeTeamId</code></td>
-              <td>The field is undocumented. In the one sampled review it held the id of the <em>batting</em> team
-                (<code>116</code> = DET) on a plate appearance whose official description names no challenger.</td>
-              <td><strong>Semantics unverified.</strong> The UI shows it as “the team that challenged” and prefers
-                the official play description when that names a club.</td>
+              <td>The official feed includes this numeric field, but the sampled responses do not document its
+                semantics. One sample carries <code>116</code> (= DET) on a plate appearance whose description names
+                no challenger; presence alone does not establish what the ID means.</td>
+              <td><strong>Semantics unverified; not used for attribution.</strong> The UI leaves the challenger blank
+                unless the official play description itself starts with an official team name.</td>
               <td><a href="https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress" target="_blank" rel="noopener">feed/live projection showing reviewDetails</a></td>
             </tr>
             <tr>
@@ -425,11 +426,12 @@
           against the <a href="https://statsapi.mlb.com/api/v1/schedule?sportId=1&amp;date=2026-06-01&amp;hydrate=linescore&amp;fields=dates,games,gamePk,teams,away,home,team,name,score,status,abstractGameState">official MLB schedule</a>
           is not a line-by-line verification of every field, historical game, or future live update. The original
           application was not recovered; exact parity remains unverified.</li>
-        <li><strong>Model and attribution caution:</strong> the hit forecast uses reconstructed coefficients, not an
-          official MLB prediction, and the meaning of <code>challengeTeamId</code> is not fully established. The site
-          currently displays estimates and may use that ID to attribute a challenge. These are not verified facts;
-          see section 2 and the <a href="https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress">official sample</a>.
-          A request to avoid unverified attributions is recorded on the coordination board.</li>
+        <li><strong>Model and attribution caution (historical verification note):</strong> the hit forecast uses
+          reconstructed coefficients, not an official MLB prediction. At the time of the 2026-11-20 check, the
+          meaning of <code>challengeTeamId</code> was unverified and the client could use it for attribution. The
+          follow-up in section 10 removes that behavior unless the official play description names a team; the forecast
+          remains an estimate. See section 2 and the
+          <a href="https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress">official sample</a>.</li>
         <li><strong>Scoring-change history on GitHub Pages:</strong> GitHub Pages is
           <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages">static hosting</a>;
           the optional server does not run there. A browser cannot reconstruct changes that occurred while it was not
@@ -546,10 +548,35 @@
           <tr><td>Local checks — JS syntax, local links, internal links, deterministic tests</td><td><code>node --check</code> 9/9 OK; <code>check-local-links.py</code> pass; <code>link-check.mjs</code> 79 refs, 0 broken; review 14, hit-model 12, reviews-feed 6, feed-fields 9, page-render 7 — all pass</td><td>—</td><td>✅</td><td><a href="https://github.com/snapquast73-boop/LIVPBP2/blob/main/.github/workflows/verify-site.yml" target="_blank" rel="noopener">verify-site.yml</a></td></tr>
           <tr><td>Stale PR #19 (pre-rebuild client, CONFLICTING)</td><td>closed 2026-11-22 without merging (superseded by PR #11 rebuild)</td><td>—</td><td>⚠ closed, not merged — merging would have reverted PRs #11/#24/#25/#27/#31</td><td><a href="https://github.com/snapquast73-boop/LIVPBP2/pull/19" target="_blank" rel="noopener">PR #19</a></td></tr>
           <tr><td>Repository homepage field (empty)</td><td></td><td>—</td><td>⚠ unverified — API returns 403 for the integration token, so it cannot be set programmatically. Set manually: GitHub → repo → Settings → General → Website → <code>https://snapquast73-boop.github.io/LIVPBP2/</code></td><td><a href="https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-your-repository" target="_blank" rel="noopener">GitHub docs: about your repository</a></td></tr>
-          <tr><td>Hit-forecast coefficients; meaning of <code>challengeTeamId</code>; team-logo/headshot CDN (HTTP 500 to non-browser clients)</td><td>forecast labelled as estimate; challenger prefers official description; logos/headshots hide on error</td><td></td><td>⚠ still unverified — carried forward from §2, unchanged</td><td><a href="https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress" target="_blank" rel="noopener">feed/live sample</a></td></tr>
+          <tr><td>Hit-forecast coefficients; meaning of <code>challengeTeamId</code>; team-logo/headshot CDN (HTTP 500 to non-browser clients)</td><td>Forecast remains labelled as an estimate; at this 2026-11-22 check the challenger used the official description when available; logos/headshots hide on error</td><td></td><td>⚠ forecast coefficients and ID semantics remain unverified. Challenger-ID handling was changed afterward: see §10 for current behavior. An official description naming “Angels” is independently verified in the <a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,teams,away,home,teamName,clubName,shortName,name,abbreviation,liveData,plays,allPlays,about,atBatIndex,result,description,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress">game 824027 payload</a>.</td><td><a href="https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress" target="_blank" rel="noopener">feed/live sample</a></td></tr>
         </tbody>
       </table>
       </div>
+    </section>
+
+    <section class="panel" id="session-a39d7ac1">
+      <h2>10 · Unverified challenger attribution removed (2026-11-22)</h2>
+      <p>
+        The official MLB feed contains <code>reviewDetails.challengeTeamId</code> in sampled review
+        records, but the payload does not document what that ID represents. See the
+        <a href="https://statsapi.mlb.com/api/v1.1/game/822974/feed/live?fields=liveData,plays,allPlays,atBatIndex,playEvents,details,reviewDetails,pitchNumber,isPitch,reviewType,challengeTeamId,isOverturned,inProgress">official game 822974 feed</a>,
+        the <a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=gameData,teams,away,home,teamName,clubName,shortName,name,abbreviation,liveData,plays,allPlays,about,atBatIndex,result,description,reviewDetails,reviewType,challengeTeamId,isOverturned,inProgress">official game 824027 feed with team names, descriptions, and review data</a>,
+        and the <a href="https://statsapi.mlb.com/api/v1.1/game/824027/feed/live?fields=liveData,plays,allPlays,about,atBatIndex,reviewDetails,isOverturned,inProgress,reviewType,player,id">same game's projection without <code>challengeTeamId</code></a>.
+        These endpoints establish that the field exists, not its meaning. The client now ignores
+        <code>challengeTeamId</code>; it labels a challenger only when the official play description
+        itself begins with a team name. If that condition is not met, the challenger value is blank
+        rather than inferred. Official challenge counters are independent and remain displayed only
+        when the API supplies them.
+      </p>
+      <p>
+        Regression coverage: <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/arena/a39d7ac1-livpbp2/tools/review-test.mjs">review parser tests</a>
+        (16 checks), <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/arena/a39d7ac1-livpbp2/tools/feed-fields-test.mjs">feed projection tests</a>
+        (9 checks), <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/arena/a39d7ac1-livpbp2/tools/reviews-feed-test.mjs">Replay Feed tests</a>
+        (6 checks), and <a href="https://github.com/snapquast73-boop/LIVPBP2/blob/arena/a39d7ac1-livpbp2/tools/page-render-test.mjs">page-render tests</a>
+        (8 checks) passed locally. Challenger attribution remains deliberately unavailable for records
+        whose official description does not name a team. The original project code is unavailable, so
+        full visual and behavioral parity with that deleted source cannot be claimed.
+      </p>
     </section>
 
     <footer class="site-footer">
