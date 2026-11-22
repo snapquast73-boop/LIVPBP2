@@ -126,6 +126,25 @@ check('season rate extraction reads the verified stats shape', () => {
   assert.equal(vl.atBats, 179);
 });
 
+check('game-log form ignores the modeled game even from an ISO gameDate', () => {
+  // The feed exposes gameDate as "2026-06-01T23:40:00Z", which is
+  // lexicographically greater than the bare log date "2026-06-01" it prefixes
+  // — a full-string comparison would leak the modeled game's own result.
+  const payload = {
+    stats: [{
+      type: { displayName: 'gameLog' },
+      splits: [
+        { date: '2026-05-30', stat: { hits: 2, atBats: 4 } },
+        { date: '2026-05-31', stat: { hits: 1, atBats: 4 } },
+        { date: '2026-06-01', stat: { hits: 4, atBats: 4 } },
+      ],
+    }],
+  };
+  const form = Props.formFromGameLog(payload, '2026-06-01T23:40:00Z', 8);
+  assert.equal(form.atBats, 8, 'the modeled game must be excluded');
+  assert.ok(Math.abs(form.rate - 3 / 8) < 1e-9);
+});
+
 check('game-log form ignores the modeled game itself', () => {
   const payload = {
     stats: [{

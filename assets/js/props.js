@@ -125,12 +125,18 @@
   function formFromGameLog(statsPayload, beforeDate, windowSize) {
     var stats = (statsPayload && statsPayload.stats) || [];
     var n = windowSize || 8;
+    // The game date comes from the feed as an ISO timestamp ("2026-06-01T23:40:00Z")
+    // while the game log carries plain dates ("2026-06-01"), so compare the
+    // date part only — comparing full strings would silently include the
+    // modeled game itself (an ISO timestamp is lexicographically greater
+    // than the bare date it starts with).
+    var before = String(beforeDate || '').slice(0, 10);
     for (var i = 0; i < stats.length; i += 1) {
       var type = (stats[i].type && stats[i].type.displayName) || '';
       if (type !== 'gameLog') continue;
       var games = (stats[i].splits || []).filter(function (g) {
-        var d = g && g.date;
-        return !beforeDate || !d || d < beforeDate; // never leak the modeled game
+        var d = String((g && g.date) || '').slice(0, 10);
+        return !before || !d || d < before; // never leak the modeled game
       });
       var recent = games.slice(-n);
       var hits = 0;
