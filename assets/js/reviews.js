@@ -171,15 +171,6 @@
 
   /* ------------------------------------------------------------ review rows */
 
-  function teamSideOf(teamId, gameData) {
-    var teams = (gameData && gameData.teams) || {};
-    var away = (teams.away && teams.away.id) || null;
-    var home = (teams.home && teams.home.id) || null;
-    if (teamId && teamId === away) return 'away';
-    if (teamId && teamId === home) return 'home';
-    return null;
-  }
-
   function teamAbbr(gameData, side) {
     var teams = (gameData && gameData.teams) || {};
     var t = teams[side] || {};
@@ -218,26 +209,28 @@
     return { away: s.away === null ? 0 : s.away, home: s.home === null ? 0 : s.home };
   }
 
-  function challengerInfo(rd, description, gameData, awayAbbr, homeAbbr) {
-    var teamId = rd && (rd.challengeTeamId || rd.challengingTeamId);
-    var side = teamSideOf(teamId, gameData);
+  function challengerInfo(description, gameData, awayAbbr, homeAbbr) {
     var desc = String(description || '');
     var role = null;
     if (/manager challenge|challenged \(/i.test(desc)) role = 'manager';
     if (/pitch result/i.test(desc)) role = 'abs';
-    if (side) {
-      return { side: side, abbr: side === 'away' ? awayAbbr : homeAbbr, role: role };
-    }
-    // Fall back to the team nickname named in the official description
-    // ("Reds challenged (play at 1st) ..."), never to a guess.
+
+    // `reviewDetails.challengeTeamId` is present in official payloads, but its
+    // semantics are undocumented and the sampled value does not independently
+    // establish who challenged. Report a team only when the official play text
+    // itself starts with that team's official name; otherwise leave it blank.
     var teams = (gameData && gameData.teams) || {};
     var found = null;
-    ['away', 'home'].forEach(function (s) {
-      var t = teams[s] || {};
-      var names = [t.teamName, t.clubName, t.shortName, t.name].filter(Boolean);
-      names.forEach(function (n) {
-        if (!found && desc.toLowerCase().indexOf(String(n).toLowerCase()) === 0) {
-          found = { side: s, abbr: s === 'away' ? awayAbbr : homeAbbr, role: role };
+    ['away', 'home'].forEach(function (side) {
+      var team = teams[side] || {};
+      var names = [team.teamName, team.clubName, team.shortName, team.name].filter(Boolean);
+      names.forEach(function (name) {
+        if (!found && desc.toLowerCase().indexOf(String(name).toLowerCase()) === 0) {
+          found = {
+            side: side,
+            abbr: side === 'away' ? awayAbbr : homeAbbr,
+            role: role,
+          };
         }
       });
     });
@@ -324,15 +317,7 @@
         }
         if (!reason) reason = result.description || '';
 
-        var challenger = challengerInfo(rd, result.description, gameData, awayAbbr, homeAbbr);
-        if (!challenger.role && challenger.side) {
-          // ABS challenges: the batting side is the batter, the fielding side the
-          // catcher/pitcher. The payload does not say which one, so the role is
-          // only reported as the side that challenged.
-          challenger.role = cls.category === 'abs'
-            ? (challenger.side === battingSide ? 'batter side' : 'fielding side')
-            : null;
-        }
+        var challenger = challengerInfo(result.description, gameData, awayAbbr, homeAbbr);
 
         // "Before review" = the call-on-field score when the reviewed event was
         // observed (score after the previous completed play). Runs already
